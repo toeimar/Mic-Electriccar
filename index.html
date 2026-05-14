@@ -9,9 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Prompt:wght@500;600;700&display=swap" rel="stylesheet">
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Chart.js สำหรับกราฟ -->
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- SheetJS สำหรับ Export Excel -->
+<!-- SheetJS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
@@ -28,7 +28,10 @@
     --border: #e2e8f0;
     --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
     --shadow-md: 0 10px 25px rgba(0,0,0,0.08);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
     --danger: #ef4444; --warning: #f59e0b; --success: #10b981; --info: #3b82f6; --purple: #8b5cf6;
+    --glass: rgba(255,255,255,0.85);
+    --hero-overlay: linear-gradient(135deg, #0F9D8D 0%, #2563eb 100%);
   }
   
   :root[data-theme="dark"] {
@@ -43,178 +46,422 @@
     --border: #334155;
     --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
     --shadow-md: 0 10px 25px rgba(0,0,0,0.3);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.4);
     --danger: #f87171; --warning: #fbbf24; --success: #34d399; --info: #60a5fa; --purple: #a78bfa;
+    --glass: rgba(30,41,59,0.92);
+    --hero-overlay: linear-gradient(135deg, #0a6b62 0%, #1d4ed8 100%);
   }
 
   /* ================= RESET & BASE ================= */
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
-  body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; transition: background 0.3s, color 0.3s; overflow-x: hidden; -webkit-tap-highlight-color: transparent;}
+  body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; transition: background 0.3s, color 0.3s; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
   h1, h2, h3, h4 { font-family: 'Prompt', sans-serif; color: var(--text-main); }
   button { cursor: pointer; border: none; background: transparent; color: inherit; transition: all 0.2s; font-family: 'Kanit', sans-serif; }
   img { max-width: 100%; height: auto; }
-  
+  a { color: var(--primary); text-decoration: none; }
+
+  /* ================= SCROLLBAR ================= */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-body); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
   /* ================= UTILITIES ================= */
   .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
   .flex { display: flex; } .grid { display: grid; }
-  .items-center { align-items: center; } .justify-between { justify-content: space-between; }
+  .items-center { align-items: center; } .justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
   .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .gap-6 { gap: 24px; }
-  .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mb-2 { margin-bottom: 8px; } .mb-4 { margin-bottom: 16px; }
+  .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mt-6 { margin-top: 24px; }
+  .mb-2 { margin-bottom: 8px; } .mb-4 { margin-bottom: 16px; }
+  .p-3 { padding: 12px; } .p-4 { padding: 16px; }
   .text-center { text-align: center; } .text-right { text-align: right; }
   .text-primary { color: var(--primary); } .text-muted { color: var(--text-muted); font-size: 0.9rem; }
+  .text-success { color: var(--success); } .text-danger { color: var(--danger); }
+  .text-warning { color: var(--warning); } .text-info { color: var(--info); }
+  .text-sm { font-size: 0.85rem; } .text-lg { font-size: 1.1rem; } .text-xl { font-size: 1.3rem; }
   .font-bold { font-weight: 600; } .w-full { width: 100%; }
   .hidden { display: none !important; }
+  .rounded-full { border-radius: 999px; }
+  .overflow-hidden { overflow: hidden; }
+  .flex-wrap { flex-wrap: wrap; }
+  .flex-1 { flex: 1; }
+  .cursor-pointer { cursor: pointer; }
   
+  /* ================= ANIMATIONS ================= */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes bounce-in { 0% { transform: scale(0.7); opacity: 0; } 60% { transform: scale(1.05); } 100% { transform: scale(1); opacity: 1; } }
+
+  .animate-fade { animation: fadeIn 0.4s ease forwards; }
+  .animate-slide-up { animation: slideUp 0.3s ease forwards; }
+  .animate-bounce-in { animation: bounce-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+
   /* ================= UI COMPONENTS ================= */
-  .card { background: var(--bg-card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
-  .card:hover { box-shadow: var(--shadow-md); }
-  
+  .card { 
+    background: var(--bg-card); border-radius: 20px; padding: 24px; 
+    box-shadow: var(--shadow-sm); border: 1px solid var(--border); 
+    transition: transform 0.25s, box-shadow 0.25s; 
+    animation: fadeIn 0.4s ease forwards;
+  }
+  .card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .card-flat { background: var(--bg-card); border-radius: 20px; padding: 24px; border: 1px solid var(--border); }
+
+  /* Skeleton loader */
+  .skeleton { background: linear-gradient(90deg, var(--border) 25%, var(--bg-body) 50%, var(--border) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+
   /* Inputs */
   .input-group { margin-bottom: 16px; position: relative; }
-  .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
-  .input-control { width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid var(--border); background: var(--bg-input); color: var(--text-main); font-size: 1rem; transition: all 0.2s; }
+  .input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; letter-spacing: 0.3px; }
+  .input-control { 
+    width: 100%; padding: 12px 16px; border-radius: 12px; 
+    border: 1.5px solid var(--border); background: var(--bg-input); 
+    color: var(--text-main); font-size: 1rem; transition: all 0.2s; 
+    font-family: 'Kanit', sans-serif;
+  }
   .input-control:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 4px var(--primary-light); }
+  .input-control::placeholder { color: var(--text-muted); opacity: 0.6; }
   select.input-control { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 40px; }
   input[type="file"].input-control { padding: 8px; }
+  textarea.input-control { resize: vertical; min-height: 80px; }
+
+  /* Input with icon prefix */
+  .input-with-icon { position: relative; }
+  .input-with-icon .input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem; pointer-events: none; }
+  .input-with-icon .input-control { padding-left: 40px; }
 
   /* Buttons */
-  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 12px; font-weight: 600; font-size: 1rem; transition: all 0.2s; text-align: center; }
-  .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px var(--primary-light); }
-  .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+  .btn { 
+    display: inline-flex; align-items: center; justify-content: center; 
+    gap: 8px; padding: 12px 24px; border-radius: 12px; 
+    font-weight: 600; font-size: 1rem; transition: all 0.2s; 
+    text-align: center; font-family: 'Kanit', sans-serif; white-space: nowrap;
+    position: relative; overflow: hidden;
+  }
+  .btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0); transition: background 0.2s; border-radius: inherit; }
+  .btn:active::after { background: rgba(255,255,255,0.15); }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+  
+  .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; box-shadow: 0 4px 14px rgba(15,157,141,0.3); }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(15,157,141,0.4); }
+  .btn-primary:active:not(:disabled) { transform: translateY(0); }
+  
   .btn-outline { border: 1.5px solid var(--border); color: var(--text-main); background: transparent; }
-  .btn-outline:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
-  .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-  .btn-success { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-  .btn-warning { background: var(--warning); color: white; }
+  .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  
+  .btn-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+  .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,0.2); }
+  .btn-success { background: rgba(16,185,129,0.1); color: var(--success); }
+  .btn-success:hover:not(:disabled) { background: rgba(16,185,129,0.2); }
+  .btn-warning { background: var(--warning); color: white; box-shadow: 0 4px 12px rgba(245,158,11,0.3); }
+  .btn-warning:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(245,158,11,0.4); }
   .btn-info { background: var(--info); color: white; }
-  .btn-sm { padding: 8px 16px; font-size: 0.9rem; border-radius: 8px; }
+  .btn-info:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--text-muted); }
+  .btn-ghost:hover { background: var(--primary-light); color: var(--primary); }
+  
+  .btn-sm { padding: 8px 16px; font-size: 0.88rem; border-radius: 8px; gap: 6px; }
+  .btn-xs { padding: 5px 10px; font-size: 0.78rem; border-radius: 6px; gap: 4px; }
+  .btn-lg { padding: 16px 32px; font-size: 1.1rem; border-radius: 14px; }
+  .btn-icon { padding: 10px; border-radius: 10px; }
+  .btn-icon.btn-sm { padding: 8px; border-radius: 8px; }
+
+  /* Floating action button */
+  .fab { 
+    position: fixed; bottom: 90px; right: 20px; 
+    width: 56px; height: 56px; border-radius: 50%; 
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: white; font-size: 1.3rem; 
+    box-shadow: 0 6px 20px rgba(15,157,141,0.45);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    transition: all 0.3s; cursor: pointer;
+  }
+  .fab:hover { transform: scale(1.1) rotate(15deg); }
+  @media (max-width: 768px) { .fab { display: flex; } }
 
   /* Badges */
-  .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
-  .badge-success { background: rgba(16,185,129,0.1); color: var(--success); }
-  .badge-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
-  .badge-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
-  .badge-info { background: rgba(59,130,246,0.1); color: var(--info); }
-  .badge-purple { background: rgba(139,92,246,0.1); color: var(--purple); }
+  .badge { 
+    padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; 
+    font-weight: 600; display: inline-flex; align-items: center; gap: 4px; 
+    white-space: nowrap;
+  }
+  .badge-success { background: rgba(16,185,129,0.12); color: var(--success); }
+  .badge-warning { background: rgba(245,158,11,0.12); color: var(--warning); }
+  .badge-danger { background: rgba(239,68,68,0.12); color: var(--danger); }
+  .badge-info { background: rgba(59,130,246,0.12); color: var(--info); }
+  .badge-purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+  .badge-primary { background: var(--primary-light); color: var(--primary); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* Stat cards */
+  .stat-icon { 
+    width: 56px; height: 56px; border-radius: 16px; 
+    display: flex; align-items: center; justify-content: center; 
+    font-size: 1.4rem; flex-shrink: 0;
+  }
+  .stat-value { font-size: 1.9rem; font-weight: 700; font-family: 'Prompt', sans-serif; line-height: 1.1; }
+  .stat-label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
   /* ================= LAYOUT ================= */
   /* Navbar */
-  .navbar { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: var(--bg-card); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; box-shadow: var(--shadow-sm); }
-  .logo { font-family: 'Prompt', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; cursor: pointer; }
-  .logo img { max-height: 40px; border-radius: 8px; }
+  .navbar { 
+    position: fixed; top: 0; left: 0; right: 0; height: 64px; 
+    background: var(--glass); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border); z-index: 1000; 
+    display: flex; align-items: center; justify-content: space-between; 
+    padding: 0 24px; box-shadow: var(--shadow-sm); 
+    transition: background 0.3s;
+  }
+  .logo { font-family: 'Prompt', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; }
+  .logo img { max-height: 36px; border-radius: 8px; object-fit: contain; }
+  .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), #2563eb); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1rem; }
   
   /* Ensure main content doesn't get hidden under bottom nav on mobile */
-  .main-content { margin-top: 70px; min-height: calc(100vh - 70px); padding-bottom: 20px; transition: padding-bottom 0.3s; }
+  .main-content { margin-top: 64px; min-height: calc(100vh - 64px); padding-bottom: 20px; transition: padding-bottom 0.3s; }
 
   /* Bottom Navigation (Mobile Only) */
   .bottom-nav {
     display: none;
     position: fixed;
     bottom: 0; left: 0; right: 0;
-    background: var(--bg-card);
+    background: var(--glass);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
     border-top: 1px solid var(--border);
     z-index: 1100;
-    padding-bottom: env(safe-area-inset-bottom, 0px); /* For iOS rounded corners */
-    box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.07);
   }
-  .bottom-nav-inner {
-    display: flex; justify-content: space-around; align-items: center; height: 65px;
-  }
+  .bottom-nav-inner { display: flex; justify-content: space-around; align-items: center; height: 62px; }
   .bottom-nav-item {
     display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: var(--text-muted); font-size: 0.75rem; gap: 4px; flex: 1; height: 100%; cursor: pointer;
-    transition: all 0.2s;
+    color: var(--text-muted); font-size: 0.7rem; gap: 3px; flex: 1; height: 100%; cursor: pointer;
+    transition: all 0.2s; border-radius: 12px; margin: 4px 2px; padding: 4px;
   }
-  .bottom-nav-item i { font-size: 1.3rem; margin-bottom: 2px; transition: transform 0.2s; }
-  .bottom-nav-item.active { color: var(--primary); font-weight: bold; }
+  .bottom-nav-item i { font-size: 1.25rem; transition: transform 0.2s; }
+  .bottom-nav-item.active { color: var(--primary); font-weight: 600; }
   .bottom-nav-item.active i { transform: scale(1.15); }
-  .bottom-nav-item:active { background: rgba(0,0,0,0.02); }
+  .bottom-nav-item:active { background: var(--primary-light); color: var(--primary); border-radius: 12px; }
 
-  /* Hero & Flight Search Panel */
-  .hero-section { background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); padding: 80px 20px 100px; text-align: center; color: white; border-radius: 0 0 30px 30px; }
-  .hero-section h1 { color: white; font-size: 2.5rem; margin-bottom: 10px; }
-  .hero-section p { opacity: 0.9; font-size: 1.1rem; }
+  /* Hero & Search Panel */
+  .hero-section { 
+    background: var(--hero-overlay);
+    padding: 70px 20px 100px; text-align: center; color: white; 
+    border-radius: 0 0 36px 36px;
+    position: relative; overflow: hidden;
+  }
+  .hero-section::before { 
+    content: ''; position: absolute; top: -40%; right: -20%; 
+    width: 600px; height: 600px; border-radius: 50%; 
+    background: rgba(255,255,255,0.04); pointer-events: none;
+  }
+  .hero-section::after { 
+    content: ''; position: absolute; bottom: -30%; left: -15%; 
+    width: 400px; height: 400px; border-radius: 50%; 
+    background: rgba(255,255,255,0.04); pointer-events: none;
+  }
+  .hero-section h1 { color: white; font-size: 2.4rem; margin-bottom: 10px; position: relative; z-index: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .hero-section p { opacity: 0.92; font-size: 1.05rem; position: relative; z-index: 1; }
+  .hero-stats { display: flex; justify-content: center; gap: 32px; margin-top: 24px; position: relative; z-index: 1; flex-wrap: wrap; }
+  .hero-stat { color: rgba(255,255,255,0.95); }
+  .hero-stat-num { font-family: 'Prompt', sans-serif; font-size: 1.6rem; font-weight: 700; display: block; }
+  .hero-stat-lbl { font-size: 0.78rem; opacity: 0.8; }
   
   .flight-search-container { max-width: 1000px; margin: -60px auto 40px; padding: 0 20px; position: relative; z-index: 10; }
-  .flight-search-box { background: var(--bg-card); padding: 24px; border-radius: 20px; box-shadow: var(--shadow-md); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; align-items: end; border: 1px solid var(--border); }
+  .flight-search-box { 
+    background: var(--bg-card); padding: 24px; border-radius: 24px; 
+    box-shadow: var(--shadow-lg); 
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); 
+    gap: 14px; align-items: end; 
+    border: 1px solid var(--border);
+  }
+  .search-divider-mobile { display: none; }
   
+  /* Section headers */
+  .section-title { font-size: 1.5rem; font-weight: 700; position: relative; padding-left: 16px; }
+  .section-title::before { content: ''; position: absolute; left: 0; top: 10%; height: 80%; width: 4px; background: linear-gradient(to bottom, var(--primary), #2563eb); border-radius: 2px; }
+
   /* Car Grid */
   .car-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
-  .car-card { display: flex; flex-direction: column; overflow: hidden; }
-  .car-img-container { position: relative; height: 200px; border-radius: 12px; overflow: hidden; margin-bottom: 16px; background: #f1f5f9; }
-  .car-img-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .car-card:hover .car-img-container img { transform: scale(1.05); }
-  .car-status-badge { position: absolute; top: 10px; right: 10px; z-index: 2; }
+  .car-card { display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: 20px; }
+  .car-img-container { position: relative; height: 200px; border-radius: 16px 16px 0 0; overflow: hidden; background: linear-gradient(135deg, #e0f2f1, #dbeafe); }
+  .car-img-container img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+  .car-card:hover .car-img-container img { transform: scale(1.06); }
+  .car-status-badge { position: absolute; top: 12px; right: 12px; z-index: 2; }
   .car-price { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+  .car-heart { position: absolute; top: 12px; left: 12px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: all 0.2s; z-index: 2; }
+  .car-heart:hover, .car-heart.liked { color: var(--danger); background: rgba(239,68,68,0.1); }
+  .car-rating { display: flex; align-items: center; gap: 4px; font-size: 0.82rem; color: var(--text-muted); }
+  .car-features-tags { display: flex; gap: 4px; flex-wrap: wrap; margin: 6px 0; }
+  .car-feature-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; background: var(--primary-light); color: var(--primary); font-weight: 500; }
 
   /* Image Gallery */
-  .gallery-thumbnails { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; flex-wrap: wrap;}
-  .gallery-thumbnails img { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.6; transition: 0.2s; }
+  .gallery-thumbnails { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; flex-wrap: wrap; }
+  .gallery-thumbnails img { width: 76px; height: 56px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; opacity: 0.65; transition: 0.2s; flex-shrink: 0; }
   .gallery-thumbnails img:hover, .gallery-thumbnails img.active { opacity: 1; border-color: var(--primary); }
 
   /* Admin Layout */
-  .admin-layout { display: flex; min-height: calc(100vh - 70px); }
-  .sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 20px; position: fixed; height: calc(100vh - 70px); overflow-y: auto; display: flex; flex-direction: column; gap: 8px; z-index: 900; }
+  .admin-layout { display: flex; min-height: calc(100vh - 64px); }
+  .sidebar { 
+    width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); 
+    padding: 24px 16px; position: fixed; height: calc(100vh - 64px); 
+    overflow-y: auto; display: flex; flex-direction: column; gap: 4px; 
+    z-index: 900; top: 64px;
+  }
   .admin-main { margin-left: 260px; padding: 30px; width: calc(100% - 260px); }
-  .menu-item { padding: 12px 16px; border-radius: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
-  .menu-item:hover, .menu-item.active { background: var(--primary-light); color: var(--primary); }
-  
-  /* RESPONSIVE BREAKPOINTS */
+  .menu-item { 
+    padding: 11px 14px; border-radius: 12px; font-weight: 500; 
+    color: var(--text-muted); cursor: pointer; display: flex; align-items: center; 
+    gap: 12px; transition: all 0.2s; font-size: 0.95rem;
+  }
+  .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+  .menu-item.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+  .menu-item .menu-icon { width: 20px; text-align: center; }
+  .sidebar-section-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding: 8px 14px 4px; font-weight: 600; }
+
+  /* ================= RESPONSIVE ================= */
   @media (max-width: 992px) {
     .admin-layout { flex-direction: column; }
-    .sidebar { position: static; width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 20px; }
+    .sidebar { position: static; width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 16px; top: auto; border-right: none; border-bottom: 1px solid var(--border); flex-wrap: nowrap; gap: 4px; }
+    .sidebar .sidebar-section-label { display: none; }
+    .sidebar hr { display: none; }
     .admin-main { margin-left: 0; width: 100%; padding: 20px; }
-    .menu-item { white-space: nowrap; }
+    .menu-item { white-space: nowrap; flex-shrink: 0; padding: 8px 12px; font-size: 0.88rem; }
   }
 
   @media (max-width: 768px) {
-    .flight-search-box { grid-template-columns: 1fr; }
-    .modal-content { padding: 20px; }
-    .hero-section h1 { font-size: 2rem; }
+    .flight-search-box { grid-template-columns: 1fr 1fr; gap: 12px; padding: 18px; }
+    .flight-search-box .search-btn-col { grid-column: 1 / -1; }
+    .modal-content { padding: 20px; border-radius: 20px; }
+    .hero-section h1 { font-size: 1.75rem; }
+    .hero-section { padding: 60px 20px 90px; border-radius: 0 0 28px 28px; }
+    .hero-stats { gap: 20px; }
     .desktop-only { display: none !important; }
     .bottom-nav { display: block; }
-    .main-content { padding-bottom: 80px; } /* Space for bottom nav */
-    .admin-layout .sidebar { padding-bottom: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .main-content { padding-bottom: 80px; }
+    .car-grid { grid-template-columns: 1fr; gap: 16px; }
+    .section-title { font-size: 1.3rem; }
+    .container { padding: 16px; }
+    .navbar { padding: 0 16px; height: 60px; }
+    .main-content { margin-top: 60px; }
+    .sidebar { padding: 8px 12px; gap: 4px; }
+  }
+
+  @media (max-width: 480px) {
+    .flight-search-box { grid-template-columns: 1fr; }
+    .hero-stat-num { font-size: 1.3rem; }
   }
 
   /* Table & Timeline */
-  .table-responsive { overflow-x: auto; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; min-width: 800px; }
-  th, td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); }
-  th { background: rgba(0,0,0,0.02); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  .table-responsive { overflow-x: auto; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: rgba(0,0,0,0.02); color: var(--text-muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+  tbody tr { transition: background 0.15s; }
   tbody tr:hover { background: var(--primary-light); }
+  tbody tr:last-child td { border-bottom: none; }
   
-  .timeline-grid { display: grid; grid-template-columns: 150px repeat(14, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; overflow-x: auto; min-width: 900px;}
-  .tl-cell { background: var(--bg-card); padding: 10px 5px; text-align: center; font-size: 0.75rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; }
+  .timeline-grid { display: grid; grid-template-columns: 140px repeat(14, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; overflow-x: auto; min-width: 900px; }
+  .tl-cell { background: var(--bg-card); padding: 10px 5px; text-align: center; font-size: 0.75rem; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); position: relative; min-height: 40px; }
   .tl-header { background: var(--bg-body); font-weight: bold; color: var(--text-muted); }
-  .tl-car-name { text-align: left; font-weight: bold; padding-left: 10px; color: var(--primary); }
+  .tl-car-name { text-align: left; font-weight: bold; padding-left: 10px; color: var(--primary); font-size: 0.8rem; }
   .tl-bar { position: absolute; top: 10%; height: 80%; background: var(--primary); border-radius: 4px; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; z-index: 10; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; box-shadow: var(--shadow-sm); cursor: pointer; }
 
   /* Modals */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; opacity: 0; transition: opacity 0.3s; }
+  .modal-overlay { 
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); 
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    z-index: 2000; display: none; align-items: center; 
+    justify-content: center; padding: 16px; 
+    opacity: 0; transition: opacity 0.3s; 
+  }
   .modal-overlay.active { display: flex; opacity: 1; }
-  .modal-content { background: var(--bg-card); border-radius: 24px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 30px; transform: translateY(20px); transition: transform 0.3s; box-shadow: 0 25px 50px rgba(0,0,0,0.25); position: relative; }
-  .modal-overlay.active .modal-content { transform: translateY(0); }
-  .modal-lg { max-width: 900px; }
-  .modal-close { position: absolute; top: 20px; right: 20px; width: 32px; height: 32px; border-radius: 50%; background: var(--bg-body); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
-  .modal-close:hover { background: var(--danger); color: white; }
+  .modal-content { 
+    background: var(--bg-card); border-radius: 24px; 
+    width: 100%; max-width: 480px; max-height: 92vh; 
+    overflow-y: auto; padding: 28px; 
+    transform: translateY(24px) scale(0.97); 
+    transition: transform 0.35s cubic-bezier(0.34,1.4,0.64,1); 
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2); 
+    position: relative; border: 1px solid var(--border);
+  }
+  .modal-overlay.active .modal-content { transform: translateY(0) scale(1); }
+  .modal-lg { max-width: 880px; }
+  .modal-close { 
+    position: absolute; top: 18px; right: 18px; 
+    width: 32px; height: 32px; border-radius: 50%; 
+    background: var(--bg-body); display: flex; align-items: center; 
+    justify-content: center; cursor: pointer; color: var(--text-muted); 
+    transition: 0.2s; z-index: 10; border: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+  .modal-close:hover { background: var(--danger); color: white; border-color: var(--danger); transform: rotate(90deg); }
+  .modal-header { margin-bottom: 20px; padding-right: 40px; }
+  .modal-title { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+  .modal-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
 
   /* Upload Area */
-  .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: var(--bg-body); color: var(--text-muted); position: relative; }
+  .upload-area { border: 2px dashed var(--border); border-radius: 14px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: var(--bg-body); color: var(--text-muted); position: relative; }
   .upload-area:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
 
   /* Toasts */
-  #toast-container { position: fixed; bottom: 30px; right: 30px; z-index: 3000; display: flex; flex-direction: column; gap: 10px; }
-  .toast { background: var(--bg-card); color: var(--text-main); padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 12px; animation: slideUp 0.3s forwards; font-weight: 500; }
-  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  #toast-container { position: fixed; bottom: 90px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+  @media (min-width: 769px) { #toast-container { bottom: 30px; right: 28px; } }
+  .toast { 
+    background: var(--bg-card); color: var(--text-main); 
+    padding: 14px 20px; border-radius: 14px; 
+    box-shadow: 0 8px 24px rgba(0,0,0,0.14); 
+    border-left: 4px solid var(--primary); 
+    display: flex; align-items: center; gap: 12px; 
+    animation: slideUp 0.3s forwards; font-weight: 500; 
+    max-width: 340px; border: 1px solid var(--border); border-left-width: 4px;
+    pointer-events: auto; font-size: 0.92rem;
+  }
 
-  /* Receipt Styles for Print */
-  .receipt-box { border: 1px solid var(--border); border-radius: 12px; padding: 20px; background: var(--bg-body); margin-bottom: 20px; }
+  /* Receipt */
+  .receipt-box { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--bg-body); margin-bottom: 16px; }
   @media print {
     body * { visibility: hidden; }
     #main-modal, #main-modal * { visibility: visible; }
     #main-modal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; color: black; box-shadow: none; transform: none; padding: 0; margin: 0; }
     .modal-close, .no-print { display: none !important; }
   }
+
+  /* Empty state */
+  .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+  .empty-state i { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; display: block; }
+  .empty-state p { font-size: 1rem; }
+
+  /* Progress bar */
+  .progress-bar-wrap { background: var(--border); border-radius: 99px; height: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--primary), #2563eb); transition: width 0.5s ease; }
+
+  /* Tabs */
+  .tab-list { display: flex; gap: 4px; background: var(--bg-body); border-radius: 12px; padding: 4px; border: 1px solid var(--border); overflow-x: auto; }
+  .tab-item { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500; font-size: 0.88rem; color: var(--text-muted); white-space: nowrap; transition: all 0.2s; }
+  .tab-item.active { background: var(--bg-card); color: var(--primary); font-weight: 600; box-shadow: var(--shadow-sm); }
+
+  /* Info row */
+  .info-row { display: flex; justify-content: space-between; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); gap: 12px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row-label { color: var(--text-muted); font-size: 0.88rem; flex-shrink: 0; }
+  .info-row-value { font-weight: 500; text-align: right; word-break: break-word; }
+
+  /* Chips */
+  .chip-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .chip { padding: 6px 14px; border-radius: 99px; font-size: 0.82rem; font-weight: 500; border: 1.5px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+  .chip:hover, .chip.active { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+  /* Car detail features grid */
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .feature-item { background: var(--bg-body); border: 1px solid var(--border); border-radius: 14px; padding: 14px; text-align: center; }
+  .feature-item i { font-size: 1.4rem; margin-bottom: 6px; display: block; }
+  .feature-item .feature-val { font-weight: 700; font-size: 1.05rem; }
+  .feature-item .feature-name { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -222,16 +469,17 @@
 <!-- Navbar -->
 <nav class="navbar">
   <div class="logo" onclick="app.navigate('home')">
-    <img id="nav-logo-img" src="" style="display:none;" alt="Logo">
-    <i class="fa-solid fa-bolt text-primary" id="nav-logo-icon"></i> 
+    <div class="logo-icon" id="nav-logo-icon-wrap">
+      <img id="nav-logo-img" src="" style="display:none; max-height:32px; border-radius:6px;" alt="Logo">
+      <i class="fa-solid fa-bolt" id="nav-logo-icon"></i>
+    </div>
     <span id="nav-store-name" class="desktop-only">EVRENTAL PRO</span>
   </div>
   <div class="flex items-center gap-2">
-    <!-- พื้นที่สำหรับปุ่มสลับแอดมิน (Desktop เท่านั้น) -->
     <div id="nav-admin-switch" class="desktop-only"></div>
     
-    <button class="btn btn-outline btn-sm no-print" onclick="app.toggleTheme()" title="เปลี่ยนธีม">
-      <i class="fa-solid fa-moon" id="theme-icon"></i>
+    <button class="btn btn-ghost btn-icon no-print" onclick="app.toggleTheme()" title="เปลี่ยนธีม">
+      <i id="theme-icon" class="fa-solid fa-moon" style="font-size:1.1rem;"></i>
     </button>
     
     <div id="nav-user-area" class="no-print desktop-only"></div>
@@ -241,17 +489,21 @@
 <!-- Main Container -->
 <div id="app-root" class="main-content"></div>
 
-<!-- Mobile Bottom Navigation Container -->
+<!-- Mobile Bottom Navigation -->
 <div id="bottom-nav-root" class="no-print"></div>
 
-<!-- Modals & Toasts Container -->
+<!-- FAB -->
+<div class="fab no-print" onclick="document.querySelector('.flight-search-container')?.scrollIntoView({behavior:'smooth'})" title="ค้นหารถ">
+  <i class="fa-solid fa-search"></i>
+</div>
+
+<!-- Modals & Toasts -->
 <div id="modal-root"></div>
 <div id="toast-container" class="no-print"></div>
 
-<!-- สคริปต์แบบ Module (เพื่อใช้งาน Firebase V11) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- 1. FIREBASE CONFIG ---
@@ -268,7 +520,6 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
-
 const envAppId = typeof __app_id !== 'undefined' ? __app_id : 'car-rental-mic';
 
 // --- 2. MOCK DATA & STATE ---
@@ -331,9 +582,7 @@ const app = {
       try {
         const docRef = doc(db, 'artifacts', envAppId, 'public', 'data', 'store_data', 'main_state');
         await setDoc(docRef, this.state);
-      } catch (e) {
-        console.error("Error saving to Firestore", e);
-      }
+      } catch (e) { console.error("Error saving to Firestore", e); }
     }
   },
 
@@ -350,22 +599,14 @@ const app = {
         if (snapshot.exists()) {
           this.state = snapshot.data();
           localStorage.setItem('ev_state_v5', JSON.stringify(this.state));
-          
           const uid = sessionStorage.getItem('ev_user_id');
           if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
-          
-          if(document.getElementById('app-root').innerHTML !== '') {
-            this.render();
-          }
+          if(document.getElementById('app-root').innerHTML !== '') this.render();
         } else {
           this.saveState();
         }
-      }, (error) => {
-        console.error("Firestore listen error", error);
-      });
-    } catch(e) {
-      console.error("Auth error", e);
-    }
+      }, (error) => { console.error("Firestore listen error", error); });
+    } catch(e) { console.error("Auth error", e); }
 
     const uid = sessionStorage.getItem('ev_user_id');
     if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
@@ -378,16 +619,12 @@ const app = {
     this.searchParams.dateFrom = today.toISOString().split('T')[0];
     this.searchParams.dateTo = tomorrow.toISOString().split('T')[0];
     if(this.state.branches.length > 0) {
-        this.searchParams.pick = this.state.branches[0].id;
-        this.searchParams.drop = this.state.branches[0].id;
+      this.searchParams.pick = this.state.branches[0].id;
+      this.searchParams.drop = this.state.branches[0].id;
     }
 
     this.render();
-
-    if(receiptId) {
-      ui.showReceiptModal(receiptId);
-      setTimeout(() => window.print(), 800);
-    }
+    if(receiptId) { ui.showReceiptModal(receiptId); setTimeout(() => window.print(), 800); }
   },
 
   toggleTheme() {
@@ -395,7 +632,7 @@ const app = {
     document.documentElement.setAttribute('data-theme', this.state.theme);
     this.updateThemeIcon();
     this.saveState();
-    if(this.currentView === 'admin_dashboard') ui.renderChart(); 
+    if(this.currentAdminTab === 'dashboard') { setTimeout(() => { ui.renderChart(); }, 100); }
   },
 
   updateThemeIcon() {
@@ -407,58 +644,61 @@ const app = {
     this.currentView = view;
     window.history.replaceState({}, document.title, window.location.pathname);
     this.render();
-    window.scrollTo(0,0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   isAdmin() { return this.currentUser && (this.currentUser.role === 'admin_master' || this.currentUser.role === 'admin_sub'); },
   isMaster() { return this.currentUser && this.currentUser.role === 'admin_master'; },
 
   render() {
-    // 1. Render Navbar Config
+    // Navbar: store name
     document.getElementById('nav-store-name').innerText = this.state.settings.storeName;
+    
+    // Navbar: logo
     const logoImg = document.getElementById('nav-logo-img');
     const logoIcon = document.getElementById('nav-logo-icon');
+    const logoWrap = document.getElementById('nav-logo-icon-wrap');
     if(this.state.settings.logoUrl) {
       logoImg.src = this.state.settings.logoUrl;
       logoImg.style.display = 'block';
       logoIcon.style.display = 'none';
+      logoWrap.style.background = 'none';
     } else {
       logoImg.style.display = 'none';
       logoIcon.style.display = 'block';
+      logoWrap.style.background = '';
     }
 
-    // 2. Render Admin Desktop Switch Button
+    // Navbar: admin switch
     const adminSwitch = document.getElementById('nav-admin-switch');
     if (this.isAdmin()) {
       const isCustomer = this.currentView === 'home';
       adminSwitch.innerHTML = `
-        <button class="btn btn-outline btn-sm font-bold text-primary" style="border-color:var(--primary)" onclick="app.navigate('${isCustomer ? 'admin_dashboard' : 'home'}')">
-          <i class="fa-solid fa-repeat"></i> ${isCustomer ? 'ไปหน้าแอดมิน' : 'ไปหน้าลูกค้า'}
-        </button>
-      `;
-    } else {
-      adminSwitch.innerHTML = '';
-    }
+        <button class="btn btn-outline btn-sm font-bold" style="border-color:var(--primary); color:var(--primary);" onclick="app.navigate('${isCustomer ? 'admin_dashboard' : 'home'}')">
+          <i class="fa-solid fa-repeat"></i> ${isCustomer ? 'หน้าแอดมิน' : 'หน้าลูกค้า'}
+        </button>`;
+    } else { adminSwitch.innerHTML = ''; }
 
-    // 3. Render Navbar User Area (Desktop Only)
+    // Navbar: user area (desktop)
     const navUser = document.getElementById('nav-user-area');
     if(this.currentUser) {
+      const tierColors = { Silver: '#94a3b8', Gold: '#f59e0b', Platinum: '#8b5cf6', Admin: '#ef4444' };
+      const tc = tierColors[this.currentUser.tier] || '#94a3b8';
       navUser.innerHTML = `
-        <div class="flex items-center gap-4">
-          <div class="text-right">
-            <div style="font-size:0.75rem; color:var(--text-muted)">${this.currentUser.points} Pts | ${this.currentUser.tier}</div>
+        <div class="flex items-center gap-3">
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; color:var(--text-muted)"><span style="color:${tc}; font-weight:600;">● ${this.currentUser.tier}</span> · ${utils.formatMoney(this.currentUser.points)} Pts</div>
             <div class="font-bold" style="font-size:0.9rem">${this.currentUser.name}</div>
           </div>
           <button class="btn btn-outline btn-sm" onclick="logic.logout()">
             <i class="fa-solid fa-sign-out-alt"></i> ออกจากระบบ
           </button>
-        </div>
-      `;
+        </div>`;
     } else {
-      navUser.innerHTML = `<button class="btn btn-primary btn-sm" onclick="ui.showLoginModal()">เข้าสู่ระบบ</button>`;
+      navUser.innerHTML = `<button class="btn btn-primary btn-sm" onclick="ui.showLoginModal()"><i class="fa-solid fa-user"></i> เข้าสู่ระบบ</button>`;
     }
 
-    // 4. Render Main Content
+    // Main content
     const root = document.getElementById('app-root');
     if(this.isAdmin() && this.currentView !== 'home') {
       root.innerHTML = views.adminLayout();
@@ -469,28 +709,18 @@ const app = {
       this.renderCarGrid();
     }
 
-    // 5. Render Mobile Bottom Nav
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   },
 
   renderAdminTab(tabId) {
-    // ป้องกันแอดมินรองเข้าถึงแท็บจัดการแอดมิน
     if (tabId === 'admins' && !this.isMaster()) return;
-
     this.currentAdminTab = tabId;
     document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
     const activeEl = document.getElementById(`menu-${tabId}`);
     if(activeEl) activeEl.classList.add('active');
-
     const content = document.getElementById('admin-content');
     if(content) content.innerHTML = views.adminTabs[tabId]();
-    
-    if(tabId === 'dashboard') {
-      ui.renderChart();
-      ui.renderTimeline();
-    }
-
-    // Update Bottom Nav active state
+    if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   }
 };
@@ -503,13 +733,21 @@ const utils = {
     return d.toLocaleDateString('th-TH', { year:'numeric', month:'short', day:'numeric' });
   },
   showToast: (msg, type = 'info') => {
-    const icons = { success: 'fa-check-circle text-success', error: 'fa-times-circle text-danger', warning: 'fa-exclamation-triangle text-warning', info: 'fa-info-circle text-info' };
+    const icons = { 
+      success: 'fa-check-circle', error: 'fa-times-circle', 
+      warning: 'fa-exclamation-triangle', info: 'fa-info-circle' 
+    };
+    const colors = { success: 'var(--success)', error: 'var(--danger)', warning: 'var(--warning)', info: 'var(--info)' };
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.innerHTML = `<i class="fa-solid ${icons[type]}"></i> <span>${msg}</span>`;
+    toast.style.borderLeftColor = colors[type];
+    toast.innerHTML = `<i class="fa-solid ${icons[type]}" style="color:${colors[type]}; font-size:1.1rem; flex-shrink:0;"></i> <span>${msg}</span>`;
     container.appendChild(toast);
-    setTimeout(() => { toast.style.animation = 'slideUp 0.3s reverse forwards'; setTimeout(() => toast.remove(), 300); }, 3000);
+    setTimeout(() => { 
+      toast.style.animation = 'slideUp 0.3s reverse forwards'; 
+      setTimeout(() => toast.remove(), 300); 
+    }, 3200);
   },
   calcDays: (d1, d2) => {
     const timeDiff = new Date(d2).getTime() - new Date(d1).getTime();
@@ -557,17 +795,14 @@ const utils = {
     if(b.status === 'Cancelled') return { text: 'ยกเลิก', class: 'danger' };
     if(b.status === 'Completed') return { text: 'คืนรถแล้ว', class: 'info' };
     if(b.status === 'Pending') return { text: 'รอตรวจสอบ', class: 'warning' };
-    
     const today = new Date(); today.setHours(0,0,0,0);
     const returnDate = new Date(b.dateTo); returnDate.setHours(0,0,0,0);
     const diffDays = Math.ceil((returnDate - today) / (1000 * 60 * 60 * 24));
-
     if(b.status === 'Active') {
       if(diffDays < 0) return { text: 'เลยกำหนด (Overdue)', class: 'danger' };
       if(diffDays === 1) return { text: 'แจ้งเตือน: พรุ่งนี้คืนรถ', class: 'purple' };
       return { text: 'กำลังใช้งาน', class: 'success' };
     }
-    
     if(b.status === 'Confirmed') {
       if(diffDays < 0) return { text: 'ลูกค้าไม่มารับรถ', class: 'danger' };
       return { text: 'อนุมัติ (รอรับรถ)', class: 'success' };
@@ -579,7 +814,6 @@ const utils = {
     const chatId = '-1005029081020';
     const pickBranchName = app.state.branches.find(b => b.id === booking.pickBranch)?.name || booking.pickBranch;
     const dropBranchName = app.state.branches.find(b => b.id === booking.dropBranch)?.name || booking.dropBranch;
-
     const message = `🔔 <b>มีรายการจองรถใหม่เข้าสู่ระบบ!</b>\n\n` +
                     `📝 <b>รหัสจอง:</b> ${booking.id}\n` +
                     `👤 <b>ลูกค้า:</b> ${user.name} (${user.phone})\n` +
@@ -589,29 +823,19 @@ const utils = {
                     `📍 <b>รับรถ:</b> ${pickBranchName}\n` +
                     `📍 <b>คืนรถ:</b> ${dropBranchName}\n\n` +
                     `<i>โปรดเข้าสู่ระบบหลังบ้านเพื่อตรวจสอบสลิปและอนุมัติ</i>`;
-
     try {
-        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        });
-    } catch (error) {
-        console.error("Telegram Error:", error);
-    }
+      await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' })
+      });
+    } catch (error) { console.error("Telegram Error:", error); }
   }
 };
 
-// --- 5. VIEWS (HTML Generators) ---
+// --- 5. VIEWS ---
 const views = {
-  // Mobile Bottom Navigation View
   bottomNav: () => {
     const isCustomerMode = app.currentView === 'home' || !app.isAdmin();
-    
     if (isCustomerMode) {
       return `
       <div class="bottom-nav">
@@ -619,14 +843,14 @@ const views = {
           <div class="bottom-nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
             <i class="fa-solid fa-home"></i>หน้าแรก
           </div>
-          <div class="bottom-nav-item" onclick="document.querySelector('.flight-search-container').scrollIntoView({behavior: 'smooth'})">
-            <i class="fa-solid fa-search"></i>ค้นหารถ
+          <div class="bottom-nav-item" onclick="document.querySelector('.flight-search-container')?.scrollIntoView({behavior:'smooth'})">
+            <i class="fa-solid fa-search"></i>ค้นหา
           </div>
           <div class="bottom-nav-item" onclick="${app.currentUser ? 'ui.showMyBookings()' : 'ui.showLoginModal()'}">
             <i class="fa-solid fa-history"></i>ประวัติ
           </div>
           ${app.isAdmin() 
-            ? `<div class="bottom-nav-item" style="color:var(--primary)" onclick="app.navigate('admin_dashboard')"><i class="fa-solid fa-repeat"></i>หลังบ้าน</div>`
+            ? `<div class="bottom-nav-item" style="color:var(--primary);" onclick="app.navigate('admin_dashboard')"><i class="fa-solid fa-repeat"></i>แอดมิน</div>`
             : `<div class="bottom-nav-item" onclick="${app.currentUser ? 'logic.logout()' : 'ui.showLoginModal()'}">
                 <i class="fa-solid ${app.currentUser ? 'fa-sign-out-alt' : 'fa-user'}"></i>${app.currentUser ? 'ออกระบบ' : 'เข้าระบบ'}
                </div>`
@@ -649,8 +873,8 @@ const views = {
           <div class="bottom-nav-item ${app.currentAdminTab === 'settings' ? 'active' : ''}" onclick="app.renderAdminTab('settings')">
             <i class="fa-solid fa-cog"></i>ตั้งค่า
           </div>
-          <div class="bottom-nav-item" style="color:var(--primary)" onclick="app.navigate('home')">
-            <i class="fa-solid fa-repeat"></i>หน้าร้าน
+          <div class="bottom-nav-item" style="color:var(--primary);" onclick="app.navigate('home')">
+            <i class="fa-solid fa-repeat"></i>ร้านค้า
           </div>
         </div>
       </div>`;
@@ -661,7 +885,6 @@ const views = {
     const bOpts = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.pick===b.id?'selected':''}>${b.name}</option>`).join('');
     const bOptsDrop = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.drop===b.id?'selected':''}>${b.name}</option>`).join('');
     const tOpts = app.state.carTypes.map(t => `<option value="${t}" ${app.searchParams.type===t?'selected':''}>${t}</option>`).join('');
-    
     return `
       <div class="flight-search-box">
         <div class="input-group mb-0">
@@ -681,31 +904,57 @@ const views = {
           <input type="date" id="s-dto" class="input-control" value="${app.searchParams.dateTo}" onchange="app.searchParams.dateTo=this.value">
         </div>
         <div class="input-group mb-0">
-          <label><i class="fa-solid fa-car text-primary"></i> ประเภท</label>
+          <label><i class="fa-solid fa-car text-primary"></i> ประเภทรถ</label>
           <select id="s-type" class="input-control" onchange="app.searchParams.type=this.value">${tOpts}</select>
         </div>
-        <button class="btn btn-primary w-full" style="height: 48px;" onclick="app.renderCarGrid()">
-          <i class="fa-solid fa-search"></i> ค้นหารถ
-        </button>
-      </div>
-    `;
+        <div class="input-group mb-0 search-btn-col">
+          <label style="opacity:0; pointer-events:none;">ค้นหา</label>
+          <button class="btn btn-primary w-full" style="height:48px;" onclick="app.renderCarGrid()">
+            <i class="fa-solid fa-search"></i> ค้นหารถ
+          </button>
+        </div>
+      </div>`;
   },
 
   customerHome: () => `
     <div class="hero-section">
-      <h1>${app.state.settings.heroTitle}</h1>
-      <p>${app.state.settings.heroSub}</p>
+      <h1 class="animate-fade">${app.state.settings.heroTitle}</h1>
+      <p class="animate-fade" style="animation-delay:0.1s;">${app.state.settings.heroSub}</p>
+      <div class="hero-stats animate-fade" style="animation-delay:0.2s;">
+        <div class="hero-stat">
+          <span class="hero-stat-num">${app.state.cars.length}</span>
+          <span class="hero-stat-lbl">รถในระบบ</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">${app.state.branches.length}</span>
+          <span class="hero-stat-lbl">สาขา</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">${app.state.bookings.filter(b=>b.status!=='Cancelled').length}+</span>
+          <span class="hero-stat-lbl">การเช่าแล้ว</span>
+        </div>
+        <div class="hero-stat">
+          <span class="hero-stat-num">24/7</span>
+          <span class="hero-stat-lbl">บริการตลอดเวลา</span>
+        </div>
+      </div>
     </div>
     
     <div class="flight-search-container">
       ${views.flightSearchPanel()}
     </div>
 
-    <div class="container pb-4">
+    <div class="container" style="padding-bottom: 40px;">
       <div class="flex justify-between items-center mb-4">
-        <h2>รถยนต์ที่พร้อมให้บริการ</h2>
-        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm desktop-only" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง & บิล</button>` : ''}
+        <h2 class="section-title">รถพร้อมให้บริการ</h2>
+        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm desktop-only" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง</button>` : ''}
       </div>
+      
+      <!-- Type filter chips -->
+      <div class="chip-group mb-4">
+        ${app.state.carTypes.map(t => `<div class="chip ${app.searchParams.type===t?'active':''}" onclick="app.searchParams.type='${t}'; app.renderCarGrid(); document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); this.classList.add('active')">${t}</div>`).join('')}
+      </div>
+      
       <div id="car-grid-container" class="car-grid"></div>
     </div>
   `,
@@ -713,20 +962,30 @@ const views = {
   adminLayout: () => `
     <div class="admin-layout">
       <div class="sidebar">
-        <h3 class="mb-4 px-3 text-primary">Admin Panel</h3>
-        <div id="menu-dashboard" class="menu-item active" onclick="app.renderAdminTab('dashboard')"><i class="fa-solid fa-chart-pie w-6"></i> ภาพรวม (Dashboard)</div>
-        <div id="menu-bookings" class="menu-item" onclick="app.renderAdminTab('bookings')"><i class="fa-solid fa-list-check w-6"></i> จัดการการจอง</div>
-        <div id="menu-cars" class="menu-item" onclick="app.renderAdminTab('cars')"><i class="fa-solid fa-car w-6"></i> จัดการรถ (Fleet)</div>
-        <div id="menu-crm" class="menu-item" onclick="app.renderAdminTab('crm')"><i class="fa-solid fa-users w-6"></i> จัดการลูกค้า (CRM)</div>
-        
-        <hr class="my-2" style="border-color:var(--border);">
-        <div id="menu-settings" class="menu-item" onclick="app.renderAdminTab('settings')"><i class="fa-solid fa-cog w-6"></i> ตั้งค่าร้านค้า</div>
-        
+        <div class="sidebar-section-label">เมนูหลัก</div>
+        <div id="menu-dashboard" class="menu-item" onclick="app.renderAdminTab('dashboard')">
+          <span class="menu-icon"><i class="fa-solid fa-chart-pie"></i></span> ภาพรวม (Dashboard)
+        </div>
+        <div id="menu-bookings" class="menu-item" onclick="app.renderAdminTab('bookings')">
+          <span class="menu-icon"><i class="fa-solid fa-list-check"></i></span> จัดการการจอง
+        </div>
+        <div id="menu-cars" class="menu-item" onclick="app.renderAdminTab('cars')">
+          <span class="menu-icon"><i class="fa-solid fa-car"></i></span> จัดการรถ (Fleet)
+        </div>
+        <div id="menu-crm" class="menu-item" onclick="app.renderAdminTab('crm')">
+          <span class="menu-icon"><i class="fa-solid fa-users"></i></span> จัดการลูกค้า (CRM)
+        </div>
+        <hr style="border:none; border-top:1px solid var(--border); margin: 8px 0;">
+        <div class="sidebar-section-label">การตั้งค่า</div>
+        <div id="menu-settings" class="menu-item" onclick="app.renderAdminTab('settings')">
+          <span class="menu-icon"><i class="fa-solid fa-cog"></i></span> ตั้งค่าร้านค้า
+        </div>
         ${app.isMaster() ? `
-          <div id="menu-admins" class="menu-item text-warning" onclick="app.renderAdminTab('admins')"><i class="fa-solid fa-user-shield w-6"></i> จัดการแอดมิน</div>
-        ` : ''}
+          <div id="menu-admins" class="menu-item" style="color:var(--warning);" onclick="app.renderAdminTab('admins')">
+            <span class="menu-icon"><i class="fa-solid fa-user-shield"></i></span> จัดการแอดมิน
+          </div>` : ''}
       </div>
-      <div class="admin-main" id="admin-content"></div>
+      <div class="admin-main animate-fade" id="admin-content"></div>
     </div>
   `,
 
@@ -735,238 +994,304 @@ const views = {
       const activeBks = app.state.bookings.filter(b => b.status === 'Confirmed' || b.status === 'Active').length;
       const pendBks = app.state.bookings.filter(b => b.status === 'Pending').length;
       const income = app.state.bookings.filter(b => b.status !== 'Cancelled').reduce((sum, b) => sum + b.total, 0);
-
+      const completedBks = app.state.bookings.filter(b => b.status === 'Completed').length;
       return `
         <h2 class="mb-4">สรุปภาพรวมระบบ</h2>
-        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; mb-6">
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px;">
           <div class="card flex items-center gap-4">
-            <div style="width:60px; height:60px; border-radius:16px; background:rgba(16,185,129,0.1); color:var(--success); display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="fa-solid fa-wallet"></i></div>
-            <div><div class="text-muted font-bold text-sm">รายได้สะสม</div><div class="font-bold text-success" style="font-size:1.8rem">฿${utils.formatMoney(income)}</div></div>
+            <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);">
+              <i class="fa-solid fa-wallet"></i>
+            </div>
+            <div>
+              <div class="stat-label">รายได้สะสม</div>
+              <div class="stat-value text-success">฿${utils.formatMoney(income)}</div>
+            </div>
           </div>
           <div class="card flex items-center gap-4">
-            <div style="width:60px; height:60px; border-radius:16px; background:rgba(59,130,246,0.1); color:var(--info); display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="fa-solid fa-car-side"></i></div>
-            <div><div class="text-muted font-bold text-sm">การจองที่ยืนยันแล้ว</div><div class="font-bold text-info" style="font-size:1.8rem">${activeBks} รายการ</div></div>
+            <div class="stat-icon" style="background:rgba(59,130,246,0.1); color:var(--info);">
+              <i class="fa-solid fa-car-side"></i>
+            </div>
+            <div>
+              <div class="stat-label">การจองที่ยืนยันแล้ว</div>
+              <div class="stat-value text-info">${activeBks} <span style="font-size:1rem;">รายการ</span></div>
+            </div>
           </div>
           <div class="card flex items-center gap-4">
-            <div style="width:60px; height:60px; border-radius:16px; background:rgba(245,158,11,0.1); color:var(--warning); display:flex; align-items:center; justify-content:center; font-size:24px;"><i class="fa-solid fa-clock"></i></div>
-            <div><div class="text-muted font-bold text-sm">รอตรวจสอบสลิป</div><div class="font-bold text-warning" style="font-size:1.8rem">${pendBks} รายการ</div></div>
+            <div class="stat-icon" style="background:rgba(245,158,11,0.1); color:var(--warning);">
+              <i class="fa-solid fa-clock"></i>
+            </div>
+            <div>
+              <div class="stat-label">รอตรวจสอบสลิป</div>
+              <div class="stat-value text-warning">${pendBks} <span style="font-size:1rem;">รายการ</span></div>
+            </div>
+          </div>
+          <div class="card flex items-center gap-4">
+            <div class="stat-icon" style="background:rgba(139,92,246,0.1); color:var(--purple);">
+              <i class="fa-solid fa-check-double"></i>
+            </div>
+            <div>
+              <div class="stat-label">คืนรถแล้วทั้งหมด</div>
+              <div class="stat-value" style="color:var(--purple);">${completedBks} <span style="font-size:1rem;">ครั้ง</span></div>
+            </div>
           </div>
         </div>
         
-        <div class="card mt-6">
-          <h3 class="mb-4"><i class="fa-solid fa-calendar-alt"></i> ตารางคิวการจอง (14 วันข้างหน้า)</h3>
-          <div id="timeline-container" class="table-responsive p-0"></div>
+        <div class="card mt-4">
+          <h3 class="mb-4"><i class="fa-solid fa-calendar-alt text-primary"></i> ตารางคิวการจอง (14 วันข้างหน้า)</h3>
+          <div id="timeline-container" class="table-responsive p-0" style="border:none; background:transparent;"></div>
         </div>
 
-        <div class="card mt-6">
-          <h3 class="mb-4">กราฟรายได้ 7 วันล่าสุด (Mockup)</h3>
-          <canvas id="incomeChart" height="80"></canvas>
+        <div class="card mt-4">
+          <h3 class="mb-4"><i class="fa-solid fa-chart-bar text-primary"></i> กราฟรายได้ 7 วันล่าสุด (Mockup)</h3>
+          <canvas id="incomeChart" height="75"></canvas>
         </div>
       `;
     },
-    bookings: () => `
-      <div class="flex justify-between items-center mb-4">
-        <h2>จัดการการจอง & ตรวจสอบสลิป</h2>
-        ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('bookings')"><i class="fa-solid fa-file-excel"></i> Export Bookings</button>` : ''}
-      </div>
-      <div class="table-responsive">
-        <table>
-          <thead><tr><th>รหัสจอง</th><th>ลูกค้า</th><th>รถยนต์</th><th>วันที่เช่า</th><th>ยอดชำระ</th><th>สถานะ/แจ้งเตือน</th><th>จัดการ</th></tr></thead>
-          <tbody>
-            ${app.state.bookings.map(b => {
+
+    bookings: () => {
+      const sorted = [...app.state.bookings].sort((a,b) => new Date(b.dateFrom)-new Date(a.dateFrom));
+      return `
+        <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
+          <h2>จัดการการจอง & ตรวจสอบสลิป</h2>
+          ${app.isMaster() ? `<button class="btn btn-outline btn-sm" style="color:var(--success); border-color:var(--success);" onclick="logic.exportExcel('bookings')"><i class="fa-solid fa-file-excel"></i> Export Excel</button>` : ''}
+        </div>
+        
+        <!-- Mobile card view -->
+        <div class="mobile-card-list" id="booking-mobile-list">
+          ${sorted.length === 0 ? `<div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>ยังไม่มีข้อมูลการจอง</p></div>` :
+            sorted.map(b => {
               const u = app.state.users.find(x => x.id === b.userId);
               const c = app.state.cars.find(x => x.id === b.carId);
               const st = utils.getBookingStatusDisplay(b);
-              
               return `
-              <tr>
-                <td class="font-bold">${b.id}</td>
-                <td>${u ? u.name : 'Unknown'}<br><span class="text-muted">${u?u.phone:''}</span></td>
-                <td class="text-primary font-bold">${c ? c.name : 'Car'}</td>
-                <td style="font-size:0.9rem">${utils.formatDate(b.dateFrom)} - ${utils.formatDate(b.dateTo)}<br><span class="text-muted">${b.days} วัน</span></td>
-                <td class="font-bold">฿${utils.formatMoney(b.total + (b.fine || 0))} ${b.fine ? `<br><span class="text-danger text-sm">+ ปรับ ฿${utils.formatMoney(b.fine)}</span>`:''}</td>
-                <td><span class="badge badge-${st.class}">${st.text}</span></td>
-                <td>
-                  <button class="btn btn-outline btn-sm mb-1 w-full" onclick="ui.showAdminBookingModal('${b.id}')"><i class="fa-solid fa-pen-to-square"></i> ตรวจสอบ/แก้ไข</button>
-                  <button class="btn btn-info btn-sm w-full text-white" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-print"></i> เปิดบิล</button>
-                </td>
-              </tr>
-              `;
-            }).sort((a,b)=>new Date(b.dateFrom)-new Date(a.dateFrom)).join('') || '<tr><td colspan="7" class="text-center py-4">ไม่มีข้อมูลการจอง</td></tr>'}
-          </tbody>
-        </table>
-      </div>
-    `,
+              <div class="card mb-3 p-4">
+                <div class="flex justify-between items-center mb-3">
+                  <div>
+                    <span class="font-bold text-primary">${b.id}</span>
+                    ${b.status === 'Pending' ? `<span class="badge badge-warning ml-2" style="margin-left:6px;"><i class="fa-solid fa-circle-dot"></i> รอตรวจสอบ</span>` : ''}
+                  </div>
+                  <span class="badge badge-${st.class}">${st.text}</span>
+                </div>
+                <div class="grid" style="grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px; font-size:0.88rem;">
+                  <div>
+                    <div class="text-muted" style="font-size:0.75rem;">ลูกค้า</div>
+                    <div class="font-bold">${u ? u.name : 'Unknown'}</div>
+                    <div class="text-muted">${u ? u.phone : ''}</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.75rem;">รถยนต์</div>
+                    <div class="font-bold text-primary">${c ? c.name : 'Car'}</div>
+                    <div class="text-muted">${b.days} วัน</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.75rem;">วันเช่า</div>
+                    <div>${utils.formatDate(b.dateFrom)}</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.75rem;">ยอดชำระ</div>
+                    <div class="font-bold">฿${utils.formatMoney(b.total + (b.fine || 0))}</div>
+                    ${b.fine ? `<div class="text-danger" style="font-size:0.75rem;">+ ค่าปรับ ฿${utils.formatMoney(b.fine)}</div>` : ''}
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  <button class="btn btn-outline btn-sm flex-1" onclick="ui.showAdminBookingModal('${b.id}')"><i class="fa-solid fa-pen-to-square"></i> ตรวจสอบ</button>
+                  <button class="btn btn-info btn-sm flex-1" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-print"></i> บิล</button>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+      `;
+    },
+
     cars: () => `
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
         <h2>จัดการรถยนต์ (Fleet)</h2>
         <div class="flex gap-2">
-          ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('cars')"><i class="fa-solid fa-file-excel"></i> Export Cars</button>` : ''}
+          ${app.isMaster() ? `<button class="btn btn-outline btn-sm" style="color:var(--success); border-color:var(--success);" onclick="logic.exportExcel('cars')"><i class="fa-solid fa-file-excel"></i> Export</button>` : ''}
           <button class="btn btn-primary btn-sm" onclick="ui.showCarFormModal()"><i class="fa-solid fa-plus"></i> เพิ่มรถใหม่</button>
         </div>
       </div>
       <div class="grid" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
-        ${app.state.cars.map(c => `
-          <div class="card p-0 overflow-hidden">
-            <div style="height:150px; background:url('${c.images[0]}') center/cover;"></div>
-            <div class="p-4">
-              <div class="flex justify-between items-start mb-2">
-                <h3 class="font-bold" style="font-size:1.1rem">${c.name}</h3>
-                <span class="badge badge-info">${c.type}</span>
-              </div>
-              <div class="text-primary font-bold mb-4">฿${utils.formatMoney(c.price)} / วัน</div>
-              <div class="flex gap-2">
-                <button class="btn btn-outline btn-sm w-full" onclick="ui.showCarFormModal(${c.id})"><i class="fa-solid fa-edit"></i> แก้ไข</button>
-                <button class="btn btn-danger btn-sm" onclick="logic.deleteCar(${c.id})"><i class="fa-solid fa-trash"></i></button>
+        ${app.state.cars.map(c => {
+          const bkCount = app.state.bookings.filter(b => b.carId === c.id && b.status !== 'Cancelled').length;
+          return `
+          <div class="card p-0 overflow-hidden" style="border-radius:20px;">
+            <div style="height:160px; background:url('${c.images[0]}') center/cover; position:relative;">
+              <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); padding:12px 14px;">
+                <span class="badge badge-info" style="font-size:0.7rem;">${c.type}</span>
               </div>
             </div>
-          </div>
-        `).join('')}
+            <div class="p-4">
+              <div class="flex justify-between items-start mb-1">
+                <h3 style="font-size:1.05rem; font-weight:700;">${c.name}</h3>
+                <span style="font-size:0.78rem; color:var(--text-muted);">${bkCount} ครั้ง</span>
+              </div>
+              <div class="text-primary font-bold mb-1" style="font-size:1.1rem;">฿${utils.formatMoney(c.price)}<span class="text-muted" style="font-size:0.82rem; font-weight:400;"> /วัน</span></div>
+              <div class="car-rating mb-3">
+                <i class="fa-solid fa-star" style="color:var(--warning);"></i> ${c.rating} (${c.reviews} รีวิว)
+              </div>
+              <div class="flex gap-2">
+                <button class="btn btn-outline btn-sm flex-1" onclick="ui.showCarFormModal(${c.id})"><i class="fa-solid fa-edit"></i> แก้ไข</button>
+                <button class="btn btn-danger btn-sm btn-icon" onclick="logic.deleteCar(${c.id})"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
       </div>
     `,
+
     crm: () => `
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
         <h2>ระบบจัดการลูกค้า (CRM)</h2>
-        ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('users')"><i class="fa-solid fa-file-excel"></i> Export CRM</button>` : ''}
+        ${app.isMaster() ? `<button class="btn btn-outline btn-sm" style="color:var(--success); border-color:var(--success);" onclick="logic.exportExcel('users')"><i class="fa-solid fa-file-excel"></i> Export</button>` : ''}
       </div>
-      <div class="table-responsive">
-        <table>
-          <thead><tr><th>รหัสลูกค้า</th><th>ชื่อ - เบอร์โทร</th><th>ระดับ (Tier)</th><th>คะแนนสะสม</th><th>จำนวนการเช่า</th><th>จัดการ</th></tr></thead>
-          <tbody>
-            ${app.state.users.filter(u => u.role==='user').map(u => {
-              const bCount = app.state.bookings.filter(b => b.userId === u.id).length;
-              return `
-              <tr>
-                <td class="font-bold">${u.id}</td>
-                <td>${u.name}<br><span class="text-muted">${u.phone}</span></td>
-                <td><span class="badge badge-warning">${u.tier}</span></td>
-                <td class="font-bold text-success">${utils.formatMoney(u.points)} Pts</td>
-                <td>${bCount} ครั้ง</td>
-                <td><button class="btn btn-outline btn-sm" onclick="ui.showCRMEditModal('${u.id}')"><i class="fa-solid fa-gear"></i> จัดการ</button></td>
-              </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
+      
+      <!-- Summary row -->
+      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px;">
+        <div class="card-flat text-center p-3">
+          <div style="font-size:1.6rem; font-weight:700; color:var(--primary);">${app.state.users.filter(u=>u.role==='user').length}</div>
+          <div class="text-muted text-sm">ลูกค้าทั้งหมด</div>
+        </div>
+        <div class="card-flat text-center p-3">
+          <div style="font-size:1.6rem; font-weight:700; color:var(--warning);">${app.state.users.filter(u=>u.tier==='Gold').length}</div>
+          <div class="text-muted text-sm">Gold Members</div>
+        </div>
+        <div class="card-flat text-center p-3">
+          <div style="font-size:1.6rem; font-weight:700; color:var(--purple);">${app.state.users.filter(u=>u.tier==='Platinum').length}</div>
+          <div class="text-muted text-sm">Platinum Members</div>
+        </div>
       </div>
+
+      <!-- Mobile cards -->
+      ${app.state.users.filter(u => u.role==='user').length === 0 
+        ? `<div class="empty-state"><i class="fa-solid fa-users"></i><p>ยังไม่มีลูกค้าในระบบ</p></div>` 
+        : app.state.users.filter(u => u.role==='user').map(u => {
+            const bCount = app.state.bookings.filter(b => b.userId === u.id).length;
+            const tierColors = { Silver: '#94a3b8', Gold: '#f59e0b', Platinum: '#8b5cf6' };
+            const tc = tierColors[u.tier] || '#94a3b8';
+            return `
+            <div class="card mb-3 p-4 flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+              <div class="flex items-center gap-3">
+                <div style="width:44px; height:44px; border-radius:50%; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-size:1.1rem; color:var(--primary); font-weight:700; flex-shrink:0;">
+                  ${u.name.charAt(0)}
+                </div>
+                <div>
+                  <div class="font-bold">${u.name}</div>
+                  <div class="text-muted text-sm">${u.phone}</div>
+                  <div style="margin-top:3px;">
+                    <span style="font-size:0.75rem; color:${tc}; font-weight:600;">● ${u.tier}</span>
+                    <span class="text-muted text-sm"> · ${utils.formatMoney(u.points)} Pts · ${bCount} ครั้ง</span>
+                  </div>
+                </div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="ui.showCRMEditModal('${u.id}')"><i class="fa-solid fa-gear"></i> จัดการ</button>
+            </div>`;
+          }).join('')}
     `,
+
     settings: () => {
       const bList = app.state.branches.map(b => `
-        <div class="flex justify-between items-center p-2 border-b" style="border-color:var(--border)">
-          <span>${b.id} - ${b.name}</span>
-          <button class="btn btn-danger btn-sm" onclick="logic.deleteBranch('${b.id}')"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `).join('');
-
+        <div class="flex justify-between items-center p-3 mb-2" style="background:var(--bg-body); border-radius:12px; border:1px solid var(--border);">
+          <div>
+            <span class="badge badge-primary mr-2">${b.id}</span>
+            <span>${b.name}</span>
+          </div>
+          <button class="btn btn-danger btn-xs" onclick="logic.deleteBranch('${b.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>`).join('');
       return `
-      <h2 class="mb-4">ตั้งค่าร้านค้า & ดีไซน์</h2>
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;" id="setting-grid">
-        <div class="card">
-          <h4 class="mb-4 border-b pb-2"><i class="fa-solid fa-store"></i> ข้อมูลหน้าร้าน (Frontend)</h4>
-          <div class="input-group">
-            <label>ชื่อร้าน / แบรนด์ (Store Name)</label>
-            <input type="text" id="set-store-name" class="input-control" value="${app.state.settings.storeName}">
-          </div>
-          <div class="input-group">
-            <label>อัปโหลดโลโก้ร้านค้า</label>
-            <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setLogo')">
-            <img id="preview-setLogo" src="${app.state.settings.logoUrl || ''}" style="max-height: 50px; display: ${app.state.settings.logoUrl ? 'block':'none'}; margin-top: 8px;">
-          </div>
-          <div class="input-group">
-            <label>ข้อความพาดหัวหลัก (Hero Title)</label>
-            <input type="text" id="set-hero-title" class="input-control" value="${app.state.settings.heroTitle}">
-          </div>
-          <div class="input-group">
-            <label>ข้อความรอง (Hero Subtitle)</label>
-            <input type="text" id="set-hero-sub" class="input-control" value="${app.state.settings.heroSub}">
-          </div>
-          <div class="input-group">
-            <label>เบอร์โทรศัพท์ติดต่อ</label>
-            <input type="text" id="set-phone" class="input-control" value="${app.state.settings.phone}">
-          </div>
-        </div>
-
-        <div>
-          <div class="card mb-4">
-            <h4 class="mb-4 border-b pb-2"><i class="fa-solid fa-money-bill-transfer"></i> ข้อมูลบัญชีรับเงิน & QR</h4>
-            <div class="input-group">
-              <label>ธนาคาร (Bank Name)</label>
-              <input type="text" id="set-bank" class="input-control" value="${app.state.settings.bank}">
-            </div>
-            <div class="input-group">
-              <label>เลขที่บัญชี (Account Number)</label>
-              <input type="text" id="set-acc-no" class="input-control" value="${app.state.settings.accNo}">
-            </div>
-            <div class="input-group">
-              <label>ชื่อบัญชี (Account Name)</label>
-              <input type="text" id="set-acc-name" class="input-control" value="${app.state.settings.accName}">
-            </div>
-            <div class="input-group">
-              <label>อัปโหลด QR Code รับเงิน</label>
-              <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setQR')">
-              <img id="preview-setQR" src="${app.state.settings.qrUrl || ''}" style="max-height: 100px; display: ${app.state.settings.qrUrl ? 'block':'none'}; margin-top: 8px; border-radius:8px; border:1px solid var(--border);">
-            </div>
-          </div>
-
+        <h2 class="mb-4">ตั้งค่าร้านค้า & ดีไซน์</h2>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;" id="setting-grid">
           <div class="card">
-            <h4 class="mb-4 border-b pb-2"><i class="fa-solid fa-map-location-dot"></i> สาขา / สถานที่รับ-คืนรถ</h4>
-            <div style="max-height: 150px; overflow-y: auto; margin-bottom: 10px;">${bList}</div>
-            <div class="flex gap-2">
-              <input type="text" id="new-branch-id" class="input-control" placeholder="รหัสสาขา" style="width: 30%;">
-              <input type="text" id="new-branch-name" class="input-control" placeholder="ชื่อสถานที่" style="width: 70%;">
+            <h4 class="mb-4" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-solid fa-store text-primary"></i> ข้อมูลหน้าร้าน</h4>
+            <div class="input-group"><label>ชื่อร้าน / แบรนด์</label><input type="text" id="set-store-name" class="input-control" value="${app.state.settings.storeName}"></div>
+            <div class="input-group">
+              <label>อัปโหลดโลโก้ร้านค้า</label>
+              <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setLogo')">
+              <img id="preview-setLogo" src="${app.state.settings.logoUrl || ''}" style="max-height:50px; display:${app.state.settings.logoUrl?'block':'none'}; margin-top:8px; border-radius:8px;">
             </div>
-            <button class="btn btn-outline btn-sm w-full mt-2" onclick="logic.addBranch()">เพิ่มสถานที่</button>
+            <div class="input-group"><label>ข้อความพาดหัวหลัก</label><input type="text" id="set-hero-title" class="input-control" value="${app.state.settings.heroTitle}"></div>
+            <div class="input-group"><label>ข้อความรอง</label><input type="text" id="set-hero-sub" class="input-control" value="${app.state.settings.heroSub}"></div>
+            <div class="input-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="text" id="set-phone" class="input-control" value="${app.state.settings.phone}"></div>
+          </div>
+
+          <div>
+            <div class="card mb-4">
+              <h4 class="mb-4" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-solid fa-money-bill-transfer text-primary"></i> บัญชีรับเงิน & QR</h4>
+              <div class="input-group"><label>ธนาคาร</label><input type="text" id="set-bank" class="input-control" value="${app.state.settings.bank}"></div>
+              <div class="input-group"><label>เลขที่บัญชี</label><input type="text" id="set-acc-no" class="input-control" value="${app.state.settings.accNo}"></div>
+              <div class="input-group"><label>ชื่อบัญชี</label><input type="text" id="set-acc-name" class="input-control" value="${app.state.settings.accName}"></div>
+              <div class="input-group">
+                <label>อัปโหลด QR Code รับเงิน</label>
+                <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setQR')">
+                <img id="preview-setQR" src="${app.state.settings.qrUrl || ''}" style="max-height:100px; display:${app.state.settings.qrUrl?'block':'none'}; margin-top:8px; border-radius:8px; border:1px solid var(--border);">
+              </div>
+            </div>
+
+            <div class="card">
+              <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-solid fa-map-location-dot text-primary"></i> สาขา / สถานที่รับ-คืนรถ</h4>
+              <div style="max-height:200px; overflow-y:auto; margin-bottom:12px;">${bList}</div>
+              <div class="flex gap-2">
+                <input type="text" id="new-branch-id" class="input-control" placeholder="รหัส (เช่น BKK)" style="width:35%;">
+                <input type="text" id="new-branch-name" class="input-control" placeholder="ชื่อสาขา">
+              </div>
+              <button class="btn btn-outline btn-sm w-full mt-2" onclick="logic.addBranch()"><i class="fa-solid fa-plus"></i> เพิ่มสาขา</button>
+            </div>
           </div>
         </div>
-      </div>
-      <button class="btn btn-primary w-full mt-4" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
-      <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr; } }</style>
-    `},
+        <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
+        <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>
+      `;
+    },
+
     admins: () => `
-      <h2 class="mb-4 text-warning"><i class="fa-solid fa-user-shield"></i> จัดการสิทธิ์แอดมิน (Master Only)</h2>
-      <div class="table-responsive">
-        <table>
-          <thead><tr><th>รหัสผู้ใช้</th><th>ชื่อ - เบอร์โทร</th><th>สิทธิ์ปัจจุบัน</th><th>เปลี่ยนสิทธิ์</th></tr></thead>
-          <tbody>
-            ${app.state.users.map(u => {
-              const isMe = u.id === app.currentUser.id;
-              return `
-              <tr>
-                <td class="font-bold">${u.id}</td>
-                <td>${u.name} ${isMe ? '<span class="badge badge-success">(คุณ)</span>' : ''}<br><span class="text-muted">${u.phone}</span></td>
-                <td><span class="badge badge-${u.role === 'admin_master' ? 'danger' : u.role === 'admin_sub' ? 'info' : 'warning'}">${u.role}</span></td>
-                <td>
-                  ${!isMe ? `
-                    <select class="input-control" style="width: auto; display: inline-block; padding: 4px 10px; font-size: 0.85rem;" onchange="logic.changeUserRole('${u.id}', this.value)">
-                      <option value="user" ${u.role==='user'?'selected':''}>ลูกค้าทั่วไป (User)</option>
-                      <option value="admin_sub" ${u.role==='admin_sub'?'selected':''}>แอดมินรอง (Sub Admin)</option>
-                      <option value="admin_master" ${u.role==='admin_master'?'selected':''}>แอดมินหลัก (Master)</option>
-                    </select>
-                  ` : '<span class="text-muted">ไม่สามารถเปลี่ยนสิทธิ์ตัวเองได้</span>'}
-                </td>
-              </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
+      <h2 class="mb-4" style="color:var(--warning);"><i class="fa-solid fa-user-shield"></i> จัดการสิทธิ์แอดมิน (Master Only)</h2>
+      ${app.state.users.map(u => {
+        const isMe = u.id === app.currentUser.id;
+        const roleColors = { admin_master: 'danger', admin_sub: 'info', user: 'warning' };
+        return `
+        <div class="card mb-3 p-4">
+          <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+            <div class="flex items-center gap-3">
+              <div style="width:42px; height:42px; border-radius:50%; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-weight:700; color:var(--primary); flex-shrink:0;">
+                ${u.name.charAt(0)}
+              </div>
+              <div>
+                <div class="font-bold">${u.name} ${isMe ? '<span class="badge badge-success" style="margin-left:4px;">(คุณ)</span>' : ''}</div>
+                <div class="text-muted text-sm">${u.phone}</div>
+                <span class="badge badge-${roleColors[u.role] || 'warning'}" style="margin-top:4px;">${u.role}</span>
+              </div>
+            </div>
+            <div>
+              ${!isMe ? `
+                <select class="input-control" style="width:auto; padding:8px 32px 8px 12px; font-size:0.85rem;" onchange="logic.changeUserRole('${u.id}', this.value)">
+                  <option value="user" ${u.role==='user'?'selected':''}>ลูกค้าทั่วไป</option>
+                  <option value="admin_sub" ${u.role==='admin_sub'?'selected':''}>แอดมินรอง</option>
+                  <option value="admin_master" ${u.role==='admin_master'?'selected':''}>แอดมินหลัก</option>
+                </select>
+              ` : '<span class="text-muted text-sm">ไม่สามารถเปลี่ยนสิทธิ์ตัวเองได้</span>'}
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
     `
   }
 };
 
-// --- 6. UI CONTROLLERS (Modals & Interactions) ---
+// --- 6. UI CONTROLLERS ---
 const ui = {
-  showModal(title, contentHTML, sizeClass = '') {
+  showModal(title, contentHTML, sizeClass = '', subtitle = '') {
     const root = document.getElementById('modal-root');
     root.innerHTML = `
       <div class="modal-overlay" id="main-modal">
         <div class="modal-content ${sizeClass}">
           <div class="modal-close" onclick="ui.closeModal()"><i class="fa-solid fa-times"></i></div>
-          <h2 class="mb-4 text-primary no-print">${title}</h2>
+          <div class="modal-header">
+            <div class="modal-title no-print">${title}</div>
+            ${subtitle ? `<div class="modal-subtitle">${subtitle}</div>` : ''}
+          </div>
           ${contentHTML}
         </div>
-      </div>
-    `;
+      </div>`;
     setTimeout(() => document.getElementById('main-modal').classList.add('active'), 10);
   },
   
@@ -980,27 +1305,46 @@ const ui = {
   },
 
   showLoginModal() {
-    this.showModal('เข้าสู่ระบบ / สมัครสมาชิก', `
-      <p class="text-muted mb-4">เข้าสู่ระบบด้วยเบอร์โทรศัพท์และรหัสผ่าน หรือใช้บัญชี Google <br><small class="text-info">* คนที่สมัครคนแรกสุดของระบบจะได้เป็นแอดมิน (Master Admin) อัตโนมัติ</small></p>
+    this.showModal('เข้าสู่ระบบ', `
+      <p class="text-muted mb-4" style="font-size:0.88rem; line-height:1.6;">
+        เข้าสู่ระบบด้วยเบอร์โทรศัพท์และรหัสผ่าน หรือสมัครสมาชิกใหม่<br>
+        <small class="text-info">* ผู้ลงทะเบียนคนแรกในระบบจะได้รับสิทธิ์ Master Admin โดยอัตโนมัติ</small>
+      </p>
+      
       <div class="input-group">
-        <label>ชื่อ-นามสกุล (สำหรับผู้ใช้ใหม่)</label>
-        <input type="text" id="log-name" class="input-control" placeholder="ชื่อ นามสกุล">
+        <label>ชื่อ-นามสกุล <span class="text-muted" style="font-size:0.75rem;">(เฉพาะสมัครใหม่)</span></label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-user input-icon"></i>
+          <input type="text" id="log-name" class="input-control" placeholder="ชื่อ นามสกุล">
+        </div>
       </div>
       <div class="input-group">
         <label>เบอร์โทรศัพท์ <span class="text-danger">*</span></label>
-        <input type="tel" id="log-phone" class="input-control" placeholder="08xxxxxxxx" required>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-phone input-icon"></i>
+          <input type="tel" id="log-phone" class="input-control" placeholder="08xxxxxxxx" required>
+        </div>
       </div>
       <div class="input-group mb-6">
         <label>รหัสผ่าน <span class="text-danger">*</span></label>
-        <input type="password" id="log-pass" class="input-control" placeholder="รหัสผ่าน" required>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input type="password" id="log-pass" class="input-control" placeholder="รหัสผ่าน" required 
+            onkeydown="if(event.key==='Enter') logic.login()">
+        </div>
       </div>
-      <button class="btn btn-primary w-full mb-4" onclick="logic.login()"><i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ / สมัครสมาชิกด้วยเบอร์โทร</button>
       
-      <div class="text-center text-muted mb-4" style="font-size:0.85rem">หรือเข้าสู่ระบบอย่างรวดเร็ว</div>
-      <div class="grid" style="grid-template-columns: 1fr; gap: 10px;">
-        <button class="btn btn-outline w-full" style="color: #DB4437; border-color:#DB4437;" onclick="logic.loginWithGoogle()"><i class="fa-brands fa-google"></i> เข้าสู่ระบบด้วย Google</button>
-      </div>
-    `);
+      <button class="btn btn-primary w-full btn-lg" onclick="logic.login()">
+        <i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ / สมัครสมาชิก
+      </button>
+      
+      <p class="text-center text-muted mt-4" style="font-size:0.8rem;">
+        <i class="fa-solid fa-shield-halved text-success"></i> ข้อมูลของคุณได้รับการเข้ารหัสอย่างปลอดภัย
+      </p>
+    `, '', 'กรอกข้อมูลเพื่อเข้าสู่ระบบหรือสมัครสมาชิก');
+    
+    // Focus phone field
+    setTimeout(() => document.getElementById('log-phone')?.focus(), 200);
   },
 
   showCarDetailModal(carId) {
@@ -1013,150 +1357,187 @@ const ui = {
       el.classList.add('active');
     };
 
-    let thumbs = c.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" onclick="changeMainImg('${img}', this)">`).join('');
+    const thumbs = c.images.map((img, i) => `<img src="${img}" class="${i===0?'active':''}" onclick="changeMainImg('${img}', this)">`).join('');
+    const featureTags = c.features.split(',').map(f => `<span class="car-feature-tag">${f.trim()}</span>`).join('');
 
-    this.showModal(`รายละเอียด: ${c.name}`, `
-      <div class="car-img-container" style="height: 250px; border-radius: 16px;">
-        <img id="main-detail-img" src="${c.images[0]}" alt="${c.name}">
+    this.showModal(c.name, `
+      <div class="car-img-container" style="height:240px; border-radius:16px; margin-bottom:12px;">
+        <img id="main-detail-img" src="${c.images[0]}" alt="${c.name}" style="border-radius:16px;">
       </div>
       <div class="gallery-thumbnails mb-4">${thumbs}</div>
       
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 20px;">
-        <div class="card p-3 text-center"><i class="fa-solid fa-battery-full text-success text-xl"></i><div class="font-bold mt-1">${c.range} km</div><div class="text-muted text-sm">ระยะทาง/ชาร์จ</div></div>
-        <div class="card p-3 text-center"><i class="fa-solid fa-users text-info text-xl"></i><div class="font-bold mt-1">${c.seats} ที่นั่ง</div><div class="text-muted text-sm">ความจุ</div></div>
+      <div class="features-grid">
+        <div class="feature-item">
+          <i class="fa-solid fa-battery-full text-success"></i>
+          <div class="feature-val">${c.range} km</div>
+          <div class="feature-name">ระยะต่อชาร์จ</div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-users text-info"></i>
+          <div class="feature-val">${c.seats} ที่นั่ง</div>
+          <div class="feature-name">ความจุผู้โดยสาร</div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-star text-warning"></i>
+          <div class="feature-val">${c.rating}</div>
+          <div class="feature-name">${c.reviews} รีวิว</div>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-tag text-primary"></i>
+          <div class="feature-val">${c.type}</div>
+          <div class="feature-name">ประเภทรถ</div>
+        </div>
       </div>
       
-      <p class="mb-4"><strong>ฟีเจอร์เด่น:</strong> ${c.features}</p>
+      <div class="mb-4">
+        <div class="text-muted text-sm mb-2">ฟีเจอร์เด่น</div>
+        <div class="car-features-tags">${featureTags}</div>
+      </div>
       
       <div class="flex justify-between items-center p-4" style="background:var(--primary-light); border-radius:16px;">
         <div>
-          <div class="text-muted text-sm">ราคาเช่า</div>
-          <div class="font-bold text-primary" style="font-size:1.8rem">฿${utils.formatMoney(c.price)}<span style="font-size:1rem; color:var(--text-muted)">/วัน</span></div>
+          <div class="text-muted text-sm">ราคาเช่า / วัน</div>
+          <div class="font-bold text-primary" style="font-size:2rem; line-height:1.1;">฿${utils.formatMoney(c.price)}</div>
         </div>
-        <button class="btn btn-primary" ${isAvail?'':'disabled'} onclick="ui.showBookingModal(${c.id})" style="${isAvail?'':'opacity:0.5; cursor:not-allowed;'}">
-          ${isAvail ? 'ดำเนินการจอง' : 'รถไม่ว่างในวันที่เลือก'}
+        <button class="btn btn-primary btn-lg" ${isAvail?'':'disabled'} onclick="ui.showBookingModal(${c.id})" style="${isAvail?'':'opacity:0.5; cursor:not-allowed;'}">
+          ${isAvail ? '<i class="fa-solid fa-calendar-check"></i> จองเลย' : '<i class="fa-solid fa-lock"></i> ไม่ว่าง'}
         </button>
       </div>
-    `);
+      ${!isAvail ? `<p class="text-center text-muted mt-3 text-sm"><i class="fa-solid fa-info-circle"></i> รถไม่ว่างในช่วงวันที่เลือก กรุณาเลือกวันอื่น</p>` : ''}
+    `, '', `${c.type} · ฿${utils.formatMoney(c.price)}/วัน`);
   },
 
   showBookingModal(carId) {
     if(!app.currentUser) return this.showLoginModal();
     const c = app.state.cars.find(x => x.id === carId);
-    
     const bOpts = app.state.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
 
-    this.showModal(`ยืนยันการจอง & ชำระเงิน`, `
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 30px;" id="booking-grid">
+    this.showModal(`ยืนยันการจอง`, `
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 28px;" id="booking-grid">
         <!-- Left Column -->
         <div>
-          <h4 class="mb-2"><i class="fa-solid fa-car"></i> ข้อมูลการเช่า (สามารถแก้ไขได้)</h4>
-          <div class="card p-3 mb-4" style="background: var(--bg-body)">
-            <div class="font-bold text-primary mb-2">${c.name}</div>
+          <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-car text-primary"></i> ข้อมูลการเช่า</h4>
+          <div class="card-flat p-3 mb-4" style="border-radius:14px;">
+            <div class="font-bold text-primary mb-3" style="font-size:1.05rem;">${c.name}</div>
             <div class="input-group mb-2">
               <label>สถานที่รับรถ</label>
-              <select id="bk-edit-pick" class="input-control" style="padding: 6px 12px;" onchange="app.searchParams.pick=this.value">
-                ${bOpts.replace(`value="${app.searchParams.pick}"`, `value="${app.searchParams.pick}" selected`)}
+              <select id="bk-edit-pick" class="input-control" style="padding:8px 12px;" onchange="app.searchParams.pick=this.value">
+                ${app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.pick===b.id?'selected':''}>${b.name}</option>`).join('')}
               </select>
             </div>
             <div class="input-group mb-2">
               <label>วันที่รับรถ</label>
-              <input type="date" id="bk-edit-dfrom" class="input-control" style="padding: 6px 12px;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
+              <input type="date" id="bk-edit-dfrom" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
             </div>
             <div class="input-group mb-2">
               <label>สถานที่คืนรถ</label>
-              <select id="bk-edit-drop" class="input-control" style="padding: 6px 12px;" onchange="app.searchParams.drop=this.value">
-                ${bOpts.replace(`value="${app.searchParams.drop}"`, `value="${app.searchParams.drop}" selected`)}
+              <select id="bk-edit-drop" class="input-control" style="padding:8px 12px;" onchange="app.searchParams.drop=this.value">
+                ${app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.drop===b.id?'selected':''}>${b.name}</option>`).join('')}
               </select>
             </div>
             <div class="input-group mb-0">
               <label>วันที่คืนรถ</label>
-              <input type="date" id="bk-edit-dto" class="input-control" style="padding: 6px 12px;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
+              <input type="date" id="bk-edit-dto" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
             </div>
-            <div class="text-sm mt-2 font-bold text-info border-t" style="border-top:1px solid var(--border); padding-top:8px;" id="bk-disp-days">รวมเวลาเช่า: ${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน</div>
+            <div class="mt-3 p-2 text-center" style="background:var(--primary-light); border-radius:10px; font-weight:600; color:var(--primary); font-size:0.9rem;" id="bk-disp-days">
+              <i class="fa-solid fa-calendar-days"></i> รวม ${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน
+            </div>
           </div>
 
-          <h4 class="mb-2 mt-4"><i class="fa-solid fa-id-card"></i> เอกสารผู้เช่า (แนบไฟล์ภาพ)</h4>
+          <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card text-primary"></i> เอกสารผู้เช่า</h4>
           <div class="input-group mb-2">
-            <label>อัปโหลดใบขับขี่</label>
+            <label>ใบขับขี่ <span class="text-muted">(ถ้ามี)</span></label>
             <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'license')">
-            <img id="preview-license" style="max-height: 80px; display: none; margin-top: 8px; border-radius: 8px;">
+            <img id="preview-license" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;">
           </div>
           <div class="input-group">
-            <label>อัปโหลดบัตรประชาชน</label>
+            <label>บัตรประชาชน <span class="text-muted">(ถ้ามี)</span></label>
             <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'idcard')">
-            <img id="preview-idcard" style="max-height: 80px; display: none; margin-top: 8px; border-radius: 8px;">
+            <img id="preview-idcard" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;">
           </div>
         </div>
 
         <!-- Right Column -->
         <div>
-          <h4 class="mb-2"><i class="fa-solid fa-file-invoice-dollar"></i> สรุปค่าใช้จ่าย</h4>
-          <div class="card p-4 mb-4 text-center border-primary">
-            <div class="flex justify-between mb-2"><span id="bk-disp-renttext">ค่าเช่า (${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน)</span><span id="bk-disp-rentprice">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span></div>
-            <div class="flex justify-between text-success font-bold mb-2"><span>ส่วนลด</span><span id="book-discount">฿0</span></div>
-            <hr class="my-2" style="border-color:var(--border);">
-            <div class="flex justify-between items-center">
-              <span class="font-bold text-lg">ยอดชำระสุทธิ</span>
-              <span class="font-bold text-primary" style="font-size:1.8rem" id="book-net" data-net="${c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)}">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span>
+          <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> สรุปค่าใช้จ่าย</h4>
+          <div class="card-flat p-4 mb-4" style="border-radius:14px;">
+            <div class="info-row">
+              <span class="info-row-label" id="bk-disp-renttext">ค่าเช่า (${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน)</span>
+              <span class="info-row-value" id="bk-disp-rentprice">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span>
             </div>
-            
-            <div class="flex gap-2 mt-4">
-              <input type="text" id="promo-code" class="input-control" placeholder="โค้ดส่วนลด" style="padding: 8px;">
-              <button class="btn btn-outline" onclick="logic.applyPromo(${c.price})">ใช้โค้ด</button>
+            <div class="info-row">
+              <span class="info-row-label text-success">ส่วนลด</span>
+              <span class="info-row-value text-success font-bold" id="book-discount">฿0</span>
+            </div>
+            <div class="flex justify-between items-center mt-3 pt-2" style="border-top:2px solid var(--border);">
+              <span class="font-bold">ยอดชำระสุทธิ</span>
+              <span class="font-bold text-primary" style="font-size:1.8rem; line-height:1;" id="book-net" data-net="${c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)}">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span>
+            </div>
+            <div class="flex gap-2 mt-3">
+              <div class="input-with-icon flex-1">
+                <i class="fa-solid fa-tag input-icon"></i>
+                <input type="text" id="promo-code" class="input-control" placeholder="โค้ดส่วนลด" style="padding:9px 12px 9px 36px; font-size:0.9rem;">
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="logic.applyPromo(${c.price})" style="white-space:nowrap; flex-shrink:0;">ใช้โค้ด</button>
             </div>
           </div>
 
-          <h4 class="mb-2 mt-4"><i class="fa-solid fa-qrcode"></i> โอนชำระเงิน</h4>
-          <div class="card p-3 mb-4 text-center" style="background: var(--bg-body)">
-            ${app.state.settings.qrUrl ? `<img src="${app.state.settings.qrUrl}" style="max-height:150px; margin:0 auto 10px; border-radius:8px;">` : `<i class="fa-solid fa-qrcode" style="font-size:60px; color:var(--primary); margin-bottom:10px;"></i>`}
-            <div class="font-bold">${app.state.settings.bank}</div>
-            <div class="text-primary font-bold text-lg">${app.state.settings.accNo}</div>
-            <div class="text-sm text-muted">${app.state.settings.accName}</div>
+          <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-qrcode text-primary"></i> ชำระเงิน</h4>
+          <div class="card-flat p-3 mb-4 text-center" style="border-radius:14px;">
+            ${app.state.settings.qrUrl ? `<img src="${app.state.settings.qrUrl}" style="max-height:140px; margin:0 auto 10px; border-radius:12px; display:block;">` : `<i class="fa-solid fa-qrcode" style="font-size:56px; color:var(--primary); display:block; margin-bottom:10px;"></i>`}
+            <div class="font-bold text-muted text-sm">${app.state.settings.bank}</div>
+            <div class="font-bold text-primary" style="font-size:1.1rem; letter-spacing:1px;">${app.state.settings.accNo}</div>
+            <div class="text-muted text-sm">${app.state.settings.accName}</div>
           </div>
           
           <div class="input-group">
-            <label>แนบไฟล์รูปสลิปโอนเงิน <span class="text-danger">*</span></label>
+            <label>แนบสลิปโอนเงิน <span class="text-danger">*</span></label>
             <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'slip')">
-            <img id="preview-slip" style="max-height: 100px; display: none; margin-top: 8px; border-radius: 8px; border: 1px solid var(--border);">
+            <img id="preview-slip" style="max-height:100px; display:none; margin-top:8px; border-radius:8px; border:1px solid var(--border); object-fit:cover;">
           </div>
 
-          <button class="btn btn-primary w-full mt-2" onclick="logic.confirmBooking(${c.id}, ${c.price})"><i class="fa-solid fa-check-circle"></i> ยืนยันการจอง</button>
+          <button class="btn btn-primary w-full btn-lg mt-2" onclick="logic.confirmBooking(${c.id}, ${c.price})">
+            <i class="fa-solid fa-check-circle"></i> ยืนยันการจอง
+          </button>
+          <p class="text-center text-muted mt-2" style="font-size:0.78rem;"><i class="fa-solid fa-shield-halved text-success"></i> การจองจะมีผลหลังแอดมินตรวจสอบสลิป</p>
         </div>
       </div>
-      <style>@media(max-width:768px){ #booking-grid { grid-template-columns: 1fr; } }</style>
-    `, 'modal-lg');
+      <style>@media(max-width:768px){ #booking-grid { grid-template-columns: 1fr !important; } }</style>
+    `, 'modal-lg', `${c.name} · ฿${utils.formatMoney(c.price)}/วัน`);
   },
 
   showMyBookings() {
     const myBks = app.state.bookings.filter(b => b.userId === app.currentUser.id).sort((a,b) => new Date(b.dateFrom)-new Date(a.dateFrom));
     let html = '';
     if(myBks.length === 0) {
-      html = '<div class="text-center py-6 text-muted">ยังไม่มีประวัติการจอง</div>';
+      html = `<div class="empty-state"><i class="fa-solid fa-calendar-xmark"></i><p>ยังไม่มีประวัติการจอง</p><button class="btn btn-primary btn-sm mt-4" onclick="ui.closeModal()">เลือกดูรถ</button></div>`;
     } else {
       html = myBks.map(b => {
         const c = app.state.cars.find(x => x.id === b.carId);
         const st = utils.getBookingStatusDisplay(b);
         return `
-        <div class="card mb-4">
-          <div class="flex justify-between items-center mb-2 border-b" style="border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <div class="card mb-3 p-4">
+          <div class="flex justify-between items-center mb-3">
             <div class="font-bold text-primary"><i class="fa-solid fa-ticket"></i> ${b.id}</div>
             <span class="badge badge-${st.class}">${st.text}</span>
           </div>
-          <h4 class="mb-2">${c ? c.name : 'Unknown Car'}</h4>
-          <div class="text-sm text-muted mb-2">
-            <div><i class="fa-regular fa-calendar"></i> ${utils.formatDate(b.dateFrom)} - ${utils.formatDate(b.dateTo)}</div>
+          <div class="flex gap-3 mb-3">
+            ${c && c.images[0] ? `<img src="${c.images[0]}" style="width:64px; height:48px; border-radius:10px; object-fit:cover; flex-shrink:0;">` : ''}
+            <div>
+              <h4 style="font-size:1rem; margin-bottom:2px;">${c ? c.name : 'Unknown Car'}</h4>
+              <div class="text-muted text-sm"><i class="fa-regular fa-calendar"></i> ${utils.formatDate(b.dateFrom)} – ${utils.formatDate(b.dateTo)}</div>
+              <div class="font-bold" style="color:var(--primary); margin-top:2px;">฿${utils.formatMoney(b.total + (b.fine || 0))} ${b.fine ? `<span class="text-danger text-sm">(รวมค่าปรับ)</span>`:''}</div>
+            </div>
           </div>
-          <div class="font-bold mb-4">ยอดชำระ: ฿${utils.formatMoney(b.total + (b.fine || 0))} ${b.fine ? `<span class="text-danger text-sm">(รวมค่าปรับ)</span>`:''}</div>
           <div class="flex gap-2 flex-wrap">
-            <button class="btn btn-outline btn-sm" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-file-invoice"></i> เปิดบิล/ใบจอง</button>
-            ${b.status === 'Completed' && !b.isReviewed ? `<button class="btn btn-warning btn-sm" style="color:white;" onclick="ui.showReviewModal('${b.id}')">⭐ รีวิวรับ 50 แต้ม</button>` : ''}
+            <button class="btn btn-outline btn-sm" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-file-invoice"></i> ดูบิล</button>
+            ${b.status === 'Completed' && !b.isReviewed ? `<button class="btn btn-warning btn-sm" onclick="ui.showReviewModal('${b.id}')"><i class="fa-solid fa-star"></i> รีวิวรับ 50 แต้ม</button>` : ''}
             ${b.isReviewed ? `<span class="badge badge-success"><i class="fa-solid fa-check"></i> รีวิวแล้ว</span>` : ''}
           </div>
         </div>`;
       }).join('');
     }
-    this.showModal('ประวัติการจองของฉัน & บิลการจอง', html);
+    this.showModal('ประวัติการจองของฉัน', html, '', `${app.currentUser.name} · ${app.currentUser.points} คะแนนสะสม`);
   },
 
   showReceiptModal(bId) {
@@ -1167,80 +1548,67 @@ const ui = {
     const bPick = app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch;
     const bDrop = app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch;
     const st = utils.getBookingStatusDisplay(b);
-    
-    // Create Shareable link
     const shareLink = window.location.origin + window.location.pathname + `?receipt=${b.id}`;
 
-    this.showModal(`บิลการจอง / ใบยืนยัน (Receipt)`, `
+    this.showModal(`ใบยืนยันการจอง`, `
       <div id="print-area">
         <div class="text-center mb-4">
-          ${app.state.settings.logoUrl ? `<img src="${app.state.settings.logoUrl}" style="max-height:50px; margin:0 auto 10px;">` : `<h2 class="text-primary"><i class="fa-solid fa-bolt"></i> ${app.state.settings.storeName}</h2>`}
-          <p class="text-muted">ใบยืนยันการจองรถยนต์ไฟฟ้า (Booking Confirmation)</p>
+          ${app.state.settings.logoUrl ? `<img src="${app.state.settings.logoUrl}" style="max-height:48px; margin:0 auto 10px; display:block;">` : `<h2 class="text-primary"><i class="fa-solid fa-bolt"></i> ${app.state.settings.storeName}</h2>`}
+          <p class="text-muted text-sm">ใบยืนยันการจองรถยนต์ไฟฟ้า (Booking Confirmation)</p>
           <p class="text-muted text-sm">โทร: ${app.state.settings.phone}</p>
         </div>
         
         <div class="receipt-box">
-          <div class="flex justify-between mb-2">
-            <strong>รหัสการจอง:</strong> <span class="text-primary font-bold">${b.id}</span>
-          </div>
-          <div class="flex justify-between mb-2">
-            <strong>วันที่ทำรายการ:</strong> <span>${new Date().toLocaleDateString('th-TH')}</span>
-          </div>
-          <div class="flex justify-between mb-2">
-            <strong>สถานะปัจจุบัน:</strong> <span class="badge badge-${st.class}">${st.text}</span>
-          </div>
+          <div class="info-row"><span class="info-row-label">รหัสการจอง</span><span class="info-row-value font-bold text-primary">${b.id}</span></div>
+          <div class="info-row"><span class="info-row-label">วันที่ทำรายการ</span><span class="info-row-value">${new Date().toLocaleDateString('th-TH')}</span></div>
+          <div class="info-row" style="border:none;"><span class="info-row-label">สถานะ</span><span class="info-row-value"><span class="badge badge-${st.class}">${st.text}</span></span></div>
         </div>
 
         <div class="receipt-box">
-          <h4 class="mb-2 border-b pb-2">ข้อมูลผู้เช่าและรถยนต์</h4>
-          <p><strong>ชื่อผู้เช่า:</strong> ${u.name} (${u.phone})</p>
-          <p><strong>รุ่นรถยนต์:</strong> ${c.name} (${c.type})</p>
+          <h4 class="mb-3" style="font-size:0.95rem; border-bottom:1px solid var(--border); padding-bottom:10px;">ข้อมูลผู้เช่าและรถยนต์</h4>
+          <div class="info-row"><span class="info-row-label">ชื่อผู้เช่า</span><span class="info-row-value">${u.name} (${u.phone})</span></div>
+          <div class="info-row" style="border:none;"><span class="info-row-label">รุ่นรถยนต์</span><span class="info-row-value">${c.name} (${c.type})</span></div>
         </div>
 
         <div class="receipt-box">
-          <h4 class="mb-2 border-b pb-2">รายละเอียดการเดินทาง</h4>
-          <p><i class="fa-solid fa-location-dot text-primary"></i> <strong>รับรถ:</strong> ${bPick}</p>
-          <p class="text-muted text-sm ml-4 mb-2">วันที่ ${utils.formatDate(b.dateFrom)}</p>
-          
-          <p><i class="fa-solid fa-map-pin text-warning"></i> <strong>คืนรถ:</strong> ${bDrop}</p>
-          <p class="text-muted text-sm ml-4">วันที่ ${utils.formatDate(b.dateTo)}</p>
-          <p class="mt-2 font-bold text-info">ระยะเวลาเช่า: ${b.days} วัน</p>
+          <h4 class="mb-3" style="font-size:0.95rem; border-bottom:1px solid var(--border); padding-bottom:10px;">รายละเอียดการเช่า</h4>
+          <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถที่</span><span class="info-row-value">${bPick}<br><span class="text-muted text-sm">${utils.formatDate(b.dateFrom)}</span></span></div>
+          <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถที่</span><span class="info-row-value">${bDrop}<br><span class="text-muted text-sm">${utils.formatDate(b.dateTo)}</span></span></div>
+          <div class="info-row" style="border:none;"><span class="info-row-label">ระยะเวลา</span><span class="info-row-value font-bold text-info">${b.days} วัน</span></div>
         </div>
 
-        <div class="receipt-box text-right" style="background: var(--primary-light);">
-          <div class="text-muted">ยอดชำระสุทธิ (Net Total)</div>
-          <div class="font-bold text-primary" style="font-size: 2rem;">฿${utils.formatMoney(b.total)}</div>
-          ${b.fine ? `<div class="text-danger mt-1">ยอดค่าปรับ (Fine): + ฿${utils.formatMoney(b.fine)}</div>` : ''}
-          ${b.fine ? `<div class="font-bold text-danger mt-2" style="font-size: 1.5rem;">รวมทั้งสิ้น: ฿${utils.formatMoney(b.total + b.fine)}</div>` : ''}
+        <div class="receipt-box text-right" style="background:var(--primary-light);">
+          <div class="text-muted text-sm">ยอดชำระสุทธิ</div>
+          <div class="font-bold text-primary" style="font-size:2.2rem; line-height:1.1;">฿${utils.formatMoney(b.total)}</div>
+          ${b.fine ? `<div class="text-danger mt-2">ยอดค่าปรับ: + ฿${utils.formatMoney(b.fine)}</div><div class="font-bold text-danger" style="font-size:1.5rem;">รวม: ฿${utils.formatMoney(b.total + b.fine)}</div>` : ''}
         </div>
       </div>
       
-      <div class="flex gap-2 no-print mt-4 flex-wrap">
-        <button class="btn btn-outline" style="flex:1;" onclick="utils.copyToClipboard('${shareLink}')"><i class="fa-solid fa-link"></i> คัดลอกลิงก์ส่งให้ลูกค้า</button>
-        <button class="btn btn-outline" style="flex:1;" onclick="window.print()"><i class="fa-solid fa-print"></i> พิมพ์ / Save PDF</button>
-        <button class="btn btn-primary" style="flex:1;" onclick="ui.closeModal()"><i class="fa-solid fa-check"></i> ปิด</button>
+      <div class="flex gap-2 no-print mt-4" style="flex-wrap:wrap;">
+        <button class="btn btn-outline btn-sm flex-1" onclick="utils.copyToClipboard('${shareLink}')"><i class="fa-solid fa-link"></i> คัดลอกลิงก์</button>
+        <button class="btn btn-outline btn-sm flex-1" onclick="window.print()"><i class="fa-solid fa-print"></i> พิมพ์/PDF</button>
+        <button class="btn btn-primary btn-sm flex-1" onclick="ui.closeModal()"><i class="fa-solid fa-check"></i> ปิด</button>
       </div>
     `);
   },
 
   showReviewModal(bId) {
-    this.showModal('ให้คะแนนรีวิวการเช่ารถ', `
+    this.showModal('รีวิวการเช่ารถ', `
       <div class="text-center mb-4">
-        <h3 class="mb-2">ความพึงพอใจของคุณ</h3>
-        <div style="font-size: 2rem; color: var(--warning); cursor: pointer;" id="star-rating">
-          <i class="fa-solid fa-star" onclick="logic.setStar(1)"></i>
-          <i class="fa-solid fa-star" onclick="logic.setStar(2)"></i>
-          <i class="fa-solid fa-star" onclick="logic.setStar(3)"></i>
-          <i class="fa-solid fa-star" onclick="logic.setStar(4)"></i>
-          <i class="fa-solid fa-star" onclick="logic.setStar(5)"></i>
+        <p class="text-muted mb-3" style="font-size:0.9rem;">ให้คะแนนประสบการณ์การเช่ารถของคุณ</p>
+        <div id="star-rating" style="font-size:2.2rem; color:var(--warning); cursor:pointer; display:flex; justify-content:center; gap:6px;">
+          ${[1,2,3,4,5].map(i => `<i class="fa-solid fa-star" onclick="logic.setStar(${i})" onmouseover="logic.hoverStar(${i})" onmouseout="logic.resetStarHover()"></i>`).join('')}
         </div>
+        <div id="star-label" class="text-muted text-sm mt-2">คลิกเพื่อให้คะแนน</div>
       </div>
       <div class="input-group">
-        <label>ความคิดเห็นเพิ่มเติม (ถ้ามี)</label>
-        <textarea class="input-control" rows="3" placeholder="ประทับใจบริการ หรือสภาพรถยนต์อย่างไรบ้าง?"></textarea>
+        <label>ความคิดเห็น <span class="text-muted">(ถ้ามี)</span></label>
+        <textarea class="input-control" rows="3" placeholder="ประทับใจบริการอย่างไรบ้าง?"></textarea>
       </div>
-      <button class="btn btn-warning w-full text-white font-bold" onclick="logic.submitReview('${bId}')">ส่งรีวิวรับ 50 แต้ม ⭐</button>
-    `);
+      <button class="btn btn-warning w-full btn-lg" onclick="logic.submitReview('${bId}')">
+        <i class="fa-solid fa-star"></i> ส่งรีวิวรับ 50 แต้ม
+      </button>
+    `, '', 'ช่วยให้คะแนนเพื่อพัฒนาบริการ');
   },
 
   showAdminBookingModal(bId) {
@@ -1250,34 +1618,24 @@ const ui = {
     const st = utils.getBookingStatusDisplay(b);
     
     this.showModal(`จัดการคำสั่งจอง: ${bId}`, `
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;" id="admin-bk-grid">
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;" id="admin-bk-grid">
         <div>
-          <h4 class="mb-2 text-primary">ข้อมูลลูกค้า</h4>
-          <div class="card p-3 mb-4 bg-body">
-            <p><strong>ชื่อ:</strong> ${u.name}</p>
-            <p><strong>เบอร์โทร:</strong> ${u.phone}</p>
-            <p><strong>รถที่จอง:</strong> ${c.name}</p>
+          <h4 class="mb-3 text-primary"><i class="fa-solid fa-user"></i> ข้อมูลลูกค้า</h4>
+          <div class="card-flat p-3 mb-4" style="border-radius:14px;">
+            <div class="info-row"><span class="info-row-label">ชื่อ</span><span class="info-row-value font-bold">${u.name}</span></div>
+            <div class="info-row"><span class="info-row-label">เบอร์โทร</span><span class="info-row-value">${u.phone}</span></div>
+            <div class="info-row" style="border:none;"><span class="info-row-label">รถที่จอง</span><span class="info-row-value font-bold text-primary">${c.name}</span></div>
           </div>
           
-          <h4 class="mb-2 text-warning"><i class="fa-solid fa-calendar"></i> แก้ไขวันรับ-คืนรถ & ค่าปรับ</h4>
+          <h4 class="mb-3 text-warning"><i class="fa-solid fa-calendar"></i> แก้ไขวันและราคา</h4>
+          <div class="input-group"><label>วันรับรถ</label><input type="date" id="adm-date-from" class="input-control" value="${b.dateFrom}" onchange="logic.recalcAdminBookingPrice(${c.price})"></div>
+          <div class="input-group"><label>วันคืนรถ</label><input type="date" id="adm-date-to" class="input-control" value="${b.dateTo}" onchange="logic.recalcAdminBookingPrice(${c.price})"></div>
+          <div class="input-group"><label>ยอดชำระสุทธิ (บาท)</label><input type="number" id="adm-total" class="input-control" value="${b.total}"></div>
           <div class="input-group">
-            <label>วันรับรถ</label>
-            <input type="date" id="adm-date-from" class="input-control" value="${b.dateFrom}" onchange="logic.recalcAdminBookingPrice(${c.price})">
+            <label>ค่าปรับล่าช้า (บาท)</label>
+            <input type="number" id="adm-fine" class="input-control" value="${b.fine || 0}" placeholder="0">
+            <small class="text-muted mt-1 block">สถานะปัจจุบัน: <span class="badge badge-${st.class}">${st.text}</span></small>
           </div>
-          <div class="input-group">
-            <label>วันคืนรถ</label>
-            <input type="date" id="adm-date-to" class="input-control" value="${b.dateTo}" onchange="logic.recalcAdminBookingPrice(${c.price})">
-          </div>
-          <div class="input-group">
-            <label>ยอดชำระสุทธิ (บาท)</label>
-            <input type="number" id="adm-total" class="input-control" value="${b.total}">
-          </div>
-          <div class="input-group">
-            <label>ค่าปรับการคืนรถล่าช้า (บาท)</label>
-            <input type="number" id="adm-fine" class="input-control" value="${b.fine || 0}" placeholder="กรอกจำนวนเงินค่าปรับ (ถ้ามี)">
-            <small class="text-danger mt-1 block">สถานะปัจจุบัน: ${st.text}</small>
-          </div>
-
           <div class="input-group">
             <label>เปลี่ยนสถานะรายการ</label>
             <select id="adm-status" class="input-control">
@@ -1291,73 +1649,83 @@ const ui = {
         </div>
         
         <div>
-          <h4 class="mb-2 text-primary">เอกสาร & การชำระเงิน</h4>
-          <div class="card p-3 text-center mb-4 border-warning">
-            <div class="font-bold text-lg mb-2 text-primary" id="adm-display-total">ยอดโอน: ฿${utils.formatMoney(b.total)}</div>
-            ${b.slipUrl ? `<img src="${b.slipUrl}" style="max-height: 150px; border-radius:8px; border: 1px solid var(--border); margin: 0 auto 10px;">` : '<span class="text-danger block mb-2">ไม่มีภาพสลิป</span>'}
-            ${b.slipUrl ? `<button class="btn btn-outline btn-sm w-full" onclick="window.open('${b.slipUrl}')"><i class="fa-solid fa-image"></i> ดูสลิปเต็มหน้าจอ</button>` : ''}
+          <h4 class="mb-3 text-primary"><i class="fa-solid fa-file-image"></i> เอกสาร & สลิป</h4>
+          <div class="card-flat p-3 text-center mb-4" style="border-radius:14px; border-color:var(--warning);">
+            <div class="font-bold mb-2 text-primary" id="adm-display-total">ยอดโอน: ฿${utils.formatMoney(b.total)}</div>
+            ${b.slipUrl 
+              ? `<img src="${b.slipUrl}" style="max-height:160px; border-radius:10px; border:1px solid var(--border); display:block; margin:0 auto 10px; object-fit:contain;">
+                 <button class="btn btn-outline btn-sm w-full" onclick="window.open('${b.slipUrl}')"><i class="fa-solid fa-expand"></i> ดูสลิปเต็ม</button>` 
+              : `<div class="empty-state" style="padding:24px;">
+                   <i class="fa-solid fa-file-image" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i>
+                   <p style="font-size:0.88rem;">ไม่มีภาพสลิป</p>
+                 </div>`}
           </div>
           
           <div class="flex gap-2 mb-4">
-            ${b.idCardUrl ? `<button class="btn btn-outline btn-sm w-full" onclick="window.open('${b.idCardUrl}')"><i class="fa-solid fa-id-card"></i> ดูบัตรปชช.</button>` : `<button class="btn btn-outline btn-sm w-full" disabled>ไม่มีบัตรปชช.</button>`}
-            ${b.licenseUrl ? `<button class="btn btn-outline btn-sm w-full" onclick="window.open('${b.licenseUrl}')"><i class="fa-solid fa-id-card"></i> ดูใบขับขี่</button>` : `<button class="btn btn-outline btn-sm w-full" disabled>ไม่มีใบขับขี่</button>`}
+            ${b.idCardUrl 
+              ? `<button class="btn btn-outline btn-sm flex-1" onclick="window.open('${b.idCardUrl}')"><i class="fa-solid fa-id-card"></i> บัตรปชช.</button>` 
+              : `<button class="btn btn-outline btn-sm flex-1" disabled style="opacity:0.4;"><i class="fa-solid fa-id-card"></i> ไม่มีบัตรปชช.</button>`}
+            ${b.licenseUrl 
+              ? `<button class="btn btn-outline btn-sm flex-1" onclick="window.open('${b.licenseUrl}')"><i class="fa-solid fa-car"></i> ใบขับขี่</button>` 
+              : `<button class="btn btn-outline btn-sm flex-1" disabled style="opacity:0.4;"><i class="fa-solid fa-car"></i> ไม่มีใบขับขี่</button>`}
           </div>
           
-          <button class="btn btn-primary w-full" onclick="logic.updateBookingStatus('${bId}')"><i class="fa-solid fa-save"></i> บันทึกข้อมูลทั้งหมด</button>
+          <button class="btn btn-primary w-full btn-lg" onclick="logic.updateBookingStatus('${bId}')">
+            <i class="fa-solid fa-save"></i> บันทึกข้อมูลทั้งหมด
+          </button>
         </div>
       </div>
-      <style>@media(max-width:768px){ #admin-bk-grid { grid-template-columns: 1fr; } }</style>
-    `, 'modal-lg');
+      <style>@media(max-width:768px){ #admin-bk-grid { grid-template-columns: 1fr !important; } }</style>
+    `, 'modal-lg', `${u.name} · ${c.name}`);
   },
 
   showCRMEditModal(uId) {
     const u = app.state.users.find(x => x.id === uId);
-    this.showModal(`แก้ไขข้อมูลลูกค้า: ${u.name}`, `
-      <div class="input-group">
-        <label>เบอร์โทรศัพท์ (ใช้เข้าระบบ)</label>
-        <input type="text" id="crm-phone" class="input-control" value="${u.phone}">
+    const bCount = app.state.bookings.filter(b => b.userId === uId).length;
+    this.showModal(`แก้ไขข้อมูลลูกค้า`, `
+      <div class="text-center mb-4">
+        <div style="width:60px; height:60px; border-radius:50%; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--primary); margin:0 auto 10px; font-weight:700;">${u.name.charAt(0)}</div>
+        <div class="font-bold">${u.name}</div>
+        <div class="text-muted text-sm">${bCount} ครั้งที่เช่า</div>
       </div>
+      <div class="input-group"><label>เบอร์โทรศัพท์</label><input type="text" id="crm-phone" class="input-control" value="${u.phone}"></div>
       <div class="input-group">
-        <label>ระดับสมาชิกลูกค้า (Tier)</label>
+        <label>ระดับสมาชิก (Tier)</label>
         <select id="crm-tier" class="input-control">
           <option ${u.tier==='Silver'?'selected':''}>Silver</option>
           <option ${u.tier==='Gold'?'selected':''}>Gold</option>
           <option ${u.tier==='Platinum'?'selected':''}>Platinum</option>
         </select>
       </div>
-      <div class="input-group mb-6">
-        <label>คะแนนสะสม (แต้ม)</label>
-        <input type="number" id="crm-pts" class="input-control" value="${u.points}">
-      </div>
-      <button class="btn btn-primary w-full" onclick="logic.saveCRM('${uId}')">บันทึกการเปลี่ยนแปลง</button>
-    `);
+      <div class="input-group mb-6"><label>คะแนนสะสม (แต้ม)</label><input type="number" id="crm-pts" class="input-control" value="${u.points}"></div>
+      <button class="btn btn-primary w-full btn-lg" onclick="logic.saveCRM('${uId}')"><i class="fa-solid fa-save"></i> บันทึกการเปลี่ยนแปลง</button>
+    `, '', u.phone);
   },
 
   showCarFormModal(carId = null) {
     const c = carId ? app.state.cars.find(x => x.id === carId) : { name:'', type:'Sedan', price:1000, range:400, seats:5, images:[], features:'' };
     const tOpts = app.state.carTypes.filter(t=>t!=='ทั้งหมด').map(t => `<option value="${t}" ${c.type===t?'selected':''}>${t}</option>`).join('');
-    
-    // Existing images preview
-    let existImgHtml = c.images.map((img, idx) => `<img src="${img}" style="max-height: 50px; border-radius: 4px;">`).join('');
+    const existImgHtml = c.images.map(img => `<img src="${img}" style="max-height:50px; border-radius:6px; object-fit:cover;">`).join('');
 
     this.showModal(carId ? 'แก้ไขข้อมูลรถ' : 'เพิ่มรถยนต์ใหม่', `
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 15px;">
-        <div class="input-group"><label>ชื่อรุ่นรถยนต์</label><input type="text" id="car-name" class="input-control" value="${c.name}" required></div>
+      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div class="input-group"><label>ชื่อรุ่นรถยนต์ <span class="text-danger">*</span></label><input type="text" id="car-name" class="input-control" value="${c.name}" placeholder="เช่น Tesla Model 3"></div>
         <div class="input-group"><label>ประเภทรถ</label><select id="car-type" class="input-control">${tOpts}</select></div>
-        <div class="input-group"><label>ราคาเช่า/วัน (บาท)</label><input type="number" id="car-price" class="input-control" value="${c.price}" required></div>
-        <div class="input-group"><label>ระยะทางต่อการชาร์จ (km)</label><input type="number" id="car-range" class="input-control" value="${c.range}"></div>
+        <div class="input-group"><label>ราคาเช่า/วัน (บาท)</label><input type="number" id="car-price" class="input-control" value="${c.price}"></div>
+        <div class="input-group"><label>ระยะทางต่อชาร์จ (km)</label><input type="number" id="car-range" class="input-control" value="${c.range}"></div>
         <div class="input-group"><label>จำนวนที่นั่ง</label><input type="number" id="car-seats" class="input-control" value="${c.seats}"></div>
-        
         <div class="input-group">
-          <label>อัปโหลดรูปรถ (เลือกได้หลายรูป)</label>
+          <label>รูปภาพรถ <span class="text-muted">(เลือกได้หลายรูป)</span></label>
           <input type="file" multiple accept="image/*" class="input-control" onchange="logic.handleMultiFileUpload(event, 'carimgs')">
           <div id="preview-carimgs" class="flex gap-2 mt-2 flex-wrap">${existImgHtml}</div>
-          <small class="text-muted">หากไม่อัปโหลดใหม่ จะใช้รูปเดิม</small>
+          ${carId ? `<small class="text-muted">หากไม่อัปโหลดใหม่จะใช้รูปเดิม</small>` : ''}
         </div>
       </div>
-      <div class="input-group mt-2"><label>ฟีเจอร์เด่น (คั่นด้วยลูกน้ำ)</label><input type="text" id="car-features" class="input-control" value="${c.features}"></div>
-      <button class="btn btn-primary w-full mt-4" onclick="logic.saveCar(${carId})"><i class="fa-solid fa-save"></i> บันทึกข้อมูลรถ</button>
-    `);
+      <div class="input-group mt-2"><label>ฟีเจอร์เด่น <span class="text-muted">(คั่นด้วยลูกน้ำ)</span></label><input type="text" id="car-features" class="input-control" value="${c.features}" placeholder="Autopilot, จอ 15 นิ้ว, หลังคาแก้ว"></div>
+      <button class="btn btn-primary w-full btn-lg mt-4" onclick="logic.saveCar(${carId})">
+        <i class="fa-solid fa-save"></i> บันทึกข้อมูลรถ
+      </button>
+    `, '', carId ? `แก้ไขข้อมูล ${c.name}` : 'กรอกข้อมูลรถยนต์ใหม่');
   },
 
   renderChart() {
@@ -1365,9 +1733,8 @@ const ui = {
     if(!ctx) return;
     if(window.myChart) window.myChart.destroy();
     const isDark = app.state.theme === 'dark';
-    const textColor = isDark ? '#f8fafc' : '#1e293b';
-    const gridColor = isDark ? '#334155' : '#e2e8f0';
-
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const gridColor = isDark ? '#334155' : '#f1f5f9';
     window.myChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -1375,16 +1742,34 @@ const ui = {
         datasets: [{
           label: 'รายได้ (บาท)',
           data: [15000, 22000, 18000, 25000, 32000, 45000, 38000],
-          backgroundColor: isDark ? '#3DC4B5' : '#0F9D8D',
-          borderRadius: 6
+          backgroundColor: isDark 
+            ? ['rgba(61,196,181,0.6)','rgba(61,196,181,0.6)','rgba(61,196,181,0.6)','rgba(61,196,181,0.6)','rgba(61,196,181,0.8)','rgba(61,196,181,1)','rgba(61,196,181,0.8)']
+            : ['rgba(15,157,141,0.4)','rgba(15,157,141,0.5)','rgba(15,157,141,0.4)','rgba(15,157,141,0.6)','rgba(15,157,141,0.7)','rgba(15,157,141,1)','rgba(15,157,141,0.8)'],
+          borderRadius: 8,
+          borderSkipped: false
         }]
       },
       options: {
         responsive: true,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (context) => ` ฿${utils.formatMoney(context.raw)}`
+            }
+          }
+        },
         scales: {
-          y: { ticks: { color: textColor }, grid: { color: gridColor } },
-          x: { ticks: { color: textColor }, grid: { display: false } }
+          y: { 
+            ticks: { color: textColor, callback: (v) => '฿' + utils.formatMoney(v) }, 
+            grid: { color: gridColor },
+            border: { display: false }
+          },
+          x: { 
+            ticks: { color: textColor }, 
+            grid: { display: false },
+            border: { display: false }
+          }
         }
       }
     });
@@ -1393,44 +1778,33 @@ const ui = {
   renderTimeline() {
     const container = document.getElementById('timeline-container');
     if(!container) return;
-
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    
-    // Generate 14 days headers
+    const today = new Date(); today.setHours(0,0,0,0);
     let html = `<div class="timeline-grid"><div class="tl-cell tl-header">รถยนต์ / วันที่</div>`;
     let daysArray = [];
     for(let i=0; i<14; i++) {
-      let d = new Date(today);
-      d.setDate(d.getDate() + i);
+      let d = new Date(today); d.setDate(d.getDate() + i);
       daysArray.push(d);
-      html += `<div class="tl-cell tl-header">${d.getDate()}/${d.getMonth()+1}</div>`;
+      const isToday = i === 0;
+      html += `<div class="tl-cell tl-header" style="${isToday?'color:var(--primary);font-weight:700;':''}">${d.getDate()}/${d.getMonth()+1}${isToday?'<br><span style="font-size:0.6rem;">(วันนี้)</span>':''}</div>`;
     }
-    
-    // Generate rows for each car
     app.state.cars.forEach(car => {
       html += `<div class="tl-cell tl-car-name">${car.name}</div>`;
-      
       const carBks = app.state.bookings.filter(b => b.carId === car.id && b.status !== 'Cancelled' && b.status !== 'Completed');
-      
       daysArray.forEach(d => {
         const dTime = d.getTime();
         let cellHtml = '';
-        
         carBks.forEach(b => {
           const bStart = new Date(b.dateFrom).getTime();
           const bEnd = new Date(b.dateTo).getTime();
           if(dTime >= bStart && dTime <= bEnd) {
-             const isStart = dTime === bStart;
-             let bg = b.status === 'Confirmed' ? 'var(--info)' : (b.status === 'Active' ? 'var(--success)' : 'var(--warning)');
-             cellHtml = `<div class="tl-bar" style="background:${bg}; left:0; width:100%; border-radius: ${isStart?'4px 0 0 4px':'0'}">${isStart ? b.id : ''}</div>`;
+            const isStart = dTime === bStart;
+            let bg = b.status === 'Confirmed' ? 'var(--info)' : (b.status === 'Active' ? 'var(--success)' : 'var(--warning)');
+            cellHtml = `<div class="tl-bar" style="background:${bg}; left:1px; right:1px; width:calc(100% - 2px); border-radius:${isStart?'4px 0 0 4px':'0'}" title="${b.id}">${isStart ? b.id : ''}</div>`;
           }
         });
-        
         html += `<div class="tl-cell">${cellHtml}</div>`;
       });
     });
-    
     html += `</div>`;
     container.innerHTML = html;
   }
@@ -1443,17 +1817,11 @@ const logic = {
     if(!file) return;
     try {
       const base64Str = await utils.compressImage(file);
-      app.tempUploads[targetKey] = base64Str; 
+      app.tempUploads[targetKey] = base64Str;
       const previewEl = document.getElementById(`preview-${targetKey}`);
-      if(previewEl) {
-        previewEl.src = base64Str;
-        previewEl.style.display = 'block';
-      }
+      if(previewEl) { previewEl.src = base64Str; previewEl.style.display = 'block'; }
       utils.showToast('โหลดภาพสำเร็จ', 'success');
-    } catch(err) {
-      console.error(err);
-      utils.showToast('ไม่สามารถโหลดภาพได้', 'error');
-    }
+    } catch(err) { utils.showToast('ไม่สามารถโหลดภาพได้', 'error'); }
   },
 
   async handleMultiFileUpload(event, targetKey) {
@@ -1462,116 +1830,56 @@ const logic = {
     app.tempUploads[targetKey] = [];
     const previewContainer = document.getElementById(`preview-${targetKey}`);
     if(previewContainer) previewContainer.innerHTML = '';
-
     try {
       for(let f of files) {
         const b64 = await utils.compressImage(f);
         app.tempUploads[targetKey].push(b64);
-        if(previewContainer) {
-          previewContainer.innerHTML += `<img src="${b64}" style="max-height: 50px; border-radius: 4px;">`;
-        }
+        if(previewContainer) previewContainer.innerHTML += `<img src="${b64}" style="max-height:50px; border-radius:6px; object-fit:cover;">`;
       }
       utils.showToast(`โหลดภาพสำเร็จ ${files.length} รูป`, 'success');
-    } catch(err) {
-      utils.showToast('เกิดข้อผิดพลาดในการโหลดภาพ', 'error');
-    }
+    } catch(err) { utils.showToast('เกิดข้อผิดพลาดในการโหลดภาพ', 'error'); }
   },
 
   login() {
     const name = document.getElementById('log-name').value.trim();
     const phone = document.getElementById('log-phone').value.trim();
     const pass = document.getElementById('log-pass').value.trim();
-
     if(!phone || !pass) return utils.showToast('กรุณากรอกเบอร์โทรและรหัสผ่าน', 'error');
-
-    let user = app.state.users.find(u => u.phone === phone);
     
+    let user = app.state.users.find(u => u.phone === phone);
     if(user) {
       if(user.password === pass) {
         app.currentUser = user;
         sessionStorage.setItem('ev_user_id', user.id);
-        utils.showToast(`ยินดีต้อนรับกลับ ${user.name}`, 'success');
+        utils.showToast(`ยินดีต้อนรับกลับ ${user.name} 👋`, 'success');
         ui.closeModal();
         app.navigate(user.role.includes('admin') ? 'admin_dashboard' : 'home');
       } else {
-        utils.showToast('รหัสผ่านไม่ถูกต้อง', 'error');
+        utils.showToast('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่', 'error');
       }
     } else {
-      if(!name) return utils.showToast('ผู้ใช้ใหม่กรุณากรอกชื่อ-นามสกุล', 'error');
-      
+      if(!name) return utils.showToast('ผู้ใช้ใหม่ กรุณากรอกชื่อ-นามสกุล', 'error');
       const realUsersCount = app.state.users.filter(u => u.id !== 'A001' && u.id !== 'U001').length;
       const newRole = realUsersCount === 0 ? 'admin_master' : 'user';
-      
       user = { 
         id: (newRole==='admin_master' ? 'A' : 'U') + Math.floor(1000 + Math.random() * 9000), 
         name, phone, password: pass, email: '', 
-        role: newRole, tier: newRole==='admin_master' ? 'Admin' : 'Silver', points: app.state.settings.signupPts 
+        role: newRole, tier: newRole==='admin_master' ? 'Admin' : 'Silver', 
+        points: app.state.settings.signupPts 
       };
-      
       app.state.users.push(user);
       app.currentUser = user;
       sessionStorage.setItem('ev_user_id', user.id);
       app.saveState();
-      
       if(newRole === 'admin_master') {
-        utils.showToast(`ลงทะเบียนคนแรกสำเร็จ! คุณได้รับสิทธิ์ Master Admin`, 'success');
+        utils.showToast(`ลงทะเบียนสำเร็จ! คุณได้รับสิทธิ์ Master Admin 🎉`, 'success');
         ui.closeModal();
         app.navigate('admin_dashboard');
       } else {
-        utils.showToast(`สมัครสมาชิกสำเร็จ! รับฟรี ${app.state.settings.signupPts} แต้ม`, 'success');
+        utils.showToast(`สมัครสมาชิกสำเร็จ! รับฟรี ${app.state.settings.signupPts} แต้ม 🎁`, 'success');
         ui.closeModal();
         app.navigate('home');
       }
-    }
-  },
-
-  async loginWithGoogle() {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const fbUser = result.user;
-
-      let user = app.state.users.find(u => u.id === fbUser.uid || u.email === fbUser.email);
-
-      if (user) {
-        app.currentUser = user;
-        sessionStorage.setItem('ev_user_id', user.id);
-        utils.showToast(`ยินดีต้อนรับกลับ ${user.name}`, 'success');
-        ui.closeModal();
-        app.navigate(user.role.includes('admin') ? 'admin_dashboard' : 'home');
-      } else {
-        const realUsersCount = app.state.users.filter(u => u.id !== 'A001' && u.id !== 'U001').length;
-        const newRole = realUsersCount === 0 ? 'admin_master' : 'user';
-
-        user = {
-          id: fbUser.uid,
-          name: fbUser.displayName || 'ผู้ใช้ Google',
-          phone: fbUser.phoneNumber || 'เพิ่มเบอร์โทรภายหลัง',
-          password: 'google_login',
-          email: fbUser.email || '',
-          role: newRole,
-          tier: newRole === 'admin_master' ? 'Admin' : 'Silver',
-          points: app.state.settings.signupPts
-        };
-
-        app.state.users.push(user);
-        app.currentUser = user;
-        sessionStorage.setItem('ev_user_id', user.id);
-        app.saveState();
-
-        if(newRole === 'admin_master') {
-          utils.showToast(`ลงทะเบียนคนแรกสำเร็จ! คุณได้รับสิทธิ์ Master Admin`, 'success');
-          ui.closeModal();
-          app.navigate('admin_dashboard');
-        } else {
-          utils.showToast(`สมัครสมาชิกด้วย Google สำเร็จ! รับฟรี ${app.state.settings.signupPts} แต้ม`, 'success');
-          ui.closeModal();
-          app.navigate('home');
-        }
-      }
-    } catch (error) {
-      console.error("Google Login Error:", error);
-      utils.showToast('เข้าสู่ระบบด้วย Google ไม่สำเร็จ', 'error');
     }
   },
 
@@ -1585,88 +1893,63 @@ const logic = {
   applyPromo(carPrice) {
     const code = document.getElementById('promo-code').value.toUpperCase();
     const promo = app.state.promotions.find(p => p.code === code);
-    
     if(!promo) return utils.showToast('โค้ดส่วนลดไม่ถูกต้อง', 'error');
-    
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     const days = utils.calcDays(dFrom, dTo);
     const baseTotal = carPrice * days;
-
-    let discountAmt = 0;
-    if(promo.type === 'percent') discountAmt = baseTotal * (promo.discount / 100);
-    else discountAmt = promo.discount;
-
+    let discountAmt = promo.type === 'percent' ? baseTotal * (promo.discount / 100) : promo.discount;
     let net = Math.max(0, baseTotal - discountAmt);
-    
-    document.getElementById('book-discount').textContent = `฿${utils.formatMoney(discountAmt)}`;
+    document.getElementById('book-discount').textContent = `-฿${utils.formatMoney(discountAmt)}`;
     document.getElementById('book-net').textContent = `฿${utils.formatMoney(net)}`;
     document.getElementById('promo-code').disabled = true;
-    utils.showToast(`ใช้โค้ดสำเร็จ ลด ${utils.formatMoney(discountAmt)} บาท`, 'success');
-    
     document.getElementById('book-net').dataset.net = net;
+    utils.showToast(`✅ ใช้โค้ดสำเร็จ! ลด ฿${utils.formatMoney(discountAmt)}`, 'success');
   },
 
   recalcCustomerBookingPrice(carPrice) {
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     if(dFrom && dTo) {
-      app.searchParams.dateFrom = dFrom;
-      app.searchParams.dateTo = dTo;
-
+      app.searchParams.dateFrom = dFrom; app.searchParams.dateTo = dTo;
       const days = utils.calcDays(dFrom, dTo);
       const baseTotal = days * carPrice;
-      
-      document.getElementById('bk-disp-days').innerText = `รวมเวลาเช่า: ${days} วัน`;
+      document.getElementById('bk-disp-days').innerHTML = `<i class="fa-solid fa-calendar-days"></i> รวม ${days} วัน`;
       document.getElementById('bk-disp-renttext').innerText = `ค่าเช่า (${days} วัน)`;
       document.getElementById('bk-disp-rentprice').innerText = `฿${utils.formatMoney(baseTotal)}`;
       document.getElementById('book-net').innerText = `฿${utils.formatMoney(baseTotal)}`;
       document.getElementById('book-net').dataset.net = baseTotal;
-      
       document.getElementById('book-discount').textContent = `฿0`;
-      document.getElementById('promo-code').disabled = false;
-      document.getElementById('promo-code').value = '';
+      const promoEl = document.getElementById('promo-code');
+      if(promoEl) { promoEl.disabled = false; promoEl.value = ''; }
     }
   },
 
   confirmBooking(carId, defaultPricePerDay) {
-    if(!app.tempUploads['slip']) return utils.showToast('กรุณาอัปโหลดรูปสลิปการโอนเงิน', 'warning');
-
+    if(!app.tempUploads['slip']) return utils.showToast('กรุณาอัปโหลดรูปสลิปโอนเงินก่อน', 'warning');
     const netVal = document.getElementById('book-net').dataset.net;
     const finalTotal = netVal ? parseFloat(netVal) : (defaultPricePerDay * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo));
-    
     const bId = "BK-" + Math.floor(1000 + Math.random() * 9000);
     const newBooking = {
-      id: bId,
-      userId: app.currentUser.id,
-      carId: carId,
-      pickBranch: app.searchParams.pick,
-      dropBranch: app.searchParams.drop,
-      dateFrom: app.searchParams.dateFrom,
-      dateTo: app.searchParams.dateTo,
+      id: bId, userId: app.currentUser.id, carId: carId,
+      pickBranch: app.searchParams.pick, dropBranch: app.searchParams.drop,
+      dateFrom: app.searchParams.dateFrom, dateTo: app.searchParams.dateTo,
       days: utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo),
-      total: finalTotal,
-      status: "Pending",
+      total: finalTotal, status: "Pending",
       slipUrl: app.tempUploads['slip'] || '',
       idCardUrl: app.tempUploads['idcard'] || '',
       licenseUrl: app.tempUploads['license'] || '',
-      contractUrl: null,
-      isReviewed: false,
-      fine: 0
+      contractUrl: null, isReviewed: false, fine: 0
     };
-
     app.state.bookings.push(newBooking);
     app.saveState();
-    
     const user = app.currentUser;
     const car = app.state.cars.find(c => c.id === carId);
     utils.sendTelegramNotification(newBooking, car, user);
-
-    app.tempUploads = {}; 
-    
-    utils.showToast('สร้างรายการจองเรียบร้อย แอดมินกำลังตรวจสอบข้อมูล', 'success');
+    app.tempUploads = {};
+    utils.showToast('สร้างรายการจองเรียบร้อย! แอดมินกำลังตรวจสอบ 🎉', 'success');
     app.renderCarGrid();
-    ui.showReceiptModal(bId); 
+    ui.showReceiptModal(bId);
   },
 
   recalcAdminBookingPrice(carPricePerDay) {
@@ -1676,7 +1959,7 @@ const logic = {
       const days = utils.calcDays(dFrom, dTo);
       const newTotal = days * carPricePerDay;
       document.getElementById('adm-total').value = newTotal;
-      document.getElementById('adm-display-total').innerText = `ยอดรวมใหม่: ฿${utils.formatMoney(newTotal)} (เช่า ${days} วัน)`;
+      document.getElementById('adm-display-total').innerText = `ยอดใหม่: ฿${utils.formatMoney(newTotal)} (${days} วัน)`;
     }
   },
 
@@ -1687,19 +1970,12 @@ const logic = {
     const newDTo = document.getElementById('adm-date-to').value;
     const newTotal = parseFloat(document.getElementById('adm-total').value);
     const newFine = parseFloat(document.getElementById('adm-fine').value) || 0;
-    
     if(b.status !== 'Confirmed' && newStatus === 'Confirmed') {
-        const u = app.state.users.find(x=>x.id===b.userId);
-        if(u) u.points += Math.floor(newTotal / 100); 
+      const u = app.state.users.find(x=>x.id===b.userId);
+      if(u) u.points += Math.floor(newTotal / 100);
     }
-
-    b.status = newStatus;
-    b.dateFrom = newDFrom;
-    b.dateTo = newDTo;
-    b.days = utils.calcDays(newDFrom, newDTo);
-    b.total = newTotal;
-    b.fine = newFine;
-
+    b.status = newStatus; b.dateFrom = newDFrom; b.dateTo = newDTo;
+    b.days = utils.calcDays(newDFrom, newDTo); b.total = newTotal; b.fine = newFine;
     app.saveState();
     ui.closeModal();
     utils.showToast('อัปเดตข้อมูลการจองสำเร็จ', 'success');
@@ -1720,21 +1996,14 @@ const logic = {
   changeUserRole(uId, newRole) {
     if(!app.isMaster()) return utils.showToast('เฉพาะ Master Admin เท่านั้น', 'error');
     const u = app.state.users.find(x => x.id === uId);
-    if(u) {
-      u.role = newRole;
-      app.saveState();
-      utils.showToast(`เปลี่ยนสิทธิ์ ${u.name} เรียบร้อย`, 'success');
-      app.renderAdminTab('admins');
-    }
+    if(u) { u.role = newRole; app.saveState(); utils.showToast(`เปลี่ยนสิทธิ์ ${u.name} เรียบร้อย`, 'success'); app.renderAdminTab('admins'); }
   },
 
   saveCar(carId) {
     const name = document.getElementById('car-name').value.trim();
     if(!name) return utils.showToast('กรุณากรอกชื่อรถ', 'error');
-    
     const newCar = {
-      id: carId || Date.now(),
-      name: name,
+      id: carId || Date.now(), name,
       type: document.getElementById('car-type').value,
       price: parseFloat(document.getElementById('car-price').value) || 0,
       range: parseInt(document.getElementById('car-range').value) || 0,
@@ -1742,30 +2011,17 @@ const logic = {
       features: document.getElementById('car-features').value,
       status: "Available", rating: 5.0, reviews: 0
     };
-
-    if (app.tempUploads['carimgs'] && app.tempUploads['carimgs'].length > 0) {
-       newCar.images = app.tempUploads['carimgs'];
-    } else if (carId) {
-       const existCar = app.state.cars.find(c => c.id === carId);
-       newCar.images = existCar.images;
-    } else {
-       newCar.images = [MOCK_IMAGES[0]]; 
-    }
-
+    if(app.tempUploads['carimgs'] && app.tempUploads['carimgs'].length > 0) {
+      newCar.images = app.tempUploads['carimgs'];
+    } else if(carId) {
+      const existCar = app.state.cars.find(c => c.id === carId);
+      newCar.images = existCar.images;
+    } else { newCar.images = [MOCK_IMAGES[0]]; }
     if(carId) {
       const idx = app.state.cars.findIndex(c => c.id === carId);
-      if(idx > -1) {
-        newCar.rating = app.state.cars[idx].rating;
-        newCar.reviews = app.state.cars[idx].reviews;
-        app.state.cars[idx] = newCar;
-      }
-    } else {
-      app.state.cars.push(newCar);
-    }
-
-    app.saveState();
-    app.tempUploads = {};
-    ui.closeModal();
+      if(idx > -1) { newCar.rating = app.state.cars[idx].rating; newCar.reviews = app.state.cars[idx].reviews; app.state.cars[idx] = newCar; }
+    } else { app.state.cars.push(newCar); }
+    app.saveState(); app.tempUploads = {}; ui.closeModal();
     utils.showToast(carId ? 'แก้ไขข้อมูลรถสำเร็จ' : 'เพิ่มรถใหม่สำเร็จ', 'success');
     app.renderAdminTab('cars');
   },
@@ -1773,34 +2029,33 @@ const logic = {
   deleteCar(carId) {
     if(confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรถคันนี้ออกจากระบบ?')) {
       app.state.cars = app.state.cars.filter(c => c.id !== carId);
-      app.saveState();
-      utils.showToast('ลบรถสำเร็จ', 'success');
-      app.renderAdminTab('cars');
+      app.saveState(); utils.showToast('ลบรถสำเร็จ', 'success'); app.renderAdminTab('cars');
     }
   },
 
+  _starRating: 0,
   setStar(num) {
+    this._starRating = num;
+    const labels = ['', 'แย่มาก', 'พอใช้', 'ดี', 'ดีมาก', 'ยอดเยี่ยม'];
     const stars = document.querySelectorAll('#star-rating i');
-    stars.forEach((s, idx) => {
-      s.style.color = idx < num ? 'var(--warning)' : 'var(--border)';
-    });
+    stars.forEach((s, idx) => { s.style.color = idx < num ? 'var(--warning)' : 'var(--border)'; });
+    const lbl = document.getElementById('star-label');
+    if(lbl) lbl.textContent = labels[num] || '';
   },
+  hoverStar(num) {
+    const stars = document.querySelectorAll('#star-rating i');
+    stars.forEach((s, idx) => { s.style.color = idx < num ? 'var(--warning)' : 'var(--border)'; });
+  },
+  resetStarHover() { this.setStar(this._starRating); },
 
   submitReview(bId) {
     const b = app.state.bookings.find(x => x.id === bId);
     b.isReviewed = true;
-    
     const u = app.state.users.find(x => x.id === app.currentUser.id);
-    if(u) {
-      u.points += 50;
-      app.currentUser.points = u.points;
-    }
-
-    app.saveState();
-    ui.closeModal();
-    utils.showToast('ขอบคุณสำหรับรีวิว! คุณได้รับ 50 คะแนนสะสม', 'success');
-    app.render(); 
-    ui.showMyBookings();
+    if(u) { u.points += 50; app.currentUser.points = u.points; }
+    app.saveState(); ui.closeModal();
+    utils.showToast('ขอบคุณสำหรับรีวิว! คุณได้รับ 50 แต้ม ⭐', 'success');
+    app.render(); ui.showMyBookings();
   },
 
   saveSettings() {
@@ -1811,14 +2066,11 @@ const logic = {
     app.state.settings.bank = document.getElementById('set-bank').value;
     app.state.settings.accNo = document.getElementById('set-acc-no').value;
     app.state.settings.accName = document.getElementById('set-acc-name').value;
-    
     if(app.tempUploads['setLogo']) app.state.settings.logoUrl = app.tempUploads['setLogo'];
     if(app.tempUploads['setQR']) app.state.settings.qrUrl = app.tempUploads['setQR'];
-    
-    app.saveState();
-    app.tempUploads = {};
-    utils.showToast('บันทึกการตั้งค่าร้านค้าสำเร็จ', 'success');
-    app.render(); 
+    app.saveState(); app.tempUploads = {};
+    utils.showToast('บันทึกการตั้งค่าร้านค้าสำเร็จ ✅', 'success');
+    app.render();
   },
 
   addBranch() {
@@ -1826,61 +2078,38 @@ const logic = {
     const name = document.getElementById('new-branch-name').value.trim();
     if(!id || !name) return utils.showToast('กรุณากรอกรหัสและชื่อสาขา', 'warning');
     if(app.state.branches.find(b => b.id === id)) return utils.showToast('รหัสสาขานี้มีอยู่แล้ว', 'error');
-    
     app.state.branches.push({ id, name });
-    app.saveState();
-    utils.showToast('เพิ่มสาขาสำเร็จ', 'success');
-    app.renderAdminTab('settings');
+    app.saveState(); utils.showToast('เพิ่มสาขาสำเร็จ', 'success'); app.renderAdminTab('settings');
   },
 
   deleteBranch(id) {
     if(confirm('ต้องการลบสาขานี้ใช่หรือไม่?')) {
       app.state.branches = app.state.branches.filter(b => b.id !== id);
-      app.saveState();
-      utils.showToast('ลบสาขาสำเร็จ', 'success');
-      app.renderAdminTab('settings');
+      app.saveState(); utils.showToast('ลบสาขาสำเร็จ', 'success'); app.renderAdminTab('settings');
     }
   },
 
   exportExcel(type) {
-    // ป้องกันแอดมินรองดาวน์โหลด
-    if (!app.isMaster()) return utils.showToast('เฉพาะ Master Admin เท่านั้นที่ดาวน์โหลดได้', 'error');
-
+    if(!app.isMaster()) return utils.showToast('เฉพาะ Master Admin เท่านั้นที่ดาวน์โหลดได้', 'error');
     const wb = XLSX.utils.book_new();
-    let data = [];
-    let filename = '';
-
+    let data = [], filename = '';
     if(type === 'bookings') {
-      data = app.state.bookings.map(b => ({
-        รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId, 
-        วันรับ: b.dateFrom, วันคืน: b.dateTo, จำนวนวัน: b.days, 
-        ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status
-      }));
+      data = app.state.bookings.map(b => ({ รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId, วันรับ: b.dateFrom, วันคืน: b.dateTo, จำนวนวัน: b.days, ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status }));
       filename = 'Bookings_Report.xlsx';
-    } else if (type === 'users') {
-      data = app.state.users.map(u => ({
-        รหัสลูกค้า: u.id, ชื่อ: u.name, เบอร์: u.phone, 
-        ระดับ: u.tier, คะแนน: u.points, บทบาท: u.role
-      }));
+    } else if(type === 'users') {
+      data = app.state.users.map(u => ({ รหัสลูกค้า: u.id, ชื่อ: u.name, เบอร์: u.phone, ระดับ: u.tier, คะแนน: u.points, บทบาท: u.role }));
       filename = 'Customers_Report.xlsx';
-    } else if (type === 'cars') {
-       data = app.state.cars.map(c => {
-         const bCount = app.state.bookings.filter(b => b.carId === c.id).length;
-         return {
-          รหัสรถ: c.id, ชื่อรุ่น: c.name, ประเภท: c.type, 
-          ราคาต่อวัน: c.price, จำนวนครั้งที่ถูกเช่า: bCount
-         };
-       });
-       filename = 'Cars_Stats_Report.xlsx';
+    } else if(type === 'cars') {
+      data = app.state.cars.map(c => { const bCount = app.state.bookings.filter(b => b.carId === c.id).length; return { รหัสรถ: c.id, ชื่อรุ่น: c.name, ประเภท: c.type, ราคาต่อวัน: c.price, จำนวนครั้งที่ถูกเช่า: bCount }; });
+      filename = 'Cars_Stats_Report.xlsx';
     } else {
-       const ws1 = XLSX.utils.json_to_sheet(app.state.bookings);
-       const ws2 = XLSX.utils.json_to_sheet(app.state.users);
-       XLSX.utils.book_append_sheet(wb, ws1, "Bookings");
-       XLSX.utils.book_append_sheet(wb, ws2, "Users");
-       XLSX.writeFile(wb, "EV_Rental_Full_Report.xlsx");
-       return utils.showToast('Export Excel สำเร็จ', 'success');
+      const ws1 = XLSX.utils.json_to_sheet(app.state.bookings);
+      const ws2 = XLSX.utils.json_to_sheet(app.state.users);
+      XLSX.utils.book_append_sheet(wb, ws1, "Bookings");
+      XLSX.utils.book_append_sheet(wb, ws2, "Users");
+      XLSX.writeFile(wb, "EV_Rental_Full_Report.xlsx");
+      return utils.showToast('Export Excel สำเร็จ', 'success');
     }
-
     const ws = XLSX.utils.json_to_sheet(data);
     XLSX.utils.book_append_sheet(wb, ws, "Data");
     XLSX.writeFile(wb, filename);
@@ -1891,37 +2120,59 @@ const logic = {
 app.renderCarGrid = function() {
   const container = document.getElementById('car-grid-container');
   if(!container) return;
-
   let cars = this.state.cars;
-  if(this.searchParams.type !== 'ทั้งหมด') {
-    cars = cars.filter(c => c.type === this.searchParams.type);
+  if(this.searchParams.type !== 'ทั้งหมด') cars = cars.filter(c => c.type === this.searchParams.type);
+  
+  if(cars.length === 0) {
+    container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">
+      <i class="fa-solid fa-car-burst"></i>
+      <p>ไม่พบรถที่ตรงกับเงื่อนไขที่เลือก</p>
+      <button class="btn btn-outline btn-sm mt-4" onclick="app.searchParams.type='ทั้งหมด'; app.renderCarGrid();">ดูรถทั้งหมด</button>
+    </div>`;
+    return;
   }
 
-  container.innerHTML = cars.map(c => {
+  container.innerHTML = cars.map((c, idx) => {
     const isAvail = utils.isCarAvailable(c.id, this.searchParams.dateFrom, this.searchParams.dateTo);
     const badgeHtml = isAvail 
-      ? `<span class="badge badge-success car-status-badge"><i class="fa-solid fa-check"></i> ว่าง</span>`
-      : `<span class="badge badge-danger car-status-badge"><i class="fa-solid fa-times"></i> ติดจอง</span>`;
+      ? `<span class="badge badge-success car-status-badge" style="backdrop-filter:blur(8px); background:rgba(16,185,129,0.92);"><i class="fa-solid fa-check"></i> ว่าง</span>`
+      : `<span class="badge badge-danger car-status-badge" style="backdrop-filter:blur(8px); background:rgba(239,68,68,0.92);"><i class="fa-solid fa-times"></i> ติดจอง</span>`;
+    const featureTags = c.features.split(',').slice(0,2).map(f => `<span class="car-feature-tag">${f.trim()}</span>`).join('');
 
     return `
-      <div class="card car-card p-0">
+      <div class="card car-card" style="animation-delay:${idx * 0.05}s;">
         <div class="car-img-container">
           ${badgeHtml}
-          <img src="${c.images[0]}" alt="${c.name}">
+          <div class="car-heart" onclick="this.classList.toggle('liked')" title="บันทึกรถคันนี้"><i class="fa-${this.classList && this.classList.contains('liked') ? 'solid' : 'regular'} fa-heart"></i></div>
+          <img src="${c.images[0]}" alt="${c.name}" loading="lazy">
         </div>
         <div class="p-4" style="flex:1; display:flex; flex-direction:column;">
           <div class="flex justify-between items-start mb-1">
-            <h3 class="font-bold cursor-pointer hover:text-primary" onclick="ui.showCarDetailModal(${c.id})">${c.name}</h3>
-            <span class="badge badge-info">${c.type}</span>
+            <h3 style="font-size:1.05rem; font-weight:700; cursor:pointer;" onclick="ui.showCarDetailModal(${c.id})">${c.name}</h3>
+            <span class="badge badge-info" style="flex-shrink:0;">${c.type}</span>
           </div>
-          <div class="text-sm text-muted mb-3"><i class="fa-solid fa-star text-warning"></i> ${c.rating} (${c.reviews}) | ${c.features}</div>
-          <div class="mt-auto flex justify-between items-center border-t" style="border-top:1px solid var(--border); padding-top:16px;">
-            <div><span class="car-price">฿${utils.formatMoney(c.price)}</span><span class="text-sm text-muted">/วัน</span></div>
-            <button class="btn btn-primary btn-sm" onclick="ui.showCarDetailModal(${c.id})">รายละเอียด</button>
+          <div class="car-rating mb-2">
+            <i class="fa-solid fa-star" style="color:var(--warning);"></i> 
+            <span style="font-weight:600; color:var(--text-main);">${c.rating}</span>
+            <span>(${c.reviews} รีวิว)</span>
+          </div>
+          <div class="car-features-tags mb-2">${featureTags}</div>
+          <div class="flex items-center gap-2 text-muted text-sm mb-3">
+            <span><i class="fa-solid fa-battery-full text-success"></i> ${c.range}km</span>
+            <span>·</span>
+            <span><i class="fa-solid fa-users text-info"></i> ${c.seats} ที่นั่ง</span>
+          </div>
+          <div class="mt-auto flex justify-between items-center" style="border-top:1px solid var(--border); padding-top:14px;">
+            <div>
+              <span class="car-price">฿${utils.formatMoney(c.price)}</span>
+              <span class="text-muted text-sm">/วัน</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="ui.showCarDetailModal(${c.id})" ${isAvail?'':'style="opacity:0.6;"'}>
+              ${isAvail ? '<i class="fa-solid fa-arrow-right"></i> เลือก' : '<i class="fa-solid fa-lock"></i> ไม่ว่าง'}
+            </button>
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join('');
 };
 
@@ -1931,9 +2182,7 @@ window.logic = logic;
 window.utils = utils;
 window.views = views;
 
-window.onload = () => {
-  app.init();
-};
+window.onload = () => { app.init(); };
 </script>
 </body>
 </html>
