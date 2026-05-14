@@ -2,7 +2,7 @@
 <html lang="th" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>EVRENTAL PRO - Premium Car Rental</title>
 
 <!-- Fonts -->
@@ -48,7 +48,7 @@
 
   /* ================= RESET & BASE ================= */
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kanit', sans-serif; }
-  body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; transition: background 0.3s, color 0.3s; overflow-x: hidden; }
+  body { background-color: var(--bg-body); color: var(--text-main); line-height: 1.6; transition: background 0.3s, color 0.3s; overflow-x: hidden; -webkit-tap-highlight-color: transparent;}
   h1, h2, h3, h4 { font-family: 'Prompt', sans-serif; color: var(--text-main); }
   button { cursor: pointer; border: none; background: transparent; color: inherit; transition: all 0.2s; font-family: 'Kanit', sans-serif; }
   img { max-width: 100%; height: auto; }
@@ -62,6 +62,7 @@
   .text-center { text-align: center; } .text-right { text-align: right; }
   .text-primary { color: var(--primary); } .text-muted { color: var(--text-muted); font-size: 0.9rem; }
   .font-bold { font-weight: 600; } .w-full { width: 100%; }
+  .hidden { display: none !important; }
   
   /* ================= UI COMPONENTS ================= */
   .card { background: var(--bg-card); border-radius: 16px; padding: 24px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); transition: transform 0.2s, box-shadow 0.2s; }
@@ -100,7 +101,33 @@
   .navbar { position: fixed; top: 0; left: 0; right: 0; height: 70px; background: var(--bg-card); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); z-index: 1000; display: flex; align-items: center; justify-content: space-between; padding: 0 5%; box-shadow: var(--shadow-sm); }
   .logo { font-family: 'Prompt', sans-serif; font-size: 1.5rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; cursor: pointer; }
   .logo img { max-height: 40px; border-radius: 8px; }
-  .main-content { margin-top: 70px; min-height: calc(100vh - 70px); }
+  
+  /* Ensure main content doesn't get hidden under bottom nav on mobile */
+  .main-content { margin-top: 70px; min-height: calc(100vh - 70px); padding-bottom: 20px; transition: padding-bottom 0.3s; }
+
+  /* Bottom Navigation (Mobile Only) */
+  .bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--bg-card);
+    border-top: 1px solid var(--border);
+    z-index: 1100;
+    padding-bottom: env(safe-area-inset-bottom, 0px); /* For iOS rounded corners */
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.05);
+  }
+  .bottom-nav-inner {
+    display: flex; justify-content: space-around; align-items: center; height: 65px;
+  }
+  .bottom-nav-item {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 0.75rem; gap: 4px; flex: 1; height: 100%; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .bottom-nav-item i { font-size: 1.3rem; margin-bottom: 2px; transition: transform 0.2s; }
+  .bottom-nav-item.active { color: var(--primary); font-weight: bold; }
+  .bottom-nav-item.active i { transform: scale(1.15); }
+  .bottom-nav-item:active { background: rgba(0,0,0,0.02); }
 
   /* Hero & Flight Search Panel */
   .hero-section { background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%); padding: 80px 20px 100px; text-align: center; color: white; border-radius: 0 0 30px 30px; }
@@ -131,11 +158,22 @@
   .menu-item { padding: 12px 16px; border-radius: 12px; font-weight: 500; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
   .menu-item:hover, .menu-item.active { background: var(--primary-light); color: var(--primary); }
   
+  /* RESPONSIVE BREAKPOINTS */
   @media (max-width: 992px) {
     .admin-layout { flex-direction: column; }
     .sidebar { position: static; width: 100%; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 20px; }
     .admin-main { margin-left: 0; width: 100%; padding: 20px; }
     .menu-item { white-space: nowrap; }
+  }
+
+  @media (max-width: 768px) {
+    .flight-search-box { grid-template-columns: 1fr; }
+    .modal-content { padding: 20px; }
+    .hero-section h1 { font-size: 2rem; }
+    .desktop-only { display: none !important; }
+    .bottom-nav { display: block; }
+    .main-content { padding-bottom: 80px; } /* Space for bottom nav */
+    .admin-layout .sidebar { padding-bottom: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
   }
 
   /* Table & Timeline */
@@ -177,13 +215,6 @@
     #main-modal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; color: black; box-shadow: none; transform: none; padding: 0; margin: 0; }
     .modal-close, .no-print { display: none !important; }
   }
-
-  /* Responsive Adjustments */
-  @media (max-width: 768px) {
-    .flight-search-box { grid-template-columns: 1fr; }
-    .modal-content { padding: 20px; }
-    .hero-section h1 { font-size: 2rem; }
-  }
 </style>
 </head>
 <body>
@@ -193,19 +224,25 @@
   <div class="logo" onclick="app.navigate('home')">
     <img id="nav-logo-img" src="" style="display:none;" alt="Logo">
     <i class="fa-solid fa-bolt text-primary" id="nav-logo-icon"></i> 
-    <span id="nav-store-name">EVRENTAL PRO</span>
+    <span id="nav-store-name" class="desktop-only">EVRENTAL PRO</span>
   </div>
-  <div class="flex items-center gap-4">
+  <div class="flex items-center gap-2">
+    <!-- พื้นที่สำหรับปุ่มสลับแอดมิน (Desktop เท่านั้น) -->
+    <div id="nav-admin-switch" class="desktop-only"></div>
+    
     <button class="btn btn-outline btn-sm no-print" onclick="app.toggleTheme()" title="เปลี่ยนธีม">
       <i class="fa-solid fa-moon" id="theme-icon"></i>
     </button>
-    <button class="btn btn-outline btn-sm font-bold no-print" onclick="app.toggleLang()" id="lang-btn">TH</button>
-    <div id="nav-user-area" class="no-print"></div>
+    
+    <div id="nav-user-area" class="no-print desktop-only"></div>
   </div>
 </nav>
 
 <!-- Main Container -->
 <div id="app-root" class="main-content"></div>
+
+<!-- Mobile Bottom Navigation Container -->
+<div id="bottom-nav-root" class="no-print"></div>
 
 <!-- Modals & Toasts Container -->
 <div id="modal-root"></div>
@@ -214,7 +251,7 @@
 <!-- สคริปต์แบบ Module (เพื่อใช้งาน Firebase V11) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
 // --- 1. FIREBASE CONFIG ---
@@ -232,7 +269,6 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 
-// ใช้ Environment App ID หรือค่าเริ่มต้น เพื่อป้องกัน Error ในระบบ Canvas
 const envAppId = typeof __app_id !== 'undefined' ? __app_id : 'car-rental-mic';
 
 // --- 2. MOCK DATA & STATE ---
@@ -243,7 +279,7 @@ const MOCK_IMAGES = [
 ];
 
 const DEFAULT_STATE = {
-  theme: 'light', lang: 'th',
+  theme: 'light',
   settings: {
     storeName: 'EVRENTAL PRO MAX',
     logoUrl: '',
@@ -305,7 +341,6 @@ const app = {
     document.documentElement.setAttribute('data-theme', this.state.theme);
     this.updateThemeIcon();
 
-    // เริ่มต้นเชื่อมต่อและดึงข้อมูลจาก Firebase
     try {
       await signInAnonymously(auth);
       this.isFirestoreInitialized = true;
@@ -319,12 +354,10 @@ const app = {
           const uid = sessionStorage.getItem('ev_user_id');
           if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
           
-          // Re-render UI after state updates from remote
           if(document.getElementById('app-root').innerHTML !== '') {
             this.render();
           }
         } else {
-          // หากฐานข้อมูลยังว่างเปล่า ให้เซฟข้อมูลเริ่มต้นขึ้นไป
           this.saveState();
         }
       }, (error) => {
@@ -337,7 +370,6 @@ const app = {
     const uid = sessionStorage.getItem('ev_user_id');
     if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
     
-    // Check if Receipt URL parameter exists
     const urlParams = new URLSearchParams(window.location.search);
     const receiptId = urlParams.get('receipt');
 
@@ -371,25 +403,18 @@ const app = {
     if(icon) icon.className = this.state.theme === 'light' ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
   },
 
-  toggleLang() {
-    this.state.lang = this.state.lang === 'th' ? 'en' : 'th';
-    document.getElementById('lang-btn').textContent = this.state.lang.toUpperCase();
-    utils.showToast(this.state.lang === 'th' ? 'เปลี่ยนภาษาไทย' : 'Language: English');
-    this.render();
-  },
-
   navigate(view) {
     this.currentView = view;
-    // Clear url params
     window.history.replaceState({}, document.title, window.location.pathname);
     this.render();
+    window.scrollTo(0,0);
   },
 
   isAdmin() { return this.currentUser && (this.currentUser.role === 'admin_master' || this.currentUser.role === 'admin_sub'); },
   isMaster() { return this.currentUser && this.currentUser.role === 'admin_master'; },
 
   render() {
-    // Render Navbar Config
+    // 1. Render Navbar Config
     document.getElementById('nav-store-name').innerText = this.state.settings.storeName;
     const logoImg = document.getElementById('nav-logo-img');
     const logoIcon = document.getElementById('nav-logo-icon');
@@ -402,17 +427,30 @@ const app = {
       logoIcon.style.display = 'block';
     }
 
-    // Render Navbar User Area
+    // 2. Render Admin Desktop Switch Button
+    const adminSwitch = document.getElementById('nav-admin-switch');
+    if (this.isAdmin()) {
+      const isCustomer = this.currentView === 'home';
+      adminSwitch.innerHTML = `
+        <button class="btn btn-outline btn-sm font-bold text-primary" style="border-color:var(--primary)" onclick="app.navigate('${isCustomer ? 'admin_dashboard' : 'home'}')">
+          <i class="fa-solid fa-repeat"></i> ${isCustomer ? 'ไปหน้าแอดมิน' : 'ไปหน้าลูกค้า'}
+        </button>
+      `;
+    } else {
+      adminSwitch.innerHTML = '';
+    }
+
+    // 3. Render Navbar User Area (Desktop Only)
     const navUser = document.getElementById('nav-user-area');
     if(this.currentUser) {
       navUser.innerHTML = `
         <div class="flex items-center gap-4">
-          <div class="text-right hidden-mobile" style="display:none; @media(min-width:768px){display:block;}">
+          <div class="text-right">
             <div style="font-size:0.75rem; color:var(--text-muted)">${this.currentUser.points} Pts | ${this.currentUser.tier}</div>
             <div class="font-bold" style="font-size:0.9rem">${this.currentUser.name}</div>
           </div>
           <button class="btn btn-outline btn-sm" onclick="logic.logout()">
-            <i class="fa-solid fa-sign-out-alt"></i> ${this.state.lang === 'th' ? 'ออก' : 'Logout'}
+            <i class="fa-solid fa-sign-out-alt"></i> ออกจากระบบ
           </button>
         </div>
       `;
@@ -420,7 +458,7 @@ const app = {
       navUser.innerHTML = `<button class="btn btn-primary btn-sm" onclick="ui.showLoginModal()">เข้าสู่ระบบ</button>`;
     }
 
-    // Render Main Content
+    // 4. Render Main Content
     const root = document.getElementById('app-root');
     if(this.isAdmin() && this.currentView !== 'home') {
       root.innerHTML = views.adminLayout();
@@ -430,21 +468,30 @@ const app = {
       root.innerHTML = views.customerHome();
       this.renderCarGrid();
     }
+
+    // 5. Render Mobile Bottom Nav
+    document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   },
 
   renderAdminTab(tabId) {
+    // ป้องกันแอดมินรองเข้าถึงแท็บจัดการแอดมิน
+    if (tabId === 'admins' && !this.isMaster()) return;
+
     this.currentAdminTab = tabId;
     document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
     const activeEl = document.getElementById(`menu-${tabId}`);
     if(activeEl) activeEl.classList.add('active');
 
     const content = document.getElementById('admin-content');
-    content.innerHTML = views.adminTabs[tabId]();
+    if(content) content.innerHTML = views.adminTabs[tabId]();
     
     if(tabId === 'dashboard') {
       ui.renderChart();
       ui.renderTimeline();
     }
+
+    // Update Bottom Nav active state
+    document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   }
 };
 
@@ -527,8 +574,6 @@ const utils = {
     }
     return { text: b.status, class: 'secondary' };
   },
-  
-  // Telegram Bot Notification Logic
   sendTelegramNotification: async (booking, car, user) => {
     const botToken = '8945655803:AAHI9QB4v9TRS1Z4OYUHrTFcBJdEkwbugig';
     const chatId = '-1005029081020';
@@ -563,6 +608,55 @@ const utils = {
 
 // --- 5. VIEWS (HTML Generators) ---
 const views = {
+  // Mobile Bottom Navigation View
+  bottomNav: () => {
+    const isCustomerMode = app.currentView === 'home' || !app.isAdmin();
+    
+    if (isCustomerMode) {
+      return `
+      <div class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <div class="bottom-nav-item active" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+            <i class="fa-solid fa-home"></i>หน้าแรก
+          </div>
+          <div class="bottom-nav-item" onclick="document.querySelector('.flight-search-container').scrollIntoView({behavior: 'smooth'})">
+            <i class="fa-solid fa-search"></i>ค้นหารถ
+          </div>
+          <div class="bottom-nav-item" onclick="${app.currentUser ? 'ui.showMyBookings()' : 'ui.showLoginModal()'}">
+            <i class="fa-solid fa-history"></i>ประวัติ
+          </div>
+          ${app.isAdmin() 
+            ? `<div class="bottom-nav-item" style="color:var(--primary)" onclick="app.navigate('admin_dashboard')"><i class="fa-solid fa-repeat"></i>หลังบ้าน</div>`
+            : `<div class="bottom-nav-item" onclick="${app.currentUser ? 'logic.logout()' : 'ui.showLoginModal()'}">
+                <i class="fa-solid ${app.currentUser ? 'fa-sign-out-alt' : 'fa-user'}"></i>${app.currentUser ? 'ออกระบบ' : 'เข้าระบบ'}
+               </div>`
+          }
+        </div>
+      </div>`;
+    } else {
+      return `
+      <div class="bottom-nav">
+        <div class="bottom-nav-inner">
+          <div class="bottom-nav-item ${app.currentAdminTab === 'dashboard' ? 'active' : ''}" onclick="app.renderAdminTab('dashboard')">
+            <i class="fa-solid fa-chart-pie"></i>ภาพรวม
+          </div>
+          <div class="bottom-nav-item ${app.currentAdminTab === 'bookings' ? 'active' : ''}" onclick="app.renderAdminTab('bookings')">
+            <i class="fa-solid fa-list-check"></i>จอง
+          </div>
+          <div class="bottom-nav-item ${app.currentAdminTab === 'cars' ? 'active' : ''}" onclick="app.renderAdminTab('cars')">
+            <i class="fa-solid fa-car"></i>รถยนต์
+          </div>
+          <div class="bottom-nav-item ${app.currentAdminTab === 'settings' ? 'active' : ''}" onclick="app.renderAdminTab('settings')">
+            <i class="fa-solid fa-cog"></i>ตั้งค่า
+          </div>
+          <div class="bottom-nav-item" style="color:var(--primary)" onclick="app.navigate('home')">
+            <i class="fa-solid fa-repeat"></i>หน้าร้าน
+          </div>
+        </div>
+      </div>`;
+    }
+  },
+
   flightSearchPanel: () => {
     const bOpts = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.pick===b.id?'selected':''}>${b.name}</option>`).join('');
     const bOptsDrop = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.drop===b.id?'selected':''}>${b.name}</option>`).join('');
@@ -601,7 +695,6 @@ const views = {
     <div class="hero-section">
       <h1>${app.state.settings.heroTitle}</h1>
       <p>${app.state.settings.heroSub}</p>
-      ${app.isAdmin() ? `<button class="btn btn-outline mt-4" style="border-color:white; color:white;" onclick="app.navigate('admin_dashboard')">👉 กลับหน้าจัดการแอดมิน</button>` : ''}
     </div>
     
     <div class="flight-search-container">
@@ -611,7 +704,7 @@ const views = {
     <div class="container pb-4">
       <div class="flex justify-between items-center mb-4">
         <h2>รถยนต์ที่พร้อมให้บริการ</h2>
-        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง & บิล</button>` : ''}
+        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm desktop-only" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง & บิล</button>` : ''}
       </div>
       <div id="car-grid-container" class="car-grid"></div>
     </div>
@@ -632,9 +725,6 @@ const views = {
         ${app.isMaster() ? `
           <div id="menu-admins" class="menu-item text-warning" onclick="app.renderAdminTab('admins')"><i class="fa-solid fa-user-shield w-6"></i> จัดการแอดมิน</div>
         ` : ''}
-
-        <hr class="my-2" style="border-color:var(--border);">
-        <div class="menu-item" onclick="app.navigate('home')"><i class="fa-solid fa-eye w-6"></i> มุมมองลูกค้า</div>
       </div>
       <div class="admin-main" id="admin-content"></div>
     </div>
@@ -677,7 +767,7 @@ const views = {
     bookings: () => `
       <div class="flex justify-between items-center mb-4">
         <h2>จัดการการจอง & ตรวจสอบสลิป</h2>
-        <button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('bookings')"><i class="fa-solid fa-file-excel"></i> Export Bookings</button>
+        ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('bookings')"><i class="fa-solid fa-file-excel"></i> Export Bookings</button>` : ''}
       </div>
       <div class="table-responsive">
         <table>
@@ -711,7 +801,7 @@ const views = {
       <div class="flex justify-between items-center mb-4">
         <h2>จัดการรถยนต์ (Fleet)</h2>
         <div class="flex gap-2">
-          <button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('cars')"><i class="fa-solid fa-file-excel"></i> Export Cars</button>
+          ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('cars')"><i class="fa-solid fa-file-excel"></i> Export Cars</button>` : ''}
           <button class="btn btn-primary btn-sm" onclick="ui.showCarFormModal()"><i class="fa-solid fa-plus"></i> เพิ่มรถใหม่</button>
         </div>
       </div>
@@ -737,7 +827,7 @@ const views = {
     crm: () => `
       <div class="flex justify-between items-center mb-4">
         <h2>ระบบจัดการลูกค้า (CRM)</h2>
-        <button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('users')"><i class="fa-solid fa-file-excel"></i> Export CRM</button>
+        ${app.isMaster() ? `<button class="btn btn-outline btn-sm text-success" onclick="logic.exportExcel('users')"><i class="fa-solid fa-file-excel"></i> Export CRM</button>` : ''}
       </div>
       <div class="table-responsive">
         <table>
@@ -891,7 +981,7 @@ const ui = {
 
   showLoginModal() {
     this.showModal('เข้าสู่ระบบ / สมัครสมาชิก', `
-      <p class="text-muted mb-4">เข้าสู่ระบบด้วยเบอร์โทรศัพท์และรหัสผ่าน หากยังไม่มีระบบจะสมัครให้ทันที <br><small class="text-info">* คนที่สมัครคนแรกสุดของระบบจะได้เป็นแอดมิน (Master Admin) อัตโนมัติ (นอกนั้นเกิดจากการแต่งตั้งเท่านั้น)</small></p>
+      <p class="text-muted mb-4">เข้าสู่ระบบด้วยเบอร์โทรศัพท์และรหัสผ่าน หรือใช้บัญชี Google <br><small class="text-info">* คนที่สมัครคนแรกสุดของระบบจะได้เป็นแอดมิน (Master Admin) อัตโนมัติ</small></p>
       <div class="input-group">
         <label>ชื่อ-นามสกุล (สำหรับผู้ใช้ใหม่)</label>
         <input type="text" id="log-name" class="input-control" placeholder="ชื่อ นามสกุล">
@@ -904,12 +994,11 @@ const ui = {
         <label>รหัสผ่าน <span class="text-danger">*</span></label>
         <input type="password" id="log-pass" class="input-control" placeholder="รหัสผ่าน" required>
       </div>
-      <button class="btn btn-primary w-full mb-4" onclick="logic.login()"><i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ / สมัครสมาชิก</button>
+      <button class="btn btn-primary w-full mb-4" onclick="logic.login()"><i class="fa-solid fa-sign-in-alt"></i> เข้าสู่ระบบ / สมัครสมาชิกด้วยเบอร์โทร</button>
       
-      <div class="text-center text-muted mb-4" style="font-size:0.85rem">หรือเข้าสู่ระบบด้วยโซเชียลมีเดีย</div>
-      <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 10px;">
-        <button class="btn btn-outline" style="color: #DB4437; border-color:#DB4437;" onclick="utils.showToast('Mock Google Login')"><i class="fa-brands fa-google"></i> Google</button>
-        <button class="btn btn-outline" style="color: #4267B2; border-color:#4267B2;" onclick="utils.showToast('Mock Facebook Login')"><i class="fa-brands fa-facebook"></i> Facebook</button>
+      <div class="text-center text-muted mb-4" style="font-size:0.85rem">หรือเข้าสู่ระบบอย่างรวดเร็ว</div>
+      <div class="grid" style="grid-template-columns: 1fr; gap: 10px;">
+        <button class="btn btn-outline w-full" style="color: #DB4437; border-color:#DB4437;" onclick="logic.loginWithGoogle()"><i class="fa-brands fa-google"></i> เข้าสู่ระบบด้วย Google</button>
       </div>
     `);
   },
@@ -1410,11 +1499,7 @@ const logic = {
     } else {
       if(!name) return utils.showToast('ผู้ใช้ใหม่กรุณากรอกชื่อ-นามสกุล', 'error');
       
-      // การให้สิทธิ์แอดมิน: ให้คนที่สมัครคนแรกเป็นแอดมิน นอกนั้นเป็น User (เกิดจากการแต่งตั้งเท่านั้น)
-      // (เราจะนับจำนวนผู้ใช้ที่สมัครเข้ามาใหม่ โดยกรอง Mock Data ที่ฝังมากับระบบออกไป)
       const realUsersCount = app.state.users.filter(u => u.id !== 'A001' && u.id !== 'U001').length;
-      
-      // ถ้าไม่มีผู้ใช้เลย (นับเฉพาะคนสมัครจริง) คนแรกสุดนี้จะได้เป็น admin_master อัตโนมัติ
       const newRole = realUsersCount === 0 ? 'admin_master' : 'user';
       
       user = { 
@@ -1440,6 +1525,56 @@ const logic = {
     }
   },
 
+  async loginWithGoogle() {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const fbUser = result.user;
+
+      let user = app.state.users.find(u => u.id === fbUser.uid || u.email === fbUser.email);
+
+      if (user) {
+        app.currentUser = user;
+        sessionStorage.setItem('ev_user_id', user.id);
+        utils.showToast(`ยินดีต้อนรับกลับ ${user.name}`, 'success');
+        ui.closeModal();
+        app.navigate(user.role.includes('admin') ? 'admin_dashboard' : 'home');
+      } else {
+        const realUsersCount = app.state.users.filter(u => u.id !== 'A001' && u.id !== 'U001').length;
+        const newRole = realUsersCount === 0 ? 'admin_master' : 'user';
+
+        user = {
+          id: fbUser.uid,
+          name: fbUser.displayName || 'ผู้ใช้ Google',
+          phone: fbUser.phoneNumber || 'เพิ่มเบอร์โทรภายหลัง',
+          password: 'google_login',
+          email: fbUser.email || '',
+          role: newRole,
+          tier: newRole === 'admin_master' ? 'Admin' : 'Silver',
+          points: app.state.settings.signupPts
+        };
+
+        app.state.users.push(user);
+        app.currentUser = user;
+        sessionStorage.setItem('ev_user_id', user.id);
+        app.saveState();
+
+        if(newRole === 'admin_master') {
+          utils.showToast(`ลงทะเบียนคนแรกสำเร็จ! คุณได้รับสิทธิ์ Master Admin`, 'success');
+          ui.closeModal();
+          app.navigate('admin_dashboard');
+        } else {
+          utils.showToast(`สมัครสมาชิกด้วย Google สำเร็จ! รับฟรี ${app.state.settings.signupPts} แต้ม`, 'success');
+          ui.closeModal();
+          app.navigate('home');
+        }
+      }
+    } catch (error) {
+      console.error("Google Login Error:", error);
+      utils.showToast('เข้าสู่ระบบด้วย Google ไม่สำเร็จ', 'error');
+    }
+  },
+
   logout() {
     app.currentUser = null;
     sessionStorage.removeItem('ev_user_id');
@@ -1453,7 +1588,6 @@ const logic = {
     
     if(!promo) return utils.showToast('โค้ดส่วนลดไม่ถูกต้อง', 'error');
     
-    // Recalculate base based on UI dates
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     const days = utils.calcDays(dFrom, dTo);
@@ -1477,7 +1611,6 @@ const logic = {
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     if(dFrom && dTo) {
-      // update global search params so they are saved in booking
       app.searchParams.dateFrom = dFrom;
       app.searchParams.dateTo = dTo;
 
@@ -1490,7 +1623,6 @@ const logic = {
       document.getElementById('book-net').innerText = `฿${utils.formatMoney(baseTotal)}`;
       document.getElementById('book-net').dataset.net = baseTotal;
       
-      // Reset promo if changed dates
       document.getElementById('book-discount').textContent = `฿0`;
       document.getElementById('promo-code').disabled = false;
       document.getElementById('promo-code').value = '';
@@ -1526,7 +1658,6 @@ const logic = {
     app.state.bookings.push(newBooking);
     app.saveState();
     
-    // แจ้งเตือนไปยัง Telegram ทันทีหลังสร้างการจอง
     const user = app.currentUser;
     const car = app.state.cars.find(c => c.id === carId);
     utils.sendTelegramNotification(newBooking, car, user);
@@ -1712,6 +1843,9 @@ const logic = {
   },
 
   exportExcel(type) {
+    // ป้องกันแอดมินรองดาวน์โหลด
+    if (!app.isMaster()) return utils.showToast('เฉพาะ Master Admin เท่านั้นที่ดาวน์โหลดได้', 'error');
+
     const wb = XLSX.utils.book_new();
     let data = [];
     let filename = '';
@@ -1739,7 +1873,6 @@ const logic = {
        });
        filename = 'Cars_Stats_Report.xlsx';
     } else {
-       // fallback export all
        const ws1 = XLSX.utils.json_to_sheet(app.state.bookings);
        const ws2 = XLSX.utils.json_to_sheet(app.state.users);
        XLSX.utils.book_append_sheet(wb, ws1, "Bookings");
@@ -1792,15 +1925,12 @@ app.renderCarGrid = function() {
   }).join('');
 };
 
-// --- Export to Window ---
-// ผูก Object เข้ากับ Window เพื่อให้ใช้งานผ่าน onclick="..." ได้
 window.app = app;
 window.ui = ui;
 window.logic = logic;
 window.utils = utils;
 window.views = views;
 
-// --- 8. INITIALIZATION ---
 window.onload = () => {
   app.init();
 };
