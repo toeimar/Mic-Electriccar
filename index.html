@@ -190,6 +190,7 @@
   .badge-info { background: rgba(59,130,246,0.12); color: var(--info); }
   .badge-purple { background: rgba(139,92,246,0.12); color: var(--purple); }
   .badge-primary { background: var(--primary-light); color: var(--primary); }
+  .badge-overdue { background: rgba(239,68,68,0.18); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
 
   .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
 
@@ -225,7 +226,6 @@
   .bottom-nav-item.active i { transform: scale(1.15); }
   .bottom-nav-item:active { background: var(--primary-light); color: var(--primary); border-radius: 12px; }
 
-  /* === AVAILABILITY BADGE - ข้อ 9 ชัดเจนขึ้น === */
   .avail-badge-wrap {
     position: absolute; top: 10px; right: 10px; z-index: 5;
     display: flex; flex-direction: column; gap: 4px; align-items: flex-end;
@@ -242,7 +242,6 @@
   .avail-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: white; box-shadow: 0 0 0 2px rgba(255,255,255,0.4); }
   .avail-pill.avail .dot { animation: pulse 2s infinite; }
 
-  /* Car availability overlay for unavailable cars */
   .car-unavail-overlay {
     position: absolute; inset: 0; z-index: 3;
     background: rgba(0,0,0,0.55); border-radius: 16px 16px 0 0;
@@ -256,7 +255,6 @@
     border: 2px solid rgba(255,255,255,0.3);
   }
 
-  /* Insurance badge */
   .insurance-alert { 
     border-left: 4px solid var(--warning); background: rgba(245,158,11,0.08); 
     padding: 12px 16px; border-radius: 12px; margin-bottom: 10px;
@@ -443,11 +441,9 @@
   .spec-table tr:last-child td { border-bottom: none; }
   .spec-section-title { font-size: 0.85rem; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; margin: 16px 0 8px; padding-bottom: 6px; border-bottom: 2px solid var(--primary-light); font-family: 'Prompt', sans-serif; }
 
-  /* Google Map embed */
   .map-embed-container { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); margin-top: 8px; }
   .map-embed-container iframe { width: 100%; height: 220px; border: none; display: block; }
 
-  /* Telegram test button */
   .tg-test-btn {
     background: linear-gradient(135deg, #0088cc, #006aa3); color: white;
     border-radius: 10px; padding: 10px 18px; font-weight: 700; font-size: 0.92rem;
@@ -455,9 +451,17 @@
   }
   .tg-test-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,136,204,0.4); }
 
-  /* Insurance progress */
   .insurance-days-bar { height: 6px; border-radius: 99px; background: var(--border); overflow: hidden; margin-top: 6px; }
   .insurance-days-fill { height: 100%; border-radius: 99px; transition: width 0.5s; }
+
+  .img-viewer-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+    animation: fadeIn 0.2s ease;
+  }
+  .img-viewer-overlay img { max-width: 100%; max-height: 90vh; border-radius: 12px; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .img-viewer-close { position: fixed; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.15); color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.3); transition: background 0.2s; }
+  .img-viewer-close:hover { background: rgba(239,68,68,0.7); }
 </style>
 </head>
 <body>
@@ -515,8 +519,6 @@ const MOCK_IMAGES = [
   "https://images.unsplash.com/photo-1536700503339-1e4b06520771?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
 ];
 
-// ข้อ 3: เพิ่ม insuranceExpiry ในข้อมูลรถ
-// ข้อ 4: branch มี mapUrl และ mapEmbed
 const DEFAULT_STATE = {
   theme: 'light',
   settings: {
@@ -594,7 +596,6 @@ const app = {
   },
 
   init: async function() {
-    // ข้อ 8: migrate state เดิมให้มีฟิลด์ใหม่
     if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
     if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
     if (!this.state.settings.insuranceAlertDays) this.state.settings.insuranceAlertDays = 30;
@@ -617,7 +618,6 @@ const app = {
       onSnapshot(docRef, (snapshot) => {
         if (snapshot.exists()) {
           this.state = snapshot.data();
-          // migrate on receive
           if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
           if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
           localStorage.setItem('ev_state_v5', JSON.stringify(this.state));
@@ -645,12 +645,11 @@ const app = {
 
     this.render();
     if(receiptId) { ui.showReceiptModal(receiptId); setTimeout(() => window.print(), 800); }
-
-    // ข้อ 3: ตรวจประกันทุกครั้งที่เปิด
     this.checkInsuranceAlerts();
+    // ข้อ 3: แจ้งเตือนวันรับ-คืนรถล่วงหน้า 2 วัน
+    this.checkPickupReturnAlerts();
   },
 
-  // ข้อ 3: ตรวจแจ้งเตือนประกัน
   checkInsuranceAlerts() {
     const alertDays = this.state.settings.insuranceAlertDays || 30;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -666,6 +665,48 @@ const app = {
         setTimeout(() => {
           utils.showToast(`🚨 ${car.name} ประกันหมดอายุแล้ว! โปรดต่อทันที`, 'error');
         }, 1500);
+      }
+    });
+  },
+
+  // ข้อ 3: ฟังก์ชันแจ้งเตือนวันรับ-คืนรถล่วงหน้า 2 วัน
+  checkPickupReturnAlerts() {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const in2Days = new Date(today); in2Days.setDate(in2Days.getDate() + 2);
+
+    this.state.bookings.forEach(b => {
+      if(b.status === 'Cancelled' || b.status === 'Completed') return;
+
+      const pickDate = new Date(b.dateFrom); pickDate.setHours(0,0,0,0);
+      const returnDate = new Date(b.dateTo); returnDate.setHours(0,0,0,0);
+      const diffPick = Math.ceil((pickDate - today) / (1000 * 60 * 60 * 24));
+      const diffReturn = Math.ceil((returnDate - today) / (1000 * 60 * 60 * 24));
+
+      const car = this.state.cars.find(c => c.id === b.carId);
+      const user = this.state.users.find(u => u.id === b.userId);
+      const carName = car ? car.name : b.carId;
+      const userName = user ? user.name : b.userId;
+
+      if(b.status === 'Confirmed' && diffPick === 2) {
+        setTimeout(() => {
+          utils.showToast(`🚗 รับรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateFrom)})`, 'info');
+        }, 2000);
+        if(this.isAdmin()) {
+          utils.sendTelegram(
+            `🚗 <b>แจ้งเตือน: รับรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันรับรถ:</b> ${utils.formatDate(b.dateFrom)}`
+          );
+        }
+      }
+
+      if(b.status === 'Active' && diffReturn === 2) {
+        setTimeout(() => {
+          utils.showToast(`🔔 คืนรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateTo)})`, 'warning');
+        }, 2500);
+        if(this.isAdmin()) {
+          utils.sendTelegram(
+            `🔔 <b>แจ้งเตือน: คืนรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันคืนรถ:</b> ${utils.formatDate(b.dateTo)}`
+          );
+        }
       }
     });
   },
@@ -817,6 +858,18 @@ const utils = {
     document.execCommand('copy'); document.body.removeChild(el);
     utils.showToast('คัดลอกลิงก์สำเร็จ', 'success');
   },
+
+  openImageViewer: (src) => {
+    if(!src) return utils.showToast('ไม่มีรูปภาพ', 'warning');
+    const overlay = document.createElement('div');
+    overlay.className = 'img-viewer-overlay';
+    overlay.innerHTML = `
+      <div class="img-viewer-close" onclick="this.parentElement.remove()"><i class="fa-solid fa-times"></i></div>
+      <img src="${src}" alt="ดูรูปเต็ม">`;
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+  },
+
   getBookingStatusDisplay: (b) => {
     if(b.status === 'Cancelled') return { text: 'ยกเลิก', class: 'danger' };
     if(b.status === 'Completed') return { text: 'คืนรถแล้ว', class: 'info' };
@@ -825,7 +878,7 @@ const utils = {
     const returnDate = new Date(b.dateTo); returnDate.setHours(0,0,0,0);
     const diffDays = Math.ceil((returnDate - today) / (1000 * 60 * 60 * 24));
     if(b.status === 'Active') {
-      if(diffDays < 0) return { text: 'เลยกำหนด (Overdue)', class: 'danger' };
+      if(diffDays < 0) return { text: `คืนรถช้า ${Math.abs(diffDays)} วัน`, class: 'overdue' };
       if(diffDays === 1) return { text: 'แจ้งเตือน: พรุ่งนี้คืนรถ', class: 'purple' };
       return { text: 'กำลังใช้งาน', class: 'success' };
     }
@@ -835,7 +888,7 @@ const utils = {
     }
     return { text: b.status, class: 'secondary' };
   },
-  // ข้อ 5: ฟังก์ชัน Telegram สำหรับทุกความเคลื่อนไหว
+
   sendTelegram: async (message, parseMode = 'HTML') => {
     const botToken = app.state.settings.tgBotToken;
     const chatId = app.state.settings.tgChatId;
@@ -861,7 +914,6 @@ const utils = {
                     `<i>โปรดเข้าสู่ระบบหลังบ้านเพื่อตรวจสอบสลิปและอนุมัติ</i>`;
     await utils.sendTelegram(message);
   },
-  // ข้อ 5: แจ้งเปลี่ยนสถานะ
   sendTelegramStatusUpdate: async (booking, newStatus, car, user) => {
     const statusEmoji = { Pending:'⏳', Confirmed:'✅', Active:'🚗', Completed:'🏁', Cancelled:'❌' };
     const message = `${statusEmoji[newStatus]||'📌'} <b>อัปเดตสถานะการจอง</b>\n\n` +
@@ -872,7 +924,6 @@ const utils = {
                     `💰 <b>ยอด:</b> ฿${utils.formatMoney(booking.total)}`;
     await utils.sendTelegram(message);
   },
-  // ข้อ 5: แจ้งสมัครสมาชิกใหม่
   sendTelegramNewUser: async (user) => {
     const message = `👤 <b>สมาชิกใหม่ลงทะเบียน!</b>\n\n` +
                     `👤 <b>ชื่อ:</b> ${user.name}\n` +
@@ -880,7 +931,6 @@ const utils = {
                     `🏅 <b>ระดับ:</b> ${user.tier}`;
     await utils.sendTelegram(message);
   },
-  // ข้อ 3: แจ้งประกัน
   sendTelegramInsuranceAlert: async (car) => {
     const today = new Date(); today.setHours(0,0,0,0);
     const expiry = new Date(car.insuranceExpiry); expiry.setHours(0,0,0,0);
@@ -892,7 +942,6 @@ const utils = {
                     `📋 <b>หมายเหตุ:</b> ${car.insuranceNote||'-'}`;
     await utils.sendTelegram(message);
   },
-  // ข้อ 3: คำนวณสถานะประกัน
   getInsuranceStatus: (car, alertDays) => {
     if(!car.insuranceExpiry) return { status: 'none', diff: null, color: 'var(--text-muted)', label: 'ไม่ระบุ' };
     const today = new Date(); today.setHours(0,0,0,0);
@@ -1078,6 +1127,12 @@ const views = {
         return Math.ceil((exp - today)/(1000*60*60*24)) <= alertDays;
       });
 
+      const overdueBks = app.state.bookings.filter(b => {
+        if(b.status !== 'Active') return false;
+        const ret = new Date(b.dateTo); ret.setHours(0,0,0,0);
+        return ret < today;
+      }).length;
+
       return `
         <h2 class="mb-4">สรุปภาพรวมระบบ</h2>
         
@@ -1116,6 +1171,11 @@ const views = {
             <div class="stat-icon" style="background:rgba(139,92,246,0.1); color:var(--purple);"><i class="fa-solid fa-check-double"></i></div>
             <div><div class="stat-label">คืนรถแล้วทั้งหมด</div><div class="stat-value" style="color:var(--purple);">${completedBks} <span style="font-size:1rem;">ครั้ง</span></div></div>
           </div>
+          ${overdueBks > 0 ? `
+          <div class="card flex items-center gap-4" style="border-color:var(--danger); background:rgba(239,68,68,0.04);">
+            <div class="stat-icon" style="background:rgba(239,68,68,0.1); color:var(--danger);"><i class="fa-solid fa-clock-rotate-left"></i></div>
+            <div><div class="stat-label" style="color:var(--danger);">คืนรถช้า (Overdue)</div><div class="stat-value text-danger">${overdueBks} <span style="font-size:1rem;">คัน</span></div></div>
+          </div>` : ''}
         </div>
         
         <div class="card mt-4">
@@ -1170,7 +1230,6 @@ const views = {
       `;
     },
 
-    // ข้อ 3: แท็บประกัน
     insurance: () => {
       const alertDays = app.state.settings.insuranceAlertDays || 30;
       const today = new Date(); today.setHours(0,0,0,0);
@@ -1192,7 +1251,6 @@ const views = {
           ${app.state.cars.map(car => {
             const ins = utils.getInsuranceStatus(car, alertDays);
             const expiry = car.insuranceExpiry ? new Date(car.insuranceExpiry) : null;
-            const totalDays = expiry ? Math.ceil((expiry - today)/(1000*60*60*24)) + 365 : 365;
             const pct = expiry ? Math.max(0, Math.min(100, (ins.diff/365)*100)) : 0;
             return `
             <div class="card" style="border-color:${ins.status==='expired'?'var(--danger)':ins.status==='soon'?'var(--warning)':'var(--border)'};">
@@ -1230,8 +1288,19 @@ const views = {
         </div>`;
     },
 
+    // ข้อ 2: เรียงลำดับสำคัญสุดก่อน (Pending → Active/Overdue → Confirmed → Completed → Cancelled)
     bookings: () => {
-      const sorted = [...app.state.bookings].sort((a,b) => new Date(b.dateFrom)-new Date(a.dateFrom));
+      const STATUS_PRIORITY = { 'Pending': 0, 'Active': 1, 'Confirmed': 2, 'Completed': 3, 'Cancelled': 4 };
+      const today = new Date(); today.setHours(0,0,0,0);
+
+      const sorted = [...app.state.bookings].sort((a, b) => {
+        const pa = STATUS_PRIORITY[a.status] ?? 5;
+        const pb = STATUS_PRIORITY[b.status] ?? 5;
+        if(pa !== pb) return pa - pb;
+        // ภายในกลุ่มเดียวกัน เรียงล่าสุดก่อน
+        return new Date(b.dateFrom) - new Date(a.dateFrom);
+      });
+
       return `
         <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
           <h2>จัดการการจอง & ตรวจสอบสลิป</h2>
@@ -1243,6 +1312,7 @@ const views = {
               const u = app.state.users.find(x => x.id === b.userId);
               const c = app.state.cars.find(x => x.id === b.carId);
               const st = utils.getBookingStatusDisplay(b);
+              const bookedOn = b.createdAt ? utils.formatDate(b.createdAt) : utils.formatDate(b.dateFrom);
               return `
               <div class="card mb-3 p-4">
                 <div class="flex justify-between items-center mb-3">
@@ -1264,14 +1334,23 @@ const views = {
                     <div class="text-muted">${b.days} วัน</div>
                   </div>
                   <div>
-                    <div class="text-muted" style="font-size:0.8rem;">วันเช่า</div>
-                    <div>${utils.formatDate(b.dateFrom)}</div>
+                    <div class="text-muted" style="font-size:0.8rem;">วันเช่า – คืน</div>
+                    <div>${utils.formatDate(b.dateFrom)} – ${utils.formatDate(b.dateTo)}</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.8rem;">วันที่จอง</div>
+                    <div style="color:var(--info); font-weight:600;"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${bookedOn}</div>
                   </div>
                   <div>
                     <div class="text-muted" style="font-size:0.8rem;">ยอดชำระ</div>
                     <div class="font-bold">฿${utils.formatMoney(b.total + (b.fine || 0))}</div>
                     ${b.fine ? `<div class="text-danger" style="font-size:0.8rem;">+ ค่าปรับ ฿${utils.formatMoney(b.fine)}</div>` : ''}
                   </div>
+                  ${st.class === 'overdue' ? `
+                  <div>
+                    <div class="text-muted" style="font-size:0.8rem;">สถานะพิเศษ</div>
+                    <div class="badge badge-overdue"><i class="fa-solid fa-triangle-exclamation"></i> ${st.text}</div>
+                  </div>` : ''}
                 </div>
                 <div class="flex gap-2">
                   <button class="btn btn-outline btn-sm flex-1" onclick="ui.showAdminBookingModal('${b.id}')"><i class="fa-solid fa-pen-to-square"></i> ตรวจสอบ</button>
@@ -1371,7 +1450,6 @@ const views = {
           }).join('')}
     `,
 
-    // ข้อ 4: settings - branch มี address + map
     settings: () => {
       const bList = app.state.branches.map(b => `
         <div class="card-flat p-3 mb-3" style="border-radius:14px;">
@@ -1439,14 +1517,22 @@ const views = {
       `;
     },
 
-    // ข้อ 5: แท็บ Telegram settings
+    // ข้อ 1: ซ่อน Bot Token ไม่ให้แก้ไขได้ (แสดงเฉพาะ Chat ID และ save ได้เฉพาะ Chat ID)
     telegram: () => `
       <h2 class="mb-4"><i class="fa-brands fa-telegram text-info"></i> ตั้งค่าการแจ้งเตือน Telegram</h2>
       <div class="card mb-4">
         <h4 class="mb-4" style="padding-bottom:12px; border-bottom:1px solid var(--border);">ข้อมูล Bot</h4>
-        <div class="input-group"><label>Bot Token</label><input type="text" id="tg-token" class="input-control" value="${app.state.settings.tgBotToken||''}" placeholder="123456:ABCDEF..."></div>
+        <div class="input-group">
+          <label>Bot Token</label>
+          <div style="background:var(--bg-body); border:1.5px solid var(--border); border-radius:12px; padding:13px 16px; display:flex; align-items:center; gap:10px; color:var(--text-muted);">
+            <i class="fa-solid fa-lock" style="color:var(--primary); flex-shrink:0;"></i>
+            <span style="font-family:monospace; font-size:0.95rem; letter-spacing:1px;">••••••••••••••••••••••••••••••••••••••</span>
+            <span class="badge badge-success" style="margin-left:auto; flex-shrink:0;"><i class="fa-solid fa-check"></i> ตั้งค่าแล้ว</span>
+          </div>
+          <small class="text-muted mt-1 block" style="font-size:0.82rem;"><i class="fa-solid fa-shield-halved text-success"></i> Bot Token ถูกป้องกันและไม่สามารถแก้ไขได้เพื่อความปลอดภัย</small>
+        </div>
         <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
-        <button class="btn btn-primary btn-sm" onclick="logic.saveTelegramSettings()"><i class="fa-solid fa-save"></i> บันทึก Bot Settings</button>
+        <button class="btn btn-primary btn-sm" onclick="logic.saveTelegramSettings()"><i class="fa-solid fa-save"></i> บันทึก Chat ID</button>
       </div>
       <div class="card mb-4">
         <h4 class="mb-3">ทดสอบการแจ้งเตือน</h4>
@@ -1463,6 +1549,8 @@ const views = {
             { icon:'✅', label:'อัปเดตสถานะการจอง', desc:'เมื่อแอดมินเปลี่ยนสถานะ Pending/Confirmed/Active/Completed/Cancelled' },
             { icon:'👤', label:'สมัครสมาชิกใหม่', desc:'เมื่อมีลูกค้าลงทะเบียนเข้าระบบ' },
             { icon:'🛡️', label:'ประกันใกล้หมดอายุ', desc:'แจ้งเตือนเมื่อกดปุ่มในหน้าประกัน' },
+            { icon:'🚗', label:'แจ้งเตือนรับรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันรับรถใกล้ถึง' },
+            { icon:'🔔', label:'แจ้งเตือนคืนรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันคืนรถใกล้ถึง' },
           ].map(ev => `
             <div class="flex items-center gap-3 p-3" style="background:var(--bg-body); border-radius:12px; border:1px solid var(--border);">
               <span style="font-size:1.4rem;">${ev.icon}</span>
@@ -1533,7 +1621,6 @@ const ui = {
     if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; }
   },
 
-  // ข้อ 1&2: ตัดข้อความแนะนำและบัญชีทดสอบออก; ข้อ 7: ล็อคอินได้ด้วยเบอร์+รหัส
   showLoginModal() {
     this.showModal('เข้าสู่ระบบ / สมัครสมาชิก', `
       <div class="input-group">
@@ -1568,7 +1655,6 @@ const ui = {
     setTimeout(() => document.getElementById('log-phone')?.focus(), 200);
   },
 
-  // ข้อ 6: เปลี่ยนรหัสผ่านตัวเอง
   showChangePasswordModal() {
     this.showModal('เปลี่ยนรหัสผ่าน', `
       <div class="input-group">
@@ -1779,7 +1865,6 @@ const ui = {
   showMyBookings() {
     const myBks = app.state.bookings.filter(b => b.userId === app.currentUser.id).sort((a,b) => new Date(b.dateFrom)-new Date(a.dateFrom));
     let html = '';
-    // ข้อ 6: เพิ่มปุ่มเปลี่ยนรหัสผ่าน
     const profileBar = `
       <div class="card-flat p-3 mb-4 flex justify-between items-center" style="border-radius:14px; background:var(--primary-light);">
         <div>
@@ -1925,16 +2010,16 @@ const ui = {
           <div class="card-flat p-3 text-center mb-4" style="border-radius:14px; border-color:var(--warning);">
             <div class="font-bold mb-2 text-primary" id="adm-display-total">ยอดโอน: ฿${utils.formatMoney(b.total)}</div>
             ${b.slipUrl 
-              ? `<img src="${b.slipUrl}" style="max-height:160px; border-radius:10px; border:1px solid var(--border); display:block; margin:0 auto 10px; object-fit:contain;">
-                 <button class="btn btn-outline btn-sm w-full" onclick="window.open('${b.slipUrl}')"><i class="fa-solid fa-expand"></i> ดูสลิปเต็ม</button>` 
+              ? `<img src="${b.slipUrl}" style="max-height:160px; border-radius:10px; border:1px solid var(--border); display:block; margin:0 auto 10px; object-fit:contain; cursor:pointer;" onclick="utils.openImageViewer('${b.slipUrl}')">
+                 <button class="btn btn-outline btn-sm w-full" onclick="utils.openImageViewer('${b.slipUrl}')"><i class="fa-solid fa-expand"></i> ดูสลิปเต็ม</button>` 
               : `<div class="empty-state" style="padding:24px;"><i class="fa-solid fa-file-image" style="font-size:2rem; opacity:0.3; display:block; margin-bottom:8px;"></i><p style="font-size:0.92rem;">ไม่มีภาพสลิป</p></div>`}
           </div>
           <div class="flex gap-2 mb-4">
             ${b.idCardUrl 
-              ? `<button class="btn btn-outline btn-sm flex-1" onclick="window.open('${b.idCardUrl}')"><i class="fa-solid fa-id-card"></i> บัตรปชช.</button>` 
+              ? `<button class="btn btn-outline btn-sm flex-1" onclick="utils.openImageViewer('${b.idCardUrl}')"><i class="fa-solid fa-id-card"></i> บัตรปชช.</button>` 
               : `<button class="btn btn-outline btn-sm flex-1" disabled style="opacity:0.4;"><i class="fa-solid fa-id-card"></i> ไม่มีบัตรปชช.</button>`}
             ${b.licenseUrl 
-              ? `<button class="btn btn-outline btn-sm flex-1" onclick="window.open('${b.licenseUrl}')"><i class="fa-solid fa-car"></i> ใบขับขี่</button>` 
+              ? `<button class="btn btn-outline btn-sm flex-1" onclick="utils.openImageViewer('${b.licenseUrl}')"><i class="fa-solid fa-car"></i> ใบขับขี่</button>` 
               : `<button class="btn btn-outline btn-sm flex-1" disabled style="opacity:0.4;"><i class="fa-solid fa-car"></i> ไม่มีใบขับขี่</button>`}
           </div>
           <button class="btn btn-primary w-full btn-lg" onclick="logic.updateBookingStatus('${bId}')">
@@ -1969,7 +2054,6 @@ const ui = {
     `, '', u.phone);
   },
 
-  // ข้อ 3: modal แก้ไขประกันรถ
   showInsuranceEditModal(carId) {
     const c = app.state.cars.find(x => x.id === carId);
     this.showModal(`แก้ไขประกัน: ${c.name}`, `
@@ -2147,7 +2231,6 @@ const logic = {
     } catch(err) { utils.showToast('เกิดข้อผิดพลาดในการโหลดภาพ', 'error'); }
   },
 
-  // ข้อ 7: login - ถ้ามีบัญชีอยู่แล้ว ใส่เบอร์+รหัสเข้าได้เลย (ไม่ต้องใส่ชื่อ)
   login() {
     const name = document.getElementById('log-name').value.trim();
     const phone = document.getElementById('log-phone').value.trim();
@@ -2156,7 +2239,6 @@ const logic = {
     
     let user = app.state.users.find(u => u.phone === phone);
     if(user) {
-      // ผู้ใช้เดิม - เข้าด้วยเบอร์+รหัสได้เลย (ข้อ 7)
       if(user.password === pass) {
         app.currentUser = user;
         sessionStorage.setItem('ev_user_id', user.id);
@@ -2171,7 +2253,6 @@ const logic = {
         utils.showToast('รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่', 'error');
       }
     } else {
-      // สมัครใหม่ - ต้องใส่ชื่อ
       if(!name) return utils.showToast('ผู้ใช้ใหม่ กรุณากรอกชื่อ-นามสกุล', 'error');
       const realUsersCount = app.state.users.filter(u => u.id !== 'A001' && u.id !== 'U001').length;
       const newRole = realUsersCount === 0 ? 'admin_master' : 'user';
@@ -2185,7 +2266,6 @@ const logic = {
       app.currentUser = user;
       sessionStorage.setItem('ev_user_id', user.id);
       app.saveState();
-      // ข้อ 5: แจ้ง Telegram เมื่อมีสมาชิกใหม่
       utils.sendTelegramNewUser(user);
       if(newRole === 'admin_master') {
         utils.showToast(`ลงทะเบียนสำเร็จ! คุณได้รับสิทธิ์ Master Admin 🎉`, 'success');
@@ -2199,7 +2279,6 @@ const logic = {
     }
   },
 
-  // ข้อ 6: เปลี่ยนรหัสผ่านตัวเอง
   changePassword() {
     const oldPw = document.getElementById('chpw-old').value;
     const newPw = document.getElementById('chpw-new').value;
@@ -2273,7 +2352,8 @@ const logic = {
       slipUrl: app.tempUploads['slip'] || '',
       idCardUrl: app.tempUploads['idcard'] || '',
       licenseUrl: app.tempUploads['license'] || '',
-      contractUrl: null, isReviewed: false, fine: 0
+      contractUrl: null, isReviewed: false, fine: 0,
+      createdAt: new Date().toISOString().split('T')[0]
     };
     app.state.bookings.push(newBooking);
     app.saveState();
@@ -2312,7 +2392,6 @@ const logic = {
     b.status = newStatus; b.dateFrom = newDFrom; b.dateTo = newDTo;
     b.days = utils.calcDays(newDFrom, newDTo); b.total = newTotal; b.fine = newFine;
     app.saveState(); ui.closeModal();
-    // ข้อ 5: แจ้ง Telegram เมื่อเปลี่ยนสถานะ
     if(oldStatus !== newStatus) {
       const car = app.state.cars.find(c => c.id === b.carId);
       const user = app.state.users.find(u => u.id === b.userId);
@@ -2383,7 +2462,6 @@ const logic = {
     }
   },
 
-  // ข้อ 3: บันทึกประกัน
   saveInsurance(carId) {
     const c = app.state.cars.find(x => x.id === carId);
     c.insuranceExpiry = document.getElementById('ins-expiry').value;
@@ -2400,7 +2478,6 @@ const logic = {
     utils.showToast(`บันทึก: แจ้งเตือนล่วงหน้า ${val} วัน`, 'success');
   },
 
-  // ข้อ 3: ส่ง TG แจ้งเตือนประกันทุกคัน
   async sendAllInsuranceAlerts() {
     const alertDays = app.state.settings.insuranceAlertDays || 30;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -2414,7 +2491,6 @@ const logic = {
     utils.showToast(`ส่ง Telegram แจ้งเตือน ${cars.length} คันแล้ว`, 'success');
   },
 
-  // ข้อ 5: ทดสอบ Telegram
   async testTelegram() {
     const msg = `🧪 <b>ทดสอบระบบแจ้งเตือน EVRENTAL PRO</b>\n\n` +
                 `✅ การเชื่อมต่อ Bot ทำงานปกติ\n` +
@@ -2428,12 +2504,11 @@ const logic = {
     }
   },
 
-  // ข้อ 5: บันทึก TG settings
+  // ข้อ 1: saveTelegramSettings บันทึกเฉพาะ Chat ID (ไม่แตะ Bot Token)
   saveTelegramSettings() {
-    app.state.settings.tgBotToken = document.getElementById('tg-token').value.trim();
     app.state.settings.tgChatId = document.getElementById('tg-chatid').value.trim();
     app.saveState();
-    utils.showToast('บันทึก Telegram Settings สำเร็จ', 'success');
+    utils.showToast('บันทึก Chat ID สำเร็จ', 'success');
   },
 
   _starRating: 0,
@@ -2476,7 +2551,6 @@ const logic = {
     app.render();
   },
 
-  // ข้อ 4: addBranch รองรับ address + mapUrl + mapEmbed
   addBranch() {
     const id = document.getElementById('new-branch-id').value.trim().toUpperCase();
     const name = document.getElementById('new-branch-name').value.trim();
@@ -2501,7 +2575,7 @@ const logic = {
     const wb = XLSX.utils.book_new();
     let data = [], filename = '';
     if(type === 'bookings') {
-      data = app.state.bookings.map(b => ({ รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId, วันรับ: b.dateFrom, วันคืน: b.dateTo, จำนวนวัน: b.days, ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status }));
+      data = app.state.bookings.map(b => ({ รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId, วันจอง: b.createdAt||b.dateFrom, วันรับ: b.dateFrom, วันคืน: b.dateTo, จำนวนวัน: b.days, ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status }));
       filename = 'Bookings_Report.xlsx';
     } else if(type === 'users') {
       data = app.state.users.map(u => ({ รหัสลูกค้า: u.id, ชื่อ: u.name, เบอร์: u.phone, ระดับ: u.tier, คะแนน: u.points, บทบาท: u.role }));
@@ -2524,7 +2598,7 @@ const logic = {
   }
 };
 
-// ข้อ 9: Car grid - แสดงสถานะว่าง/ติดจองชัดเจนขึ้น
+// Car grid
 app.renderCarGrid = function() {
   const container = document.getElementById('car-grid-container');
   if(!container) return;
@@ -2545,7 +2619,6 @@ app.renderCarGrid = function() {
   const hasDateFilter = dateFrom && dateTo;
   const availCount = cars.filter(c => utils.isCarAvailable(c.id, dateFrom, dateTo)).length;
 
-  // Summary bar
   let summaryHtml = '';
   if(hasDateFilter) {
     summaryHtml = `
@@ -2563,7 +2636,6 @@ app.renderCarGrid = function() {
     return `
       <div class="card car-card" style="animation-delay:${idx * 0.05}s; ${!isAvail ? 'opacity:0.85;' : ''}">
         <div class="car-img-container">
-          <!-- ข้อ 9: badge ชัดเจนขึ้น -->
           <div class="avail-badge-wrap">
             ${isAvail 
               ? `<div class="avail-pill avail"><span class="dot"></span> ว่างพร้อมเช่า</div>` 
