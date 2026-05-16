@@ -462,6 +462,15 @@
   .img-viewer-overlay img { max-width: 100%; max-height: 90vh; border-radius: 12px; object-fit: contain; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
   .img-viewer-close { position: fixed; top: 16px; right: 16px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.15); color: white; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1.5px solid rgba(255,255,255,0.3); transition: background 0.2s; }
   .img-viewer-close:hover { background: rgba(239,68,68,0.7); }
+
+  /* custom location box */
+  .custom-location-box {
+    background: var(--primary-light); border: 1.5px solid var(--primary); border-radius: 12px;
+    padding: 12px 14px; margin-top: 8px; display: none; flex-direction: column; gap: 8px;
+  }
+  .custom-location-box.show { display: flex; }
+  .custom-location-box label { font-size: 0.88rem; font-weight: 600; color: var(--primary); margin-bottom: 0; }
+  .custom-location-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 </style>
 </head>
 <body>
@@ -495,11 +504,10 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// รองรับทั้งแบบรันบนโฮสต์ของคุณเอง และรันแบบ Preview บนระบบ
-let firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyAyl0TZT5yNIWQmX3XhAnPkh7orWFLUImw",
   authDomain: "car-rental-mic.firebaseapp.com",
   projectId: "car-rental-mic",
@@ -509,15 +517,11 @@ let firebaseConfig = {
   measurementId: "G-HJMYXF3PNZ"
 };
 
-// ใช้ Config จากระบบ Preview (ถ้ามี)
-if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-  firebaseConfig = JSON.parse(__firebase_config);
-}
-
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
-const envAppId = typeof __app_id !== 'undefined' ? __app_id : 'car-rental-mic';
+
+const STORE_DOC_PATH = () => doc(db, 'ev_rental_store', 'main_state');
 
 const MOCK_IMAGES = [
   "https://images.unsplash.com/photo-1560958089-b8a1929cea89?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
@@ -590,14 +594,19 @@ const app = {
   searchParams: { pick: '', drop: '', dateFrom: '', dateTo: '', type: 'ทั้งหมด' },
   tempUploads: {}, 
   isFirestoreInitialized: false,
+  _isSaving: false,
 
   saveState: async function() { 
     localStorage.setItem('ev_state_v5', JSON.stringify(this.state)); 
-    if (this.isFirestoreInitialized) {
+    if (this.isFirestoreInitialized && !this._isSaving) {
+      this._isSaving = true;
       try {
-        const docRef = doc(db, 'artifacts', envAppId, 'public', 'data', 'store_data', 'main_state');
-        await setDoc(docRef, this.state);
-      } catch (e) { console.error("Error saving to Firestore", e); }
+        await setDoc(STORE_DOC_PATH(), this.state);
+      } catch (e) { 
+        console.error("Error saving to Firestore:", e); 
+      } finally {
+        this._isSaving = false;
+      }
     }
   },
 
@@ -605,61 +614,71 @@ const app = {
     if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
     if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
     if (!this.state.settings.insuranceAlertDays) this.state.settings.insuranceAlertDays = 30;
-    this.state.branches = this.state.branches.map(b => ({
-      address: '', mapUrl: '', mapEmbed: '',
-      ...b
-    }));
-    this.state.cars = this.state.cars.map(c => ({
-      insuranceExpiry: '', insuranceNote: '',
-      ...c
-    }));
+    this.state.branches = this.state.branches.map(b => ({ address: '', mapUrl: '', mapEmbed: '', ...b }));
+    this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', ...c }));
 
     document.documentElement.setAttribute('data-theme', this.state.theme);
     this.updateThemeIcon();
 
+    const uid = sessionStorage.getItem('ev_user_id');
+    if (uid) this.currentUser = this.state.users.find(u => u.id === uid) || null;
+
     try {
-      // รองรับการเข้าสู่ระบบแบบ Preview Environment 
-      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-        await signInWithCustomToken(auth, __initial_auth_token);
-      } else {
-        await signInAnonymously(auth);
-      }
-      
+      await signInAnonymously(auth);
       this.isFirestoreInitialized = true;
-      const docRef = doc(db, 'artifacts', envAppId, 'public', 'data', 'store_data', 'main_state');
+
+      const docRef = STORE_DOC_PATH();
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const remoteState = snap.data();
+        this._mergeRemoteState(remoteState);
+      } else {
+        await setDoc(docRef, this.state);
+      }
+
       onSnapshot(docRef, (snapshot) => {
         if (snapshot.exists()) {
-          this.state = snapshot.data();
-          if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
-          if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
-          localStorage.setItem('ev_state_v5', JSON.stringify(this.state));
-          const uid = sessionStorage.getItem('ev_user_id');
-          if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
-          if(document.getElementById('app-root').innerHTML !== '') this.render();
-        } else { this.saveState(); }
-      }, (error) => { console.error("Firestore listen error", error); });
-    } catch(e) { console.error("Auth error", e); }
+          const remoteState = snapshot.data();
+          this._mergeRemoteState(remoteState);
+          if (document.getElementById('app-root').innerHTML !== '') this.render();
+        }
+      }, (error) => { console.error("Firestore listen error:", error); });
 
-    const uid = sessionStorage.getItem('ev_user_id');
-    if(uid) this.currentUser = this.state.users.find(u => u.id === uid);
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const receiptId = urlParams.get('receipt');
+    } catch(e) { console.error("Firebase init error:", e); }
 
     const today = new Date();
     const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
     this.searchParams.dateFrom = today.toISOString().split('T')[0];
     this.searchParams.dateTo = tomorrow.toISOString().split('T')[0];
-    if(this.state.branches.length > 0) {
+    if (this.state.branches.length > 0) {
       this.searchParams.pick = this.state.branches[0].id;
       this.searchParams.drop = this.state.branches[0].id;
     }
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiptId = urlParams.get('receipt');
+
     this.render();
-    if(receiptId) { ui.showReceiptModal(receiptId); setTimeout(() => window.print(), 800); }
+    if (receiptId) { ui.showReceiptModal(receiptId); setTimeout(() => window.print(), 800); }
     this.checkInsuranceAlerts();
-    // ข้อ 3: แจ้งเตือนวันรับ-คืนรถล่วงหน้า 2 วัน
     this.checkPickupReturnAlerts();
+  },
+
+  _mergeRemoteState: function(remoteState) {
+    this.state = remoteState;
+    if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
+    if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
+    localStorage.setItem('ev_state_v5', JSON.stringify(this.state));
+    const uid = sessionStorage.getItem('ev_user_id');
+    if (uid) {
+      const freshUser = this.state.users.find(u => u.id === uid);
+      if (freshUser) {
+        this.currentUser = freshUser;
+      } else {
+        this.currentUser = null;
+        sessionStorage.removeItem('ev_user_id');
+      }
+    }
   },
 
   checkInsuranceAlerts() {
@@ -681,43 +700,32 @@ const app = {
     });
   },
 
-  // ข้อ 3: ฟังก์ชันแจ้งเตือนวันรับ-คืนรถล่วงหน้า 2 วัน
   checkPickupReturnAlerts() {
     const today = new Date(); today.setHours(0,0,0,0);
-    const in2Days = new Date(today); in2Days.setDate(in2Days.getDate() + 2);
-
     this.state.bookings.forEach(b => {
       if(b.status === 'Cancelled' || b.status === 'Completed') return;
-
       const pickDate = new Date(b.dateFrom); pickDate.setHours(0,0,0,0);
       const returnDate = new Date(b.dateTo); returnDate.setHours(0,0,0,0);
       const diffPick = Math.ceil((pickDate - today) / (1000 * 60 * 60 * 24));
       const diffReturn = Math.ceil((returnDate - today) / (1000 * 60 * 60 * 24));
-
       const car = this.state.cars.find(c => c.id === b.carId);
       const user = this.state.users.find(u => u.id === b.userId);
       const carName = car ? car.name : b.carId;
       const userName = user ? user.name : b.userId;
-
       if(b.status === 'Confirmed' && diffPick === 2) {
         setTimeout(() => {
           utils.showToast(`🚗 รับรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateFrom)})`, 'info');
         }, 2000);
         if(this.isAdmin()) {
-          utils.sendTelegram(
-            `🚗 <b>แจ้งเตือน: รับรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันรับรถ:</b> ${utils.formatDate(b.dateFrom)}`
-          );
+          utils.sendTelegram(`🚗 <b>แจ้งเตือน: รับรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันรับรถ:</b> ${utils.formatDate(b.dateFrom)}`);
         }
       }
-
       if(b.status === 'Active' && diffReturn === 2) {
         setTimeout(() => {
           utils.showToast(`🔔 คืนรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateTo)})`, 'warning');
         }, 2500);
         if(this.isAdmin()) {
-          utils.sendTelegram(
-            `🔔 <b>แจ้งเตือน: คืนรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันคืนรถ:</b> ${utils.formatDate(b.dateTo)}`
-          );
+          utils.sendTelegram(`🔔 <b>แจ้งเตือน: คืนรถอีก 2 วัน</b>\n\n📝 <b>รหัสจอง:</b> ${b.id}\n👤 <b>ลูกค้า:</b> ${userName}\n🚘 <b>รถ:</b> ${carName}\n📅 <b>วันคืนรถ:</b> ${utils.formatDate(b.dateTo)}`);
         }
       }
     });
@@ -870,7 +878,6 @@ const utils = {
     document.execCommand('copy'); document.body.removeChild(el);
     utils.showToast('คัดลอกลิงก์สำเร็จ', 'success');
   },
-
   openImageViewer: (src) => {
     if(!src) return utils.showToast('ไม่มีรูปภาพ', 'warning');
     const overlay = document.createElement('div');
@@ -881,7 +888,6 @@ const utils = {
     overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
   },
-
   getBookingStatusDisplay: (b) => {
     if(b.status === 'Cancelled') return { text: 'ยกเลิก', class: 'danger' };
     if(b.status === 'Completed') return { text: 'คืนรถแล้ว', class: 'info' };
@@ -900,7 +906,6 @@ const utils = {
     }
     return { text: b.status, class: 'secondary' };
   },
-
   sendTelegram: async (message, parseMode = 'HTML') => {
     const botToken = app.state.settings.tgBotToken;
     const chatId = app.state.settings.tgChatId;
@@ -913,16 +918,22 @@ const utils = {
     } catch (error) { console.error("Telegram Error:", error); }
   },
   sendTelegramNotification: async (booking, car, user) => {
-    const pickBranchName = app.state.branches.find(b => b.id === booking.pickBranch)?.name || booking.pickBranch;
-    const dropBranchName = app.state.branches.find(b => b.id === booking.dropBranch)?.name || booking.dropBranch;
+    const pickBranchName = booking.pickCustom
+      ? (booking.pickCustomLabel || 'ระบุเอง')
+      : (app.state.branches.find(b => b.id === booking.pickBranch)?.name || booking.pickBranch);
+    const dropBranchName = booking.dropCustom
+      ? (booking.dropCustomLabel || 'ระบุเอง')
+      : (app.state.branches.find(b => b.id === booking.dropBranch)?.name || booking.dropBranch);
+    const pickMapLine = booking.pickCustomUrl ? `\n🗺️ <b>แผนที่รับรถ:</b> ${booking.pickCustomUrl}` : '';
+    const dropMapLine = booking.dropCustomUrl ? `\n🗺️ <b>แผนที่คืนรถ:</b> ${booking.dropCustomUrl}` : '';
     const message = `🔔 <b>มีรายการจองรถใหม่เข้าสู่ระบบ!</b>\n\n` +
                     `📝 <b>รหัสจอง:</b> ${booking.id}\n` +
                     `👤 <b>ลูกค้า:</b> ${user.name} (${user.phone})\n` +
                     `🚗 <b>รถที่จอง:</b> ${car.name}\n` +
                     `📅 <b>วันที่เช่า:</b> ${utils.formatDate(booking.dateFrom)} ถึง ${utils.formatDate(booking.dateTo)} (${booking.days} วัน)\n` +
                     `💰 <b>ยอดชำระ:</b> ฿${utils.formatMoney(booking.total)}\n` +
-                    `📍 <b>รับรถ:</b> ${pickBranchName}\n` +
-                    `📍 <b>คืนรถ:</b> ${dropBranchName}\n\n` +
+                    `📍 <b>รับรถ:</b> ${pickBranchName}${pickMapLine}\n` +
+                    `📍 <b>คืนรถ:</b> ${dropBranchName}${dropMapLine}\n\n` +
                     `<i>โปรดเข้าสู่ระบบหลังบ้านเพื่อตรวจสอบสลิปและอนุมัติ</i>`;
     await utils.sendTelegram(message);
   },
@@ -964,6 +975,28 @@ const utils = {
     return { status: 'ok', diff, color: 'var(--success)', label: `เหลือ ${diff} วัน` };
   }
 };
+
+// helper: สร้าง branch select + custom location box
+function branchSelectHTML(fieldId, currentVal, label, icon, iconColor) {
+  const bOpts = app.state.branches.map(b =>
+    `<option value="${b.id}" ${currentVal === b.id ? 'selected' : ''}>${b.name}</option>`
+  ).join('');
+  return `
+    <div class="input-group mb-0">
+      <label><i class="fa-solid ${icon}" style="color:${iconColor};"></i> ${label}</label>
+      <select id="${fieldId}" class="input-control" onchange="ui.toggleCustomLocation('${fieldId}')">
+        ${bOpts}
+        <option value="__custom__">📍 ระบุเอง...</option>
+      </select>
+      <div id="${fieldId}-custom-box" class="custom-location-box">
+        <label><i class="fa-solid fa-map-marker-alt"></i> ชื่อสถานที่ / ที่อยู่</label>
+        <input type="text" id="${fieldId}-custom-text" class="input-control" placeholder="เช่น โรงแรม X, ถ.สุขุมวิท 11" style="padding:10px 14px;">
+        <label style="margin-top:4px;"><i class="fa-solid fa-map-location-dot"></i> Google Maps URL <span class="text-muted" style="font-weight:400;">(ถ้ามี)</span></label>
+        <input type="url" id="${fieldId}-custom-url" class="input-control" placeholder="https://maps.google.com/..." style="padding:10px 14px;">
+        <span class="custom-location-hint"><i class="fa-solid fa-circle-info"></i> วาง URL จาก Google Maps เพื่อให้แอดมินนำทางได้</span>
+      </div>
+    </div>`;
+}
 
 // --- VIEWS ---
 const views = {
@@ -1138,16 +1171,13 @@ const views = {
         const exp = new Date(c.insuranceExpiry); exp.setHours(0,0,0,0);
         return Math.ceil((exp - today)/(1000*60*60*24)) <= alertDays;
       });
-
       const overdueBks = app.state.bookings.filter(b => {
         if(b.status !== 'Active') return false;
         const ret = new Date(b.dateTo); ret.setHours(0,0,0,0);
         return ret < today;
       }).length;
-
       return `
         <h2 class="mb-4">สรุปภาพรวมระบบ</h2>
-        
         ${insuranceAlerts.length > 0 ? `
         <div class="card mb-4" style="border-color:var(--warning); background:rgba(245,158,11,0.05);">
           <div class="flex items-center gap-3 mb-3">
@@ -1165,7 +1195,6 @@ const views = {
             </div>`;
           }).join('')}
         </div>` : ''}
-
         <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 24px;">
           <div class="card flex items-center gap-4">
             <div class="stat-icon" style="background:rgba(16,185,129,0.1); color:var(--success);"><i class="fa-solid fa-wallet"></i></div>
@@ -1189,12 +1218,10 @@ const views = {
             <div><div class="stat-label" style="color:var(--danger);">คืนรถช้า (Overdue)</div><div class="stat-value text-danger">${overdueBks} <span style="font-size:1rem;">คัน</span></div></div>
           </div>` : ''}
         </div>
-        
         <div class="card mt-4">
           <h3 class="mb-4"><i class="fa-solid fa-calendar-alt text-primary"></i> ตารางคิวการจอง (14 วันข้างหน้า)</h3>
           <div id="timeline-container" class="table-responsive p-0" style="border:none; background:transparent;"></div>
         </div>
-
         <div class="card mt-4">
           <h3 class="mb-4"><i class="fa-solid fa-car text-primary"></i> รายการจองแยกตามรถแต่ละคัน</h3>
           <div class="car-booking-timeline">
@@ -1234,7 +1261,6 @@ const views = {
             }).join('')}
           </div>
         </div>
-
         <div class="card mt-4">
           <h3 class="mb-4"><i class="fa-solid fa-chart-bar text-primary"></i> กราฟรายได้ 7 วันล่าสุด (Mockup)</h3>
           <canvas id="incomeChart" height="75"></canvas>
@@ -1262,8 +1288,6 @@ const views = {
         <div class="grid" style="grid-template-columns: repeat(auto-fill,minmax(320px,1fr)); gap:18px;">
           ${app.state.cars.map(car => {
             const ins = utils.getInsuranceStatus(car, alertDays);
-            const expiry = car.insuranceExpiry ? new Date(car.insuranceExpiry) : null;
-            const pct = expiry ? Math.max(0, Math.min(100, (ins.diff/365)*100)) : 0;
             return `
             <div class="card" style="border-color:${ins.status==='expired'?'var(--danger)':ins.status==='soon'?'var(--warning)':'var(--border)'};">
               <div class="flex justify-between items-start mb-3">
@@ -1300,19 +1324,15 @@ const views = {
         </div>`;
     },
 
-    // ข้อ 2: เรียงลำดับสำคัญสุดก่อน (Pending → Active/Overdue → Confirmed → Completed → Cancelled)
     bookings: () => {
       const STATUS_PRIORITY = { 'Pending': 0, 'Active': 1, 'Confirmed': 2, 'Completed': 3, 'Cancelled': 4 };
       const today = new Date(); today.setHours(0,0,0,0);
-
       const sorted = [...app.state.bookings].sort((a, b) => {
         const pa = STATUS_PRIORITY[a.status] ?? 5;
         const pb = STATUS_PRIORITY[b.status] ?? 5;
         if(pa !== pb) return pa - pb;
-        // ภายในกลุ่มเดียวกัน เรียงล่าสุดก่อน
         return new Date(b.dateFrom) - new Date(a.dateFrom);
       });
-
       return `
         <div class="flex justify-between items-center mb-4" style="flex-wrap:wrap; gap:12px;">
           <h2>จัดการการจอง & ตรวจสอบสลิป</h2>
@@ -1325,6 +1345,8 @@ const views = {
               const c = app.state.cars.find(x => x.id === b.carId);
               const st = utils.getBookingStatusDisplay(b);
               const bookedOn = b.createdAt ? utils.formatDate(b.createdAt) : utils.formatDate(b.dateFrom);
+              const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
+              const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
               return `
               <div class="card mb-3 p-4">
                 <div class="flex justify-between items-center mb-3">
@@ -1344,6 +1366,14 @@ const views = {
                     <div class="text-muted" style="font-size:0.8rem;">รถยนต์</div>
                     <div class="font-bold text-primary">${c ? c.name : 'Car'}</div>
                     <div class="text-muted">${b.days} วัน</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.8rem;">รับรถ</div>
+                    <div>${pickLabel}${b.pickCustomUrl ? ` <a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i></a>` : ''}</div>
+                  </div>
+                  <div>
+                    <div class="text-muted" style="font-size:0.8rem;">คืนรถ</div>
+                    <div>${dropLabel}${b.dropCustomUrl ? ` <a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i></a>` : ''}</div>
                   </div>
                   <div>
                     <div class="text-muted" style="font-size:0.8rem;">วันเช่า – คืน</div>
@@ -1529,7 +1559,6 @@ const views = {
       `;
     },
 
-    // ข้อ 1: ซ่อน Bot Token ไม่ให้แก้ไขได้ (แสดงเฉพาะ Chat ID และ save ได้เฉพาะ Chat ID)
     telegram: () => `
       <h2 class="mb-4"><i class="fa-brands fa-telegram text-info"></i> ตั้งค่าการแจ้งเตือน Telegram</h2>
       <div class="card mb-4">
@@ -1563,6 +1592,7 @@ const views = {
             { icon:'🛡️', label:'ประกันใกล้หมดอายุ', desc:'แจ้งเตือนเมื่อกดปุ่มในหน้าประกัน' },
             { icon:'🚗', label:'แจ้งเตือนรับรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันรับรถใกล้ถึง' },
             { icon:'🔔', label:'แจ้งเตือนคืนรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันคืนรถใกล้ถึง' },
+            { icon:'📍', label:'สถานที่รับ-คืนรถแบบกำหนดเอง', desc:'ส่ง Google Maps URL ในการแจ้งเตือนเมื่อลูกค้าระบุเอง' },
           ].map(ev => `
             <div class="flex items-center gap-3 p-3" style="background:var(--bg-body); border-radius:12px; border:1px solid var(--border);">
               <span style="font-size:1.4rem;">${ev.icon}</span>
@@ -1631,6 +1661,18 @@ const ui = {
   closeModal() {
     const m = document.getElementById('main-modal');
     if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; }
+  },
+
+  // toggle custom location box เมื่อเลือก "ระบุเอง"
+  toggleCustomLocation(fieldId) {
+    const sel = document.getElementById(fieldId);
+    const box = document.getElementById(`${fieldId}-custom-box`);
+    if(!sel || !box) return;
+    if(sel.value === '__custom__') {
+      box.classList.add('show');
+    } else {
+      box.classList.remove('show');
+    }
   },
 
   showLoginModal() {
@@ -1732,7 +1774,6 @@ const ui = {
         <img id="main-detail-img" src="${c.images[0]}" alt="${c.name}" style="border-radius:16px;">
       </div>
       <div class="gallery-thumbnails mb-4">${thumbs}</div>
-      
       <div class="features-grid">
         <div class="feature-item">
           <i class="fa-solid fa-battery-full text-success"></i>
@@ -1755,16 +1796,11 @@ const ui = {
           <div class="feature-name">ประเภทรถ</div>
         </div>
       </div>
-      
       <div class="mb-4">
         <div class="text-muted text-sm mb-2" style="font-weight:600;">ฟีเจอร์เด่น</div>
         <div class="car-features-tags">${featureTags}</div>
       </div>
-
-      <div class="card-flat p-4 mb-4" style="border-radius:16px;">
-        ${specHTML}
-      </div>
-      
+      <div class="card-flat p-4 mb-4" style="border-radius:16px;">${specHTML}</div>
       <div class="flex justify-between items-center p-4" style="background:var(--primary-light); border-radius:16px;">
         <div>
           <div class="text-muted text-sm" style="font-weight:500;">ราคาเช่า / วัน</div>
@@ -1778,32 +1814,26 @@ const ui = {
     `, '', `${c.type} · ฿${utils.formatMoney(c.price)}/วัน`);
   },
 
+  // ✅ showBookingModal: เพิ่ม "ระบุเอง" + Google Maps URL ในฟอร์มรับ-คืนรถ
   showBookingModal(carId) {
     if(!app.currentUser) return this.showLoginModal();
     const c = app.state.cars.find(x => x.id === carId);
-
     this.showModal(`ยืนยันการจอง`, `
       <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 28px;" id="booking-grid">
         <div>
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-car text-primary"></i> ข้อมูลการเช่า</h4>
           <div class="card-flat p-3 mb-4" style="border-radius:14px;">
             <div class="font-bold text-primary mb-3" style="font-size:1.05rem;">${c.name}</div>
-            <div class="input-group mb-2">
-              <label>สถานที่รับรถ</label>
-              <select id="bk-edit-pick" class="input-control" style="padding:8px 12px;" onchange="app.searchParams.pick=this.value">
-                ${app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.pick===b.id?'selected':''}>${b.name}</option>`).join('')}
-              </select>
-            </div>
+
+            ${branchSelectHTML('bk-edit-pick', app.searchParams.pick, 'สถานที่รับรถ', 'fa-location-dot', 'var(--primary)')}
+            
             <div class="input-group mb-2">
               <label>วันที่รับรถ</label>
               <input type="date" id="bk-edit-dfrom" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
             </div>
-            <div class="input-group mb-2">
-              <label>สถานที่คืนรถ</label>
-              <select id="bk-edit-drop" class="input-control" style="padding:8px 12px;" onchange="app.searchParams.drop=this.value">
-                ${app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.drop===b.id?'selected':''}>${b.name}</option>`).join('')}
-              </select>
-            </div>
+
+            ${branchSelectHTML('bk-edit-drop', app.searchParams.drop, 'สถานที่คืนรถ', 'fa-map-pin', 'var(--warning)')}
+
             <div class="input-group mb-0">
               <label>วันที่คืนรถ</label>
               <input type="date" id="bk-edit-dto" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
@@ -1812,7 +1842,6 @@ const ui = {
               <i class="fa-solid fa-calendar-days"></i> รวม ${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน
             </div>
           </div>
-
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card text-primary"></i> เอกสารผู้เช่า</h4>
           <div class="input-group mb-2">
             <label>ใบขับขี่ <span class="text-muted">(ถ้ามี)</span></label>
@@ -1825,7 +1854,6 @@ const ui = {
             <img id="preview-idcard" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;">
           </div>
         </div>
-
         <div>
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> สรุปค่าใช้จ่าย</h4>
           <div class="card-flat p-4 mb-4" style="border-radius:14px;">
@@ -1849,7 +1877,6 @@ const ui = {
               <button class="btn btn-outline btn-sm" onclick="logic.applyPromo(${c.price})" style="white-space:nowrap; flex-shrink:0;">ใช้โค้ด</button>
             </div>
           </div>
-
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-qrcode text-primary"></i> ชำระเงิน</h4>
           <div class="card-flat p-3 mb-4 text-center" style="border-radius:14px;">
             ${app.state.settings.qrUrl ? `<img src="${app.state.settings.qrUrl}" style="max-height:140px; margin:0 auto 10px; border-radius:12px; display:block;">` : `<i class="fa-solid fa-qrcode" style="font-size:56px; color:var(--primary); display:block; margin-bottom:10px;"></i>`}
@@ -1857,13 +1884,11 @@ const ui = {
             <div class="font-bold text-primary" style="font-size:1.1rem; letter-spacing:1px;">${app.state.settings.accNo}</div>
             <div class="text-muted text-sm">${app.state.settings.accName}</div>
           </div>
-          
           <div class="input-group">
             <label>แนบสลิปโอนเงิน <span class="text-danger">*</span></label>
             <input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'slip')">
             <img id="preview-slip" style="max-height:100px; display:none; margin-top:8px; border-radius:8px; border:1px solid var(--border); object-fit:cover;">
           </div>
-
           <button class="btn btn-primary w-full btn-lg mt-2" onclick="logic.confirmBooking(${c.id}, ${c.price})">
             <i class="fa-solid fa-check-circle"></i> ยืนยันการจอง
           </button>
@@ -1891,6 +1916,8 @@ const ui = {
       html = profileBar + myBks.map(b => {
         const c = app.state.cars.find(x => x.id === b.carId);
         const st = utils.getBookingStatusDisplay(b);
+        const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
+        const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
         return `
         <div class="card mb-3 p-4">
           <div class="flex justify-between items-center mb-3">
@@ -1902,6 +1929,13 @@ const ui = {
             <div>
               <h4 style="font-size:1rem; margin-bottom:2px;">${c ? c.name : 'Unknown Car'}</h4>
               <div class="text-muted text-sm"><i class="fa-regular fa-calendar"></i> ${utils.formatDate(b.dateFrom)} – ${utils.formatDate(b.dateTo)}</div>
+              <div class="text-muted text-sm">
+                <i class="fa-solid fa-location-dot text-primary"></i> รับ: ${pickLabel}
+                ${b.pickCustomUrl ? `<a href="${b.pickCustomUrl}" target="_blank" class="text-primary"> <i class="fa-solid fa-map-location-dot"></i></a>` : ''}
+                &nbsp;·&nbsp;
+                <i class="fa-solid fa-map-pin text-warning"></i> คืน: ${dropLabel}
+                ${b.dropCustomUrl ? `<a href="${b.dropCustomUrl}" target="_blank" class="text-primary"> <i class="fa-solid fa-map-location-dot"></i></a>` : ''}
+              </div>
               <div class="font-bold" style="color:var(--primary); margin-top:2px;">฿${utils.formatMoney(b.total + (b.fine || 0))} ${b.fine ? `<span class="text-danger text-sm">(รวมค่าปรับ)</span>`:''}</div>
             </div>
           </div>
@@ -1921,11 +1955,10 @@ const ui = {
     if(!b) return utils.showToast('ไม่พบข้อมูลการจอง', 'error');
     const u = app.state.users.find(x => x.id === b.userId);
     const c = app.state.cars.find(x => x.id === b.carId);
-    const bPick = app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch;
-    const bDrop = app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch;
+    const bPick = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
+    const bDrop = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
     const st = utils.getBookingStatusDisplay(b);
     const shareLink = window.location.origin + window.location.pathname + `?receipt=${b.id}`;
-
     this.showModal(`ใบยืนยันการจอง`, `
       <div id="print-area">
         <div class="text-center mb-4">
@@ -1945,8 +1978,14 @@ const ui = {
         </div>
         <div class="receipt-box">
           <h4 class="mb-3" style="font-size:0.95rem; border-bottom:1px solid var(--border); padding-bottom:10px;">รายละเอียดการเช่า</h4>
-          <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถที่</span><span class="info-row-value">${bPick}<br><span class="text-muted text-sm">${utils.formatDate(b.dateFrom)}</span></span></div>
-          <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถที่</span><span class="info-row-value">${bDrop}<br><span class="text-muted text-sm">${utils.formatDate(b.dateTo)}</span></span></div>
+          <div class="info-row">
+            <span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถที่</span>
+            <span class="info-row-value">${bPick}${b.pickCustomUrl ? `<br><a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateFrom)}</span></span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถที่</span>
+            <span class="info-row-value">${bDrop}${b.dropCustomUrl ? `<br><a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateTo)}</span></span>
+          </div>
           <div class="info-row" style="border:none;"><span class="info-row-label">ระยะเวลา</span><span class="info-row-value font-bold text-info">${b.days} วัน</span></div>
         </div>
         <div class="receipt-box text-right" style="background:var(--primary-light);">
@@ -1987,7 +2026,8 @@ const ui = {
     const u = app.state.users.find(x => x.id === b.userId);
     const c = app.state.cars.find(x => x.id === b.carId);
     const st = utils.getBookingStatusDisplay(b);
-    
+    const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
+    const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
     this.showModal(`จัดการคำสั่งจอง: ${bId}`, `
       <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;" id="admin-bk-grid">
         <div>
@@ -1995,7 +2035,13 @@ const ui = {
           <div class="card-flat p-3 mb-4" style="border-radius:14px;">
             <div class="info-row"><span class="info-row-label">ชื่อ</span><span class="info-row-value font-bold">${u.name}</span></div>
             <div class="info-row"><span class="info-row-label">เบอร์โทร</span><span class="info-row-value">${u.phone}</span></div>
-            <div class="info-row" style="border:none;"><span class="info-row-label">รถที่จอง</span><span class="info-row-value font-bold text-primary">${c.name}</span></div>
+            <div class="info-row"><span class="info-row-label">รถที่จอง</span><span class="info-row-value font-bold text-primary">${c.name}</span></div>
+            <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถ</span>
+              <span class="info-row-value">${pickLabel}${b.pickCustomUrl ? ` <a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> Maps</a>` : ''}</span>
+            </div>
+            <div class="info-row" style="border:none;"><span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถ</span>
+              <span class="info-row-value">${dropLabel}${b.dropCustomUrl ? ` <a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> Maps</a>` : ''}</span>
+            </div>
           </div>
           <h4 class="mb-3 text-warning"><i class="fa-solid fa-calendar"></i> แก้ไขวันและราคา</h4>
           <div class="input-group"><label>วันรับรถ</label><input type="date" id="adm-date-from" class="input-control" value="${b.dateFrom}" onchange="logic.recalcAdminBookingPrice(${c.price})"></div>
@@ -2095,7 +2141,6 @@ const ui = {
     };
     const tOpts = app.state.carTypes.filter(t=>t!=='ทั้งหมด').map(t => `<option value="${t}" ${c.type===t?'selected':''}>${t}</option>`).join('');
     const existImgHtml = c.images.map(img => `<img src="${img}" style="max-height:50px; border-radius:6px; object-fit:cover;">`).join('');
-
     this.showModal(carId ? 'แก้ไขข้อมูลรถ' : 'เพิ่มรถยนต์ใหม่', `
       <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border);">
         <p class="font-bold" style="color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-car"></i> ข้อมูลพื้นฐาน</p>
@@ -2111,7 +2156,6 @@ const ui = {
           <div class="input-group mb-0" style="grid-column:1/-1;"><label>จำนวนที่นั่ง</label><input type="number" id="car-seats" class="input-control" value="${c.seats}"></div>
         </div>
       </div>
-
       <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border);">
         <p class="font-bold" style="color:var(--primary); margin-bottom:12px;"><i class="fa-solid fa-bolt"></i> สมรรถนะ</p>
         <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -2122,7 +2166,6 @@ const ui = {
           <div class="input-group mb-0" style="grid-column:1/-1;"><label>Top Speed</label><input type="text" id="car-topspeed" class="input-control" value="${c.topSpeed||''}" placeholder="เช่น 225 กม./ชม."></div>
         </div>
       </div>
-
       <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border);">
         <p class="font-bold" style="color:var(--warning); margin-bottom:12px;"><i class="fa-solid fa-shield-halved"></i> ประกันรถยนต์</p>
         <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -2130,7 +2173,6 @@ const ui = {
           <div class="input-group mb-0" style="grid-column:1/-1;"><label>บันทึก / บริษัทประกัน</label><input type="text" id="car-ins-note" class="input-control" value="${c.insuranceNote||''}" placeholder="เช่น ประกันชั้น 1 บริษัทเมืองไทย"></div>
         </div>
       </div>
-
       <div class="input-group"><label>ฟีเจอร์เด่น <span class="text-muted">(คั่นด้วยลูกน้ำ)</span></label><input type="text" id="car-features" class="input-control" value="${c.features}" placeholder="Autopilot, จอ 15 นิ้ว, หลังคาแก้ว"></div>
       <div class="input-group">
         <label>รูปภาพรถ <span class="text-muted">(เลือกได้หลายรูป)</span></label>
@@ -2248,7 +2290,6 @@ const logic = {
     const phone = document.getElementById('log-phone').value.trim();
     const pass = document.getElementById('log-pass').value.trim();
     if(!phone || !pass) return utils.showToast('กรุณากรอกเบอร์โทรและรหัสผ่าน', 'error');
-    
     let user = app.state.users.find(u => u.phone === phone);
     if(user) {
       if(user.password === pass) {
@@ -2350,14 +2391,32 @@ const logic = {
     }
   },
 
+  // ✅ confirmBooking: เก็บข้อมูล custom location ถ้าเลือก "ระบุเอง"
   confirmBooking(carId, defaultPricePerDay) {
     if(!app.tempUploads['slip']) return utils.showToast('กรุณาอัปโหลดรูปสลิปโอนเงินก่อน', 'warning');
     const netVal = document.getElementById('book-net').dataset.net;
     const finalTotal = netVal ? parseFloat(netVal) : (defaultPricePerDay * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo));
     const bId = "BK-" + Math.floor(1000 + Math.random() * 9000);
+
+    // รับค่า pick branch
+    const pickSel = document.getElementById('bk-edit-pick');
+    const isPickCustom = pickSel && pickSel.value === '__custom__';
+    const pickBranch = isPickCustom ? '__custom__' : (pickSel ? pickSel.value : app.searchParams.pick);
+    const pickCustomLabel = isPickCustom ? (document.getElementById('bk-edit-pick-custom-text')?.value.trim() || '') : '';
+    const pickCustomUrl = isPickCustom ? (document.getElementById('bk-edit-pick-custom-url')?.value.trim() || '') : '';
+
+    // รับค่า drop branch
+    const dropSel = document.getElementById('bk-edit-drop');
+    const isDropCustom = dropSel && dropSel.value === '__custom__';
+    const dropBranch = isDropCustom ? '__custom__' : (dropSel ? dropSel.value : app.searchParams.drop);
+    const dropCustomLabel = isDropCustom ? (document.getElementById('bk-edit-drop-custom-text')?.value.trim() || '') : '';
+    const dropCustomUrl = isDropCustom ? (document.getElementById('bk-edit-drop-custom-url')?.value.trim() || '') : '';
+
     const newBooking = {
       id: bId, userId: app.currentUser.id, carId: carId,
-      pickBranch: app.searchParams.pick, dropBranch: app.searchParams.drop,
+      pickBranch, dropBranch,
+      pickCustom: isPickCustom, pickCustomLabel, pickCustomUrl,
+      dropCustom: isDropCustom, dropCustomLabel, dropCustomUrl,
       dateFrom: app.searchParams.dateFrom, dateTo: app.searchParams.dateTo,
       days: utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo),
       total: finalTotal, status: "Pending",
@@ -2516,7 +2575,6 @@ const logic = {
     }
   },
 
-  // ข้อ 1: saveTelegramSettings บันทึกเฉพาะ Chat ID (ไม่แตะ Bot Token)
   saveTelegramSettings() {
     app.state.settings.tgChatId = document.getElementById('tg-chatid').value.trim();
     app.saveState();
@@ -2587,7 +2645,15 @@ const logic = {
     const wb = XLSX.utils.book_new();
     let data = [], filename = '';
     if(type === 'bookings') {
-      data = app.state.bookings.map(b => ({ รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId, วันจอง: b.createdAt||b.dateFrom, วันรับ: b.dateFrom, วันคืน: b.dateTo, จำนวนวัน: b.days, ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status }));
+      data = app.state.bookings.map(b => ({
+        รหัสการจอง: b.id, รหัสลูกค้า: b.userId, รหัสรถ: b.carId,
+        วันจอง: b.createdAt||b.dateFrom, วันรับ: b.dateFrom, วันคืน: b.dateTo,
+        จำนวนวัน: b.days, ยอดเงิน: b.total, ค่าปรับ: b.fine, สถานะ: b.status,
+        สถานที่รับ: b.pickCustom ? (b.pickCustomLabel||'ระบุเอง') : b.pickBranch,
+        MapURL_รับ: b.pickCustomUrl||'',
+        สถานที่คืน: b.dropCustom ? (b.dropCustomLabel||'ระบุเอง') : b.dropBranch,
+        MapURL_คืน: b.dropCustomUrl||''
+      }));
       filename = 'Bookings_Report.xlsx';
     } else if(type === 'users') {
       data = app.state.users.map(u => ({ รหัสลูกค้า: u.id, ชื่อ: u.name, เบอร์: u.phone, ระดับ: u.tier, คะแนน: u.points, บทบาท: u.role }));
@@ -2644,7 +2710,6 @@ app.renderCarGrid = function() {
   container.innerHTML = summaryHtml + cars.map((c, idx) => {
     const isAvail = utils.isCarAvailable(c.id, dateFrom, dateTo);
     const featureTags = c.features.split(',').slice(0,2).map(f => `<span class="car-feature-tag">${f.trim()}</span>`).join('');
-
     return `
       <div class="card car-card" style="animation-delay:${idx * 0.05}s; ${!isAvail ? 'opacity:0.85;' : ''}">
         <div class="car-img-container">
@@ -2683,8 +2748,7 @@ app.renderCarGrid = function() {
             <button class="btn btn-sm" onclick="ui.showCarDetailModal(${c.id})" 
               style="${isAvail 
                 ? 'background:linear-gradient(135deg, var(--primary), #2563eb); color:white; box-shadow:0 3px 10px rgba(15,157,141,0.35); font-weight:700;' 
-                : 'background:rgba(239,68,68,0.1); color:var(--danger); border:1.5px solid rgba(239,68,68,0.3); font-weight:700;'}"
-              >
+                : 'background:rgba(239,68,68,0.1); color:var(--danger); border:1.5px solid rgba(239,68,68,0.3); font-weight:700;'}">
               ${isAvail ? '<i class="fa-solid fa-arrow-right"></i> เลือกเลย' : '<i class="fa-solid fa-calendar-plus"></i> เปลี่ยนวัน'}
             </button>
           </div>
@@ -2701,6 +2765,5 @@ window.views = views;
 
 window.onload = () => { app.init(); };
 </script>
-<!-- END OF FILE -->
 </body>
 </html>
