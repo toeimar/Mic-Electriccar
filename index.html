@@ -495,10 +495,11 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-const firebaseConfig = {
+// รองรับทั้งแบบรันบนโฮสต์ของคุณเอง และรันแบบ Preview บนระบบ
+let firebaseConfig = {
   apiKey: "AIzaSyAyl0TZT5yNIWQmX3XhAnPkh7orWFLUImw",
   authDomain: "car-rental-mic.firebaseapp.com",
   projectId: "car-rental-mic",
@@ -507,6 +508,11 @@ const firebaseConfig = {
   appId: "1:905587457520:web:3216b0949fdd6ace72b135",
   measurementId: "G-HJMYXF3PNZ"
 };
+
+// ใช้ Config จากระบบ Preview (ถ้ามี)
+if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+  firebaseConfig = JSON.parse(__firebase_config);
+}
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -612,7 +618,13 @@ const app = {
     this.updateThemeIcon();
 
     try {
-      await signInAnonymously(auth);
+      // รองรับการเข้าสู่ระบบแบบ Preview Environment 
+      if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+        await signInWithCustomToken(auth, __initial_auth_token);
+      } else {
+        await signInAnonymously(auth);
+      }
+      
       this.isFirestoreInitialized = true;
       const docRef = doc(db, 'artifacts', envAppId, 'public', 'data', 'store_data', 'main_state');
       onSnapshot(docRef, (snapshot) => {
@@ -2689,5 +2701,6 @@ window.views = views;
 
 window.onload = () => { app.init(); };
 </script>
+<!-- END OF FILE -->
 </body>
 </html>
