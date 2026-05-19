@@ -592,6 +592,10 @@ const DEFAULT_STATE = {
       insuranceExpiry: "2026-06-15", insuranceNote: "ประกันชั้น 1 บริษัทวิริยะประกันภัย"
     }
   ],
+  insurancePlans: [
+    { id: 'basic', name: 'ประกันพื้นฐาน', price: 200, desc: 'คุ้มครองอุบัติเหตุเบื้องต้น' },
+    { id: 'premium', name: 'ประกันชั้น 1', price: 500, desc: 'คุ้มครองครอบคลุมทุกกรณี' }
+  ],
   promotions: [
     { code: "NEWUSER", discount: 10, type: "percent", desc: "ลด 10% สำหรับผู้ใช้ใหม่" },
     { code: "DISCOUNT500", discount: 500, type: "amount", desc: "ลดทันที 500 บาท" }
@@ -627,6 +631,7 @@ const app = {
     if (!this.state.settings.insuranceAlertDays) this.state.settings.insuranceAlertDays = 30;
     this.state.branches = this.state.branches.map(b => ({ address: '', mapUrl: '', mapEmbed: '', ...b }));
     this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', ...c }));
+    if (!this.state.insurancePlans) this.state.insurancePlans = DEFAULT_STATE.insurancePlans;
 
     document.documentElement.setAttribute('data-theme', this.state.theme);
     this.updateThemeIcon();
@@ -674,6 +679,7 @@ const app = {
     this.state = remoteState;
     if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
     if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
+    if (!this.state.insurancePlans) this.state.insurancePlans = DEFAULT_STATE.insurancePlans;
     localStorage.setItem('ev_state_v5', JSON.stringify(this.state));
     const uid = sessionStorage.getItem('ev_user_id');
     if (uid) {
@@ -822,7 +828,19 @@ const utils = {
   },
   calcDays: (d1, d2) => {
     const timeDiff = new Date(d2).getTime() - new Date(d1).getTime();
-    return Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+        return Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)));
+  },
+  calcTieredPrice: (car, days) => {
+    if(!car.priceTiers || car.priceTiers.length === 0) return car.price * days;
+    const sorted = [...car.priceTiers].sort((a,b) => a.minDay - b.minDay);
+    const tier = sorted.reverse().find(t => days >= t.minDay);
+    return tier ? tier.price * days : car.price * days;
+  },
+  getTierPricePerDay: (car, days) => {
+    if(!car.priceTiers || car.priceTiers.length === 0) return car.price;
+    const sorted = [...car.priceTiers].sort((a,b) => a.minDay - b.minDay);
+    const tier = sorted.reverse().find(t => days >= t.minDay);
+    return tier ? tier.price : car.price;
   },
   isCarAvailable: (carId, dFrom, dTo) => {
     const checkStart = new Date(dFrom); const checkEnd = new Date(dTo);
@@ -947,33 +965,23 @@ const utils = {
 };
 
 // =========== BRANCH SELECT + CUSTOM LOCATION ===========
-// สร้าง dropdown สาขา + กล่องระบุเอง (พิมพ์ได้)
 function branchSelectHTML(fieldId, currentVal, label, icon, iconColor) {
-  const bOpts = app.state.branches.map(b =>
-    `<option value="${b.id}" ${currentVal === b.id ? 'selected' : ''}>${b.name}</option>`
-  ).join('');
   return `
     <div class="input-group mb-0">
       <label><i class="fa-solid ${icon}" style="color:${iconColor};"></i> ${label}</label>
-      <select id="${fieldId}" class="input-control" onchange="ui.toggleCustomLocation('${fieldId}')">
-        ${bOpts}
-        <option value="__custom__">📍 ระบุเองที่อื่น...</option>
-      </select>
-      <div id="${fieldId}-custom-box" class="custom-location-box">
-        <label><i class="fa-solid fa-map-marker-alt"></i> พิมพ์ชื่อสถานที่หรือที่อยู่</label>
-        <input type="text" id="${fieldId}-custom-text" class="input-control" 
-               placeholder="เช่น โรงแรม X ถ.สุขุมวิท, บ้านเลขที่ 123 ซ.ลาดพร้าว"
-               style="padding:10px 14px;">
-        <label style="margin-top:4px;"><i class="fa-solid fa-map-location-dot"></i> Google Maps URL <span class="text-muted" style="font-weight:400;">(ไม่บังคับ)</span></label>
-        <input type="url" id="${fieldId}-custom-url" class="input-control" 
-               placeholder="https://maps.google.com/..."
-               style="padding:10px 14px;">
-        <span class="custom-location-hint"><i class="fa-solid fa-circle-info"></i> วาง URL จาก Google Maps เพื่อให้แอดมินนำทางได้ง่ายขึ้น</span>
+      <input type="text" id="${fieldId}-text" class="input-control" 
+             placeholder="เช่น สนามบินสุวรรณภูมิ, โรงแรม X ถ.สุขุมวิท"
+             value="${currentVal || ''}">
+      <div style="margin-top:6px;">
+        <input type="url" id="${fieldId}-url" class="input-control" 
+               placeholder="Google Maps URL (ไม่บังคับ) https://maps.google.com/..."
+               style="font-size:0.88rem; padding:9px 12px;">
       </div>
     </div>`;
 }
 
 // =========== VIEWS ===========
+
 const views = {
   bottomNav: () => {
     const isCustomerMode = app.currentView === 'home' || !app.isAdmin();
@@ -1022,20 +1030,13 @@ const views = {
     }
   },
 
-  flightSearchPanel: () => {
-    const bOpts = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.pick===b.id?'selected':''}>${b.name}</option>`).join('');
-    const bOptsDrop = app.state.branches.map(b => `<option value="${b.id}" ${app.searchParams.drop===b.id?'selected':''}>${b.name}</option>`).join('');
+    flightSearchPanel: () => {
     const tOpts = app.state.carTypes.map(t => `<option value="${t}" ${app.searchParams.type===t?'selected':''}>${t}</option>`).join('');
     return `
       <div class="flight-search-box">
-        <div class="input-group mb-0">
-          <label><i class="fa-solid fa-location-dot text-primary"></i> รับรถที่</label>
-          <select id="s-pick" class="input-control" onchange="app.searchParams.pick=this.value">${bOpts}</select>
-        </div>
-        <div class="input-group mb-0">
-          <label><i class="fa-solid fa-map-pin text-warning"></i> คืนรถที่</label>
-          <select id="s-drop" class="input-control" onchange="app.searchParams.drop=this.value">${bOptsDrop}</select>
-        </div>
+        ${branchSelectHTML('s-pick', app.searchParams.pick, 'รับรถที่', 'fa-location-dot', 'var(--primary)')}
+        ${branchSelectHTML('s-drop', app.searchParams.drop, 'คืนรถที่', 'fa-map-pin', 'var(--warning)')}
+        
         <div class="input-group mb-0">
           <label><i class="fa-regular fa-calendar text-primary"></i> วันรับรถ</label>
           <input type="date" id="s-dfrom" class="input-control" value="${app.searchParams.dateFrom}" onchange="app.searchParams.dateFrom=this.value">
@@ -1050,7 +1051,7 @@ const views = {
         </div>
         <div class="input-group mb-0 search-btn-col">
           <label style="opacity:0; pointer-events:none;">ค้นหา</label>
-          <button class="btn btn-primary w-full" style="height:48px;" onclick="app.renderCarGrid()">
+                    <button class="btn btn-primary w-full" style="height:48px;" onclick="app.doSearchWithCustomLocation()">
             <i class="fa-solid fa-search"></i> ค้นหารถ
           </button>
         </div>
@@ -1092,8 +1093,8 @@ const views = {
       <div id="car-grid-container" class="car-grid"></div>
     </div>
   `,
-
-  adminLayout: () => `
+  
+          adminLayout: () => `
     <div class="admin-layout">
       <div class="sidebar">
         <div class="sidebar-section-label">เมนูหลัก</div>
@@ -1101,11 +1102,11 @@ const views = {
         <div id="menu-bookings" class="menu-item" onclick="app.renderAdminTab('bookings')"><span class="menu-icon"><i class="fa-solid fa-list-check"></i></span> จัดการการจอง</div>
         <div id="menu-cars" class="menu-item" onclick="app.renderAdminTab('cars')"><span class="menu-icon"><i class="fa-solid fa-car"></i></span> จัดการรถ (Fleet)</div>
         <div id="menu-insurance" class="menu-item" onclick="app.renderAdminTab('insurance')"><span class="menu-icon"><i class="fa-solid fa-shield-halved"></i></span> ประกันรถยนต์</div>
+        <div id="menu-insuranceplans" class="menu-item" onclick="app.renderAdminTab('insuranceplans')"><span class="menu-icon"><i class="fa-solid fa-shield-check"></i></span> แพ็กเกจประกันลูกค้า</div>
         <div id="menu-crm" class="menu-item" onclick="app.renderAdminTab('crm')"><span class="menu-icon"><i class="fa-solid fa-users"></i></span> จัดการลูกค้า (CRM)</div>
         <hr style="border:none; border-top:1px solid var(--border); margin: 8px 0;">
         <div class="sidebar-section-label">การตั้งค่า</div>
         <div id="menu-settings" class="menu-item" onclick="app.renderAdminTab('settings')"><span class="menu-icon"><i class="fa-solid fa-cog"></i></span> ตั้งค่าร้านค้า</div>
-        <div id="menu-telegram" class="menu-item" onclick="app.renderAdminTab('telegram')"><span class="menu-icon"><i class="fa-brands fa-telegram"></i></span> การแจ้งเตือน Telegram</div>
         ${app.isMaster() ? `<div id="menu-admins" class="menu-item" style="color:var(--warning);" onclick="app.renderAdminTab('admins')"><span class="menu-icon"><i class="fa-solid fa-user-shield"></i></span> จัดการแอดมิน</div>` : ''}
       </div>
       <div class="admin-main animate-fade" id="admin-content"></div>
@@ -1380,47 +1381,40 @@ const views = {
             </div>
           </div>
         </div>
-        <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
-        <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>`;
-    },
-
-    telegram: () => `
-      <h2 class="mb-4"><i class="fa-brands fa-telegram text-info"></i> ตั้งค่าการแจ้งเตือน Telegram</h2>
-      <div class="card mb-4">
-        <h4 class="mb-4" style="padding-bottom:12px; border-bottom:1px solid var(--border);">ข้อมูล Bot</h4>
-        <div class="input-group">
-          <label>Bot Token</label>
-          <div style="background:var(--bg-body); border:1.5px solid var(--border); border-radius:12px; padding:13px 16px; display:flex; align-items:center; gap:10px; color:var(--text-muted);">
-            <i class="fa-solid fa-lock" style="color:var(--primary); flex-shrink:0;"></i>
-            <span style="font-family:monospace; font-size:0.95rem; letter-spacing:1px;">••••••••••••••••••••••••••••••••••••••</span>
-            <span class="badge badge-success" style="margin-left:auto; flex-shrink:0;"><i class="fa-solid fa-check"></i> ตั้งค่าแล้ว</span>
+                <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
+        <div class="card mt-4">
+          <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-brands fa-telegram text-info"></i> การแจ้งเตือน Telegram</h4>
+          <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
+          <div class="flex gap-2">
+            <button class="btn btn-primary btn-sm" onclick="logic.saveTelegramSettings()"><i class="fa-solid fa-save"></i> บันทึก Chat ID</button>
+            <button class="tg-test-btn" onclick="logic.testTelegram()"><i class="fa-brands fa-telegram"></i> ทดสอบส่ง</button>
           </div>
         </div>
-        <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
-        <button class="btn btn-primary btn-sm" onclick="logic.saveTelegramSettings()"><i class="fa-solid fa-save"></i> บันทึก Chat ID</button>
-      </div>
-      <div class="card mb-4">
-        <h4 class="mb-3">ทดสอบการแจ้งเตือน</h4>
-        <button class="tg-test-btn" onclick="logic.testTelegram()" style="font-size:1rem; padding:14px 28px; border-radius:12px;"><i class="fa-brands fa-telegram"></i> ส่งข้อความทดสอบ</button>
-      </div>
-      <div class="card">
-        <h4 class="mb-3">เหตุการณ์ที่แจ้งเตือน</h4>
-        <div style="display:flex; flex-direction:column; gap:10px;">
-          ${[
-            { icon:'🔔', label:'มีการจองใหม่', desc:'แจ้งทันทีเมื่อลูกค้าส่งคำขอจอง' },
-            { icon:'✅', label:'อัปเดตสถานะการจอง', desc:'เมื่อแอดมินเปลี่ยนสถานะ' },
-            { icon:'👤', label:'สมัครสมาชิกใหม่', desc:'เมื่อมีลูกค้าลงทะเบียนเข้าระบบ' },
-            { icon:'🛡️', label:'ประกันใกล้หมดอายุ', desc:'แจ้งเตือนเมื่อกดปุ่มในหน้าประกัน' },
-            { icon:'🚗', label:'แจ้งเตือนรับรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันรับรถใกล้ถึง' },
-            { icon:'🔔', label:'แจ้งเตือนคืนรถล่วงหน้า 2 วัน', desc:'แจ้งอัตโนมัติเมื่อวันคืนรถใกล้ถึง' },
-            { icon:'📍', label:'สถานที่รับ-คืนรถแบบกำหนดเอง', desc:'ส่ง Google Maps URL ในการแจ้งเตือน' },
-          ].map(ev => `<div class="flex items-center gap-3 p-3" style="background:var(--bg-body); border-radius:12px; border:1px solid var(--border);">
-            <span style="font-size:1.4rem;">${ev.icon}</span>
-            <div><div class="font-bold">${ev.label}</div><div class="text-muted text-sm">${ev.desc}</div></div>
-            <span class="badge badge-success" style="margin-left:auto;"><i class="fa-solid fa-check"></i> เปิดใช้</span>
-          </div>`).join('')}
+                <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>`;
+    },
+
+    insuranceplans: () => {
+      return `
+        <div class="flex justify-between items-center mb-4">
+          <h2><i class="fa-solid fa-shield-halved text-primary"></i> แพ็กเกจประกันสำหรับลูกค้า</h2>
+          <button class="btn btn-primary btn-sm" onclick="logic.addInsurancePlan()"><i class="fa-solid fa-plus"></i> เพิ่มแพ็กเกจ</button>
         </div>
-      </div>`,
+        ${app.state.insurancePlans.map((plan, idx) => `
+          <div class="card mb-3 p-4">
+            <div class="flex justify-between items-center" style="flex-wrap:wrap; gap:12px;">
+              <div>
+                <div class="font-bold">${plan.name}</div>
+                <div class="text-muted text-sm">${plan.desc}</div>
+              </div>
+              <div class="flex items-center gap-3">
+                <span class="font-bold text-primary" style="font-size:1.2rem;">฿${utils.formatMoney(plan.price)}<span class="text-muted text-sm">/วัน</span></span>
+                <button class="btn btn-outline btn-sm" onclick="logic.editInsurancePlan(${idx})"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-danger btn-sm" onclick="logic.deleteInsurancePlan(${idx})"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>`).join('')}
+        ${app.state.insurancePlans.length === 0 ? `<div class="empty-state"><i class="fa-solid fa-shield-halved"></i><p>ยังไม่มีแพ็กเกจประกัน</p></div>` : ''}`;
+    },
 
     admins: () => `
       <h2 class="mb-4" style="color:var(--warning);"><i class="fa-solid fa-user-shield"></i> จัดการสิทธิ์แอดมิน (Master Only)</h2>
@@ -1470,7 +1464,7 @@ const ui = {
   
   closeModal() {
     const m = document.getElementById('main-modal');
-    if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; }
+    if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; app._selectedInsurancePlan = null; }
   },
 
   toggleCustomLocation(fieldId) {
@@ -1661,13 +1655,13 @@ const ui = {
             <div class="mt-3 p-2 text-center" style="background:var(--primary-light); border-radius:10px; font-weight:700; color:var(--primary); font-size:0.95rem;" id="bk-disp-days"><i class="fa-solid fa-calendar-days"></i> รวม ${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน</div>
           </div>
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card text-primary"></i> เอกสารผู้เช่า</h4>
-          <div class="input-group mb-2"><label>ใบขับขี่ <span class="text-muted">(ถ้ามี)</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'license')"><img id="preview-license" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;"></div>
-          <div class="input-group"><label>บัตรประชาชน <span class="text-muted">(ถ้ามี)</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'idcard')"><img id="preview-idcard" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;"></div>
+          <div class="input-group mb-2"><label>ใบขับขี่ <span class="text-danger">*</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'license')"><img id="preview-license" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;"></div>
+          <div class="input-group"><label>บัตรประชาชน <span class="text-danger">*</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'idcard')"><img id="preview-idcard" style="max-height:80px; display:none; margin-top:8px; border-radius:8px; object-fit:cover;"></div>
         </div>
         <div>
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> สรุปค่าใช้จ่าย</h4>
           <div class="card-flat p-4 mb-4" style="border-radius:14px;">
-            <div class="info-row"><span class="info-row-label" id="bk-disp-renttext">ค่าเช่า (${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน)</span><span class="info-row-value" id="bk-disp-rentprice">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span></div>
+            <div class="info-row"><span class="info-row-label" id="bk-disp-renttext">ค่าเช่า (${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน)</span><span class="info-row-value" id="bk-disp-rentprice">฿${utils.formatMoney(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)))}</span></div>
             <div class="info-row"><span class="info-row-label text-success">ส่วนลด</span><span class="info-row-value text-success font-bold" id="book-discount">฿0</span></div>
             <div class="flex justify-between items-center mt-3 pt-2" style="border-top:2px solid var(--border);"><span class="font-bold">ยอดชำระสุทธิ</span><span class="font-bold text-primary" style="font-size:1.8rem; line-height:1; font-family:'Prompt',sans-serif;" id="book-net" data-net="${c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)}">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span></div>
             <div class="flex gap-2 mt-3"><div class="input-with-icon flex-1"><i class="fa-solid fa-tag input-icon"></i><input type="text" id="promo-code" class="input-control" placeholder="โค้ดส่วนลด" style="padding:9px 12px 9px 36px; font-size:0.95rem;"></div><button class="btn btn-outline btn-sm" onclick="logic.applyPromo(${c.price})" style="white-space:nowrap; flex-shrink:0;">ใช้โค้ด</button></div>
@@ -1679,6 +1673,20 @@ const ui = {
             <div class="font-bold text-primary" style="font-size:1.1rem; letter-spacing:1px;">${app.state.settings.accNo}</div>
             <div class="text-muted text-sm">${app.state.settings.accName}</div>
           </div>
+                    ${app.state.insurancePlans.length > 0 ? `
+          <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-shield-halved text-warning"></i> เพิ่มประกันรถ</h4>
+          <div class="card-flat p-3 mb-4" style="border-radius:14px; border-color:var(--warning);">
+            <div class="chip-group mb-0">
+              <div class="chip ${''}" id="ins-none" onclick="logic.selectInsurancePlan(null, ${c.price})" style="border-color:var(--primary); color:var(--primary);">
+                <i class="fa-solid fa-times"></i> ไม่เพิ่มประกัน
+              </div>
+                    ${app.state.insurancePlans.map(plan => `
+                <div class="chip" id="ins-${plan.id}" onclick="logic.selectInsurancePlan('${plan.id}', ${c.price})">
+                  <i class="fa-solid fa-shield-halved"></i> ${plan.name} +฿${utils.formatMoney(plan.price)}/วัน
+                </div>`).join('')}
+            </div>
+            <div id="ins-desc" class="text-muted text-sm mt-2" style="display:none;"></div>
+          </div>` : ''}
           <div class="input-group"><label>แนบสลิปโอนเงิน <span class="text-danger">*</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'slip')"><img id="preview-slip" style="max-height:100px; display:none; margin-top:8px; border-radius:8px; border:1px solid var(--border); object-fit:cover;"></div>
           <button class="btn btn-primary w-full btn-lg mt-2" onclick="logic.confirmBooking(${c.id}, ${c.price})"><i class="fa-solid fa-check-circle"></i> ยืนยันการจอง</button>
           <p class="text-center text-muted mt-2" style="font-size:0.82rem;"><i class="fa-solid fa-shield-halved text-success"></i> การจองจะมีผลหลังแอดมินตรวจสอบสลิป</p>
@@ -1893,7 +1901,24 @@ const ui = {
           <div class="input-group mb-0"><label>รุ่น (Model)</label><input type="text" id="car-model" class="input-control" value="${c.model||''}" placeholder="เช่น Model 3"></div>
           <div class="input-group mb-0"><label>สีภายนอก</label><input type="text" id="car-color-ext" class="input-control" value="${c.colorExt||''}" placeholder="เช่น ขาวมุก"></div>
           <div class="input-group mb-0"><label>สีภายใน</label><input type="text" id="car-color-int" class="input-control" value="${c.colorInt||''}" placeholder="เช่น ดำ"></div>
-          <div class="input-group mb-0"><label>ราคาเช่า/วัน (บาท)</label><input type="number" id="car-price" class="input-control" value="${c.price}"></div>
+                <div class="input-group mb-0" style="grid-column:1/-1;">
+    <label>ราคาเช่าตามจำนวนวัน <span class="text-muted">(ขั้นบันได)</span></label>
+        <div id="price-tiers-container">
+          ${(c.priceTiers && c.priceTiers.length > 0 ? c.priceTiers : [{minDay:1, maxDay:1, price:c.price}]).map(t => `
+            <div class="price-tier-row flex gap-2 mb-2 items-center">
+              <input type="number" class="input-control tier-min" placeholder="วันเริ่ม" value="${t.minDay}" style="width:80px;">
+              <span class="text-muted">-</span>
+              <input type="number" class="input-control tier-max" placeholder="วันสิ้นสุด" value="${t.maxDay || ''}" style="width:80px;">
+              <span class="text-muted text-sm">วัน =</span>
+              <input type="number" class="input-control tier-price" placeholder="ราคา/วัน" value="${t.price}" style="flex:1;">
+              <span class="text-muted text-sm">บาท/วัน</span>
+              <button type="button" class="btn btn-danger btn-xs btn-icon" onclick="this.closest('.price-tier-row').remove()"><i class="fa-solid fa-times"></i></button>
+            </div>`).join('')}
+        </div>
+        <button type="button" class="btn btn-outline btn-sm mt-1" onclick="logic.addPriceTierRow()"><i class="fa-solid fa-plus"></i> เพิ่มช่วงราคา</button>
+        <small class="text-muted block mt-1">ช่องวันสิ้นสุดว่าง = ไม่จำกัด (เช่น 30+ วัน)</small>
+      </div>
+      <input type="hidden" id="car-price" value="${c.price}">
           <div class="input-group mb-0"><label>ระยะทางต่อชาร์จ (km)</label><input type="number" id="car-range" class="input-control" value="${c.range}"></div>
           <div class="input-group mb-0" style="grid-column:1/-1;"><label>จำนวนที่นั่ง</label><input type="number" id="car-seats" class="input-control" value="${c.seats}"></div>
         </div>
@@ -1980,7 +2005,7 @@ const ui = {
           const bEnd = new Date(b.dateTo).getTime();
           if(dTime >= bStart && dTime <= bEnd) {
             const isStart = dTime === bStart;
-            let bg = b.status === 'Confirmed' ? 'var(--info)' : (b.status === 'Active' ? 'var(--success)' : 'var(--warning)');
+            let bg = b.status === 'Confirmed' ? 'var(--info)' : b.status === 'Active' ? 'var(--success)' : b.status === 'Pending' ? 'var(--warning)' : 'var(--purple)';
             cellHtml = `<div class="tl-bar" style="background:${bg}; left:1px; right:1px; width:calc(100% - 2px); border-radius:${isStart?'4px 0 0 4px':'0'}" title="${b.id}">${isStart ? b.id : ''}</div>`;
           }
         });
@@ -2106,7 +2131,8 @@ const logic = {
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     const days = utils.calcDays(dFrom, dTo);
-    const baseTotal = carPrice * days;
+    const carObj = app.state.cars.find(c => c.price === carPrice) || { price: carPrice, priceTiers: [] };
+    const baseTotal = utils.calcTieredPrice(carObj, days);
     let discountAmt = promo.type === 'percent' ? baseTotal * (promo.discount / 100) : promo.discount;
     let net = Math.max(0, baseTotal - discountAmt);
     document.getElementById('book-discount').textContent = `-฿${utils.formatMoney(discountAmt)}`;
@@ -2116,18 +2142,23 @@ const logic = {
     utils.showToast(`✅ ใช้โค้ดสำเร็จ! ลด ฿${utils.formatMoney(discountAmt)}`, 'success');
   },
 
-  recalcCustomerBookingPrice(carPrice) {
+    recalcCustomerBookingPrice(carPrice) {
     const dFrom = document.getElementById('bk-edit-dfrom').value;
     const dTo = document.getElementById('bk-edit-dto').value;
     if(dFrom && dTo) {
       app.searchParams.dateFrom = dFrom; app.searchParams.dateTo = dTo;
       const days = utils.calcDays(dFrom, dTo);
-      const baseTotal = days * carPrice;
+      const carObj = app.state.cars.find(c => c.price === carPrice) || { price: carPrice, priceTiers: [] };
+      const pricePerDay = utils.getTierPricePerDay(carObj, days);
+      const baseTotal = days * pricePerDay;
       document.getElementById('bk-disp-days').innerHTML = `<i class="fa-solid fa-calendar-days"></i> รวม ${days} วัน`;
       document.getElementById('bk-disp-renttext').innerText = `ค่าเช่า (${days} วัน)`;
       document.getElementById('bk-disp-rentprice').innerText = `฿${utils.formatMoney(baseTotal)}`;
-      document.getElementById('book-net').innerText = `฿${utils.formatMoney(baseTotal)}`;
-      document.getElementById('book-net').dataset.net = baseTotal;
+      const insPlan = app._selectedInsurancePlan ? app.state.insurancePlans?.find(p => p.id === app._selectedInsurancePlan) : null;
+      const insTotal = insPlan ? insPlan.price * days : 0;
+      const grandTotal = baseTotal + insTotal;
+      document.getElementById('book-net').innerText = `฿${utils.formatMoney(grandTotal)}`;
+      document.getElementById('book-net').dataset.net = grandTotal;
       document.getElementById('book-discount').textContent = `฿0`;
       const promoEl = document.getElementById('promo-code');
       if(promoEl) { promoEl.disabled = false; promoEl.value = ''; }
@@ -2135,40 +2166,41 @@ const logic = {
   },
 
   confirmBooking(carId, defaultPricePerDay) {
+    if(!app.tempUploads['license']) return utils.showToast('กรุณาอัปโหลดใบขับขี่', 'warning');
+    if(!app.tempUploads['idcard']) return utils.showToast('กรุณาอัปโหลดบัตรประชาชน', 'warning');
     if(!app.tempUploads['slip']) return utils.showToast('กรุณาอัปโหลดรูปสลิปโอนเงินก่อน', 'warning');
     const netVal = document.getElementById('book-net').dataset.net;
-    const finalTotal = netVal ? parseFloat(netVal) : (defaultPricePerDay * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo));
+    const carObj = app.state.cars.find(c => c.id === carId);
+    const days = utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo);
+    const finalTotal = netVal ? parseFloat(netVal) : utils.calcTieredPrice(carObj, days);
     const bId = "BK-" + Math.floor(1000 + Math.random() * 9000);
+    const pickCustomLabel = document.getElementById('bk-edit-pick-text')?.value.trim() || '';
+    const pickCustomUrl = document.getElementById('bk-edit-pick-url')?.value.trim() || '';
+    const dropCustomLabel = document.getElementById('bk-edit-drop-text')?.value.trim() || '';
+    const dropCustomUrl = document.getElementById('bk-edit-drop-url')?.value.trim() || '';
+    const pickBranch = pickCustomLabel;
+    const dropBranch = dropCustomLabel;
 
-    const pickSel = document.getElementById('bk-edit-pick');
-    const isPickCustom = pickSel && pickSel.value === '__custom__';
-    const pickBranch = isPickCustom ? '__custom__' : (pickSel ? pickSel.value : app.searchParams.pick);
-    const pickCustomLabel = isPickCustom ? (document.getElementById('bk-edit-pick-custom-text')?.value.trim() || '') : '';
-    const pickCustomUrl = isPickCustom ? (document.getElementById('bk-edit-pick-custom-url')?.value.trim() || '') : '';
-
-    const dropSel = document.getElementById('bk-edit-drop');
-    const isDropCustom = dropSel && dropSel.value === '__custom__';
-    const dropBranch = isDropCustom ? '__custom__' : (dropSel ? dropSel.value : app.searchParams.drop);
-    const dropCustomLabel = isDropCustom ? (document.getElementById('bk-edit-drop-custom-text')?.value.trim() || '') : '';
-    const dropCustomUrl = isDropCustom ? (document.getElementById('bk-edit-drop-custom-url')?.value.trim() || '') : '';
-
-    if(isPickCustom && !pickCustomLabel) return utils.showToast('กรุณาระบุสถานที่รับรถ', 'warning');
-    if(isDropCustom && !dropCustomLabel) return utils.showToast('กรุณาระบุสถานที่คืนรถ', 'warning');
+    if(!pickCustomLabel) return utils.showToast('กรุณาระบุสถานที่รับรถ', 'warning');
+    if(!dropCustomLabel) return utils.showToast('กรุณาระบุสถานที่คืนรถ', 'warning');
 
     const newBooking = {
       id: bId, userId: app.currentUser.id, carId,
       pickBranch, dropBranch,
-      pickCustom: isPickCustom, pickCustomLabel, pickCustomUrl,
-      dropCustom: isDropCustom, dropCustomLabel, dropCustomUrl,
+      pickCustom: true, pickCustomLabel, pickCustomUrl,
+      dropCustom: true, dropCustomLabel, dropCustomUrl,
       dateFrom: app.searchParams.dateFrom, dateTo: app.searchParams.dateTo,
       days: utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo),
       total: finalTotal, status: "Pending",
       slipUrl: app.tempUploads['slip'] || '',
       idCardUrl: app.tempUploads['idcard'] || '',
       licenseUrl: app.tempUploads['license'] || '',
+      insurancePlanId: app._selectedInsurancePlan || null,
+      insurancePlanName: app._selectedInsurancePlan ? (app.state.insurancePlans?.find(p => p.id === app._selectedInsurancePlan)?.name || '') : '',
       isReviewed: false, fine: 0,
       createdAt: new Date().toISOString().split('T')[0]
     };
+    
     app.state.bookings.push(newBooking);
     app.saveState();
     const car = app.state.cars.find(c => c.id === carId);
@@ -2233,10 +2265,18 @@ const logic = {
   saveCar(carId) {
     const name = document.getElementById('car-name').value.trim();
     if(!name) return utils.showToast('กรุณากรอกชื่อรถ', 'error');
+    const tiers = [];
+    document.querySelectorAll('.price-tier-row').forEach(row => {
+      const minDay = parseInt(row.querySelector('.tier-min').value) || 0;
+      const maxDay = row.querySelector('.tier-max').value ? parseInt(row.querySelector('.tier-max').value) : null;
+      const price = parseFloat(row.querySelector('.tier-price').value) || 0;
+      if(minDay && price) tiers.push({ minDay, maxDay, price });
+    });
     const newCar = {
       id: carId || Date.now(), name,
       type: document.getElementById('car-type').value,
-      price: parseFloat(document.getElementById('car-price').value) || 0,
+      price: tiers.length > 0 ? tiers[0].price : (parseFloat(document.getElementById('car-price').value) || 0),
+      priceTiers: tiers,
       range: parseInt(document.getElementById('car-range').value) || 0,
       seats: parseInt(document.getElementById('car-seats').value) || 0,
       features: document.getElementById('car-features').value,
@@ -2358,6 +2398,80 @@ const logic = {
     app.saveState(); app.tempUploads = {};
     utils.showToast('บันทึกการตั้งค่าร้านค้าสำเร็จ ✅', 'success');
     app.render();
+    setTimeout(() => { app.renderAdminTab('settings'); }, 100);
+  },
+
+  addPriceTierRow() {
+    const container = document.getElementById('price-tiers-container');
+    if(!container) return;
+    const row = document.createElement('div');
+    row.className = 'price-tier-row flex gap-2 mb-2 items-center';
+    row.innerHTML = `
+      <input type="number" class="input-control tier-min" placeholder="วันเริ่ม" style="width:80px;">
+      <span class="text-muted">-</span>
+      <input type="number" class="input-control tier-max" placeholder="วันสิ้นสุด" style="width:80px;">
+      <span class="text-muted text-sm">วัน =</span>
+      <input type="number" class="input-control tier-price" placeholder="ราคา/วัน" style="flex:1;">
+      <span class="text-muted text-sm">บาท/วัน</span>
+      <button type="button" class="btn btn-danger btn-xs btn-icon" onclick="this.closest('.price-tier-row').remove()"><i class="fa-solid fa-times"></i></button>`;
+    container.appendChild(row);
+  },
+
+    selectInsurancePlan(planId, carPrice) {
+    document.querySelectorAll('.chip[id^="ins-"]').forEach(c => c.classList.remove('active'));
+    app._selectedInsurancePlan = planId;
+    if(planId) {
+      document.getElementById(`ins-${planId}`)?.classList.add('active');
+      const plan = app.state.insurancePlans.find(p => p.id === planId);
+      const descEl = document.getElementById('ins-desc');
+      if(descEl && plan) { descEl.textContent = plan.desc; descEl.style.display = 'block'; }
+    } else {
+      document.getElementById('ins-none')?.classList.add('active');
+      const descEl = document.getElementById('ins-desc');
+      if(descEl) descEl.style.display = 'none';
+    }
+    logic.recalcCustomerBookingPrice(carPrice);
+  },
+
+  addInsurancePlan() {
+    ui.showModal('เพิ่มแพ็กเกจประกัน', `
+      <div class="input-group"><label>ชื่อแพ็กเกจ</label><input type="text" id="iplan-name" class="input-control" placeholder="เช่น ประกันชั้น 1"></div>
+      <div class="input-group"><label>ราคา/วัน (บาท)</label><input type="number" id="iplan-price" class="input-control" placeholder="500"></div>
+      <div class="input-group mb-6"><label>รายละเอียด</label><input type="text" id="iplan-desc" class="input-control" placeholder="เช่น คุ้มครองครอบคลุมทุกกรณี"></div>
+      <button class="btn btn-primary w-full btn-lg" onclick="logic.saveInsurancePlan()"><i class="fa-solid fa-save"></i> บันทึก</button>
+    `);
+  },
+
+  saveInsurancePlan(idx = null) {
+    const name = document.getElementById('iplan-name').value.trim();
+    const price = parseFloat(document.getElementById('iplan-price').value) || 0;
+    const desc = document.getElementById('iplan-desc').value.trim();
+    if(!name) return utils.showToast('กรุณากรอกชื่อแพ็กเกจ', 'error');
+    if(!app.state.insurancePlans) app.state.insurancePlans = [];
+    const plan = { id: 'plan_' + Date.now(), name, price, desc };
+    if(idx !== null) { app.state.insurancePlans[idx] = plan; }
+    else { app.state.insurancePlans.push(plan); }
+    app.saveState(); ui.closeModal();
+    utils.showToast('บันทึกแพ็กเกจประกันสำเร็จ', 'success');
+    app.renderAdminTab('insuranceplans');
+  },
+
+  editInsurancePlan(idx) {
+    const plan = app.state.insurancePlans[idx];
+    ui.showModal('แก้ไขแพ็กเกจประกัน', `
+      <div class="input-group"><label>ชื่อแพ็กเกจ</label><input type="text" id="iplan-name" class="input-control" value="${plan.name}"></div>
+      <div class="input-group"><label>ราคา/วัน (บาท)</label><input type="number" id="iplan-price" class="input-control" value="${plan.price}"></div>
+      <div class="input-group mb-6"><label>รายละเอียด</label><input type="text" id="iplan-desc" class="input-control" value="${plan.desc}"></div>
+      <button class="btn btn-primary w-full btn-lg" onclick="logic.saveInsurancePlan(${idx})"><i class="fa-solid fa-save"></i> บันทึก</button>
+    `);
+  },
+
+  deleteInsurancePlan(idx) {
+    if(confirm('ลบแพ็กเกจนี้ใช่หรือไม่?')) {
+      app.state.insurancePlans.splice(idx, 1);
+      app.saveState(); utils.showToast('ลบแพ็กเกจสำเร็จ', 'success');
+      app.renderAdminTab('insuranceplans');
+    }
   },
 
   addBranch() {
@@ -2466,7 +2580,11 @@ app.renderCarGrid = function() {
             ${c.acceleration ? `<span>·</span><span><i class="fa-solid fa-gauge text-warning"></i> ${c.acceleration}</span>` : ''}
           </div>
           <div class="mt-auto flex justify-between items-center" style="border-top:1px solid var(--border); padding-top:14px;">
-            <div><span class="car-price">฿${utils.formatMoney(c.price)}</span><span class="text-muted text-sm" style="font-weight:500;">/วัน</span></div>
+          <div>
+              <span class="car-price">฿${utils.formatMoney(utils.getTierPricePerDay(c, utils.calcDays(dateFrom, dateTo)))}</span>
+              <span class="text-muted text-sm" style="font-weight:500;">/วัน</span>
+              ${c.priceTiers && c.priceTiers.length > 1 ? `<div class="text-muted text-sm">เริ่มต้น ฿${utils.formatMoney(Math.min(...c.priceTiers.map(t=>t.price)))}/วัน</div>` : ''}
+            </div>
             <button class="btn btn-sm" onclick="ui.showCarDetailModal(${c.id})" 
               style="${isAvail ? 'background:linear-gradient(135deg, var(--primary), #2563eb); color:white; box-shadow:0 3px 10px rgba(15,157,141,0.35); font-weight:700;' : 'background:rgba(239,68,68,0.1); color:var(--danger); border:1.5px solid rgba(239,68,68,0.3); font-weight:700;'}">
               ${isAvail ? '<i class="fa-solid fa-arrow-right"></i> เลือกเลย' : '<i class="fa-solid fa-calendar-plus"></i> เปลี่ยนวัน'}
@@ -2475,6 +2593,24 @@ app.renderCarGrid = function() {
         </div>
       </div>`;
   }).join('');
+};
+app.doSearchWithCustomLocation = function() {
+  const pickText = document.getElementById('s-pick-text')?.value.trim();
+  const pickUrl = document.getElementById('s-pick-url')?.value.trim() || '';
+  const dropText = document.getElementById('s-drop-text')?.value.trim();
+  const dropUrl = document.getElementById('s-drop-url')?.value.trim() || '';
+
+  if(!pickText) return utils.showToast('กรุณาระบุสถานที่รับรถ', 'warning');
+  if(!dropText) return utils.showToast('กรุณาระบุสถานที่คืนรถ', 'warning');
+
+  this.searchParams.pick = '__custom__';
+  this.searchParams.pickCustomLabel = pickText;
+  this.searchParams.pickCustomUrl = pickUrl;
+  this.searchParams.drop = '__custom__';
+  this.searchParams.dropCustomLabel = dropText;
+  this.searchParams.dropCustomUrl = dropUrl;
+
+  this.renderCarGrid();
 };
 
 window.app = app;
