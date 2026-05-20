@@ -1014,12 +1014,9 @@ const views = {
                 <i class="fa-solid ${app.currentUser ? 'fa-sign-out-alt' : 'fa-user'}"></i>${app.currentUser ? 'ออกระบบ' : 'เข้าระบบ'}
                </div>`
           }
-        </div>
-      </div>`;
-          }
-        </div>
-      </div>`;
-    } else {
+    </div>
+          </div>`;
+      } else {
       return `
       <div class="bottom-nav">
         <div class="bottom-nav-inner">
@@ -1421,6 +1418,8 @@ const views = {
            </div>
         </div>
         <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()">
+          <i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด
+        </button>
         <div class="card mt-4">
           <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-brands fa-telegram text-info"></i> การแจ้งเตือน Telegram</h4>
           <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
@@ -1429,7 +1428,10 @@ const views = {
             <button class="tg-test-btn" onclick="logic.testTelegram()"><i class="fa-brands fa-telegram"></i> ทดสอบส่ง</button>
           </div>
         </div>
-                <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>`;
+                        </div>
+                </div>
+                </div>
+        <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>`;
     },
 
     insuranceplans: () => {
