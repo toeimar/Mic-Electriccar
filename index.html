@@ -752,6 +752,21 @@ const app = {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
+    renderAdminTab(tab) {
+    this.currentAdminTab = tab;
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    const menuEl = document.getElementById(`menu-${tab}`);
+    if(menuEl) menuEl.classList.add('active');
+    const content = document.getElementById('admin-content');
+    if(!content) return;
+    const fn = views.adminTabs[tab];
+    content.innerHTML = fn ? fn() : `<p class="text-muted">ไม่พบหน้านี้</p>`;
+    if(tab === 'dashboard') {
+      setTimeout(() => { ui.renderChart(); ui.renderTimeline(); }, 100);
+    }
+    document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
+  },
+  
   isAdmin() { return this.currentUser && (this.currentUser.role === 'admin_master' || this.currentUser.role === 'admin_sub'); },
   isMaster() { return this.currentUser && this.currentUser.role === 'admin_master'; },
 
@@ -995,9 +1010,12 @@ const views = {
           </div>
           ${app.isAdmin() 
             ? `<div class="bottom-nav-item" style="color:var(--primary);" onclick="app.navigate('admin_dashboard')"><i class="fa-solid fa-repeat"></i>แอดมิน</div>`
-            : `<div class="bottom-nav-item" onclick="${app.currentUser ? 'logic.logout()' : 'ui.showLoginModal()'}">
+                        : `<div class="bottom-nav-item" onclick="${app.currentUser ? 'logic.logout()' : 'ui.showLoginModal()'}">
                 <i class="fa-solid ${app.currentUser ? 'fa-sign-out-alt' : 'fa-user'}"></i>${app.currentUser ? 'ออกระบบ' : 'เข้าระบบ'}
                </div>`
+          }
+        </div>
+      </div>`;
           }
         </div>
       </div>`;
@@ -1395,13 +1413,14 @@ const views = {
                   <i class="fa-solid fa-floppy-disk"></i> บันทึกลายเซ็น
              </button>
            </div>
-           ${app.state.settings.adminSigUrl ? `
+   ${app.state.settings.adminSigUrl ? `
             <div class="mt-3">
               <div class="text-muted text-sm mb-1">ลายเซ็นที่บันทึกอยู่:</div>
               <img src="${app.state.settings.adminSigUrl}" style="max-height:60px; border:1px solid var(--border); border-radius:8px; background:white; padding:4px;">
             </div>` : ''}
            </div>
-        <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
+        </div>
+        <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()">
         <div class="card mt-4">
           <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-brands fa-telegram text-info"></i> การแจ้งเตือน Telegram</h4>
           <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
