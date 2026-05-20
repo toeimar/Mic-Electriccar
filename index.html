@@ -800,37 +800,6 @@ const app = {
     }
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   },
-
-  renderAdminTab(tabId) {
-    if (tabId === 'admins' && !this.isMaster()) return;
-    this.currentAdminTab = tabId;
-    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-    const activeEl = document.getElementById(`menu-${tabId}`);
-    if(activeEl) activeEl.classList.add('active');
-    const content = document.getElementById('admin-content');
-    if(content) content.innerHTML = views.adminTabs[tabId]();
-    if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
-     renderAdminTab(tabId) {
-    if (tabId === 'admins' && !this.isMaster()) return;
-    this.currentAdminTab = tabId;
-    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-    const activeEl = document.getElementById(`menu-${tabId}`);
-    if(activeEl) activeEl.classList.add('active');
-    const content = document.getElementById('admin-content');
-    if(content) content.innerHTML = views.adminTabs[tabId]();
-    if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
-    if(tabId === 'settings') {
-      setTimeout(() => {
-        ui._initSignaturePad('admin-sig-canvas');
-        const saved = app.state.settings.adminSigUrl;
-        if(saved) {
-          const c = document.getElementById('admin-sig-canvas');
-          if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; }
-        }
-      }, 150);
-    }
-    document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
-  }
 };
 
 // =========== UTILITIES ===========
@@ -1432,24 +1401,6 @@ const views = {
               <img src="${app.state.settings.adminSigUrl}" style="max-height:60px; border:1px solid var(--border); border-radius:8px; background:white; padding:4px;">
             </div>` : ''}
            </div>
-          <div class="text-muted text-sm mb-3">วาดลายเซ็นแล้วกดบันทึก จะนำไปใช้ในสัญญาทุกฉบับโดยอัตโนมัติ</div>
-          <canvas id="admin-sig-canvas" width="500" height="130"
-            style="border:1.5px solid var(--border); border-radius:12px; background:var(--bg-body); cursor:crosshair; touch-action:none; width:100%; max-width:500px; display:block;">
-          </canvas>
-          <div class="flex gap-2 mt-2">
-            <button class="btn btn-outline btn-sm" onclick="ui._clearCanvas('admin-sig-canvas')">
-              <i class="fa-solid fa-eraser"></i> ล้าง
-            </button>
-            <button class="btn btn-primary btn-sm" onclick="logic.saveAdminSignature()">
-              <i class="fa-solid fa-floppy-disk"></i> บันทึกลายเซ็น
-            </button>
-          </div>
-          ${app.state.settings.adminSigUrl ? `
-            <div class="mt-3">
-              <div class="text-muted text-sm mb-1">ลายเซ็นที่บันทึกอยู่:</div>
-              <img src="${app.state.settings.adminSigUrl}" style="max-height:60px; border:1px solid var(--border); border-radius:8px; background:white; padding:4px;">
-            </div>` : ''}
-        </div>
         <button class="btn btn-primary w-full mt-4 btn-lg" onclick="logic.saveSettings()"><i class="fa-solid fa-save"></i> บันทึกการตั้งค่าทั้งหมด</button>
         <div class="card mt-4">
           <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-brands fa-telegram text-info"></i> การแจ้งเตือน Telegram</h4>
