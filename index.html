@@ -401,13 +401,6 @@
   }
 
   .receipt-box { border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--bg-body); margin-bottom: 16px; }
-  @media print {
-    body * { visibility: hidden; }
-    #main-modal, #main-modal * { visibility: visible; }
-    #main-modal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white; color: black; box-shadow: none; transform: none; padding: 0; margin: 0; }
-    .modal-close, .no-print { display: none !important; }
-  }
-
   .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
   .empty-state i { font-size: 3rem; margin-bottom: 16px; opacity: 0.4; display: block; }
   .empty-state p { font-size: 1rem; font-weight: 500; }
