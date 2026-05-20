@@ -817,6 +817,13 @@ const app = {
     const content = document.getElementById('admin-content');
     if(content) content.innerHTML = views.adminTabs[tabId]();
     if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
+    if(tabId === 'settings') { setTimeout(() => {
+    ui._initSignaturePad('admin-sig-canvas');
+    const saved = app.state.settings.adminSigUrl;
+    if(saved) { const c = document.getElementById('admin-sig-canvas'); if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; } }
+  }, 150); }
+  document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
+}
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   }
 };
@@ -2015,7 +2022,8 @@ const ui = {
     ui._initSignaturePad('sig-owner');
     const bk = app.state.bookings.find(x => x.id === bId);
     if(bk?.sigRenter) { const img = document.getElementById('sig-renter-img'); if(img) img.src = bk.sigRenter; const c = document.getElementById('sig-renter'); if(c){ const ctx=c.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,c.width,c.height); i.src=bk.sigRenter; } }
-    if(bk?.sigOwner) { const img = document.getElementById('sig-owner-img'); if(img) img.src = bk.sigOwner; const c = document.getElementById('sig-owner'); if(c){ const ctx=c.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,c.width,c.height); i.src=bk.sigOwner; } }
+        const ownerSig = bk?.sigOwner || app.state.settings.adminSigUrl;
+    if(ownerSig) { const img = document.getElementById('sig-owner-img'); if(img) img.src = ownerSig; const c = document.getElementById('sig-owner'); if(c){ const ctx=c.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,c.width,c.height); i.src=ownerSig; } }
   }, 150);
 },
 
@@ -2676,7 +2684,17 @@ const logic = {
   },
 
   deleteInsurancePlan(idx) {
+      saveAdminSignature() {
+    const canvas = document.getElementById('admin-sig-canvas');
+    if(!canvas) return utils.showToast('ไม่พบ canvas', 'error');
+    app.state.settings.adminSigUrl = canvas.toDataURL('image/png');
+    app.saveState();
+    utils.showToast('บันทึกลายเซ็นแอดมินสำเร็จ ✅', 'success');
+  },
+
+  deleteInsurancePlan(idx) {
     if(confirm('ลบแพ็กเกจนี้ใช่หรือไม่?')) {
+
       app.state.insurancePlans.splice(idx, 1);
       app.saveState(); utils.showToast('ลบแพ็กเกจสำเร็จ', 'success');
       app.renderAdminTab('insuranceplans');
