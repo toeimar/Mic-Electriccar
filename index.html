@@ -820,10 +820,12 @@ const app = {
     if(tabId === 'settings') { setTimeout(() => {
     ui._initSignaturePad('admin-sig-canvas');
     const saved = app.state.settings.adminSigUrl;
-    if(saved) { const c = document.getElementById('admin-sig-canvas'); if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; } }
-  }, 150); }
-  document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
-}
+    if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
+    if(tabId === 'settings') { setTimeout(() => {
+      ui._initSignaturePad('admin-sig-canvas');
+      const saved = app.state.settings.adminSigUrl;
+      if(saved) { const c = document.getElementById('admin-sig-canvas'); if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; } }
+    }, 150); }
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   }
 };
