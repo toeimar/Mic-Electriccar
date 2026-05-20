@@ -810,15 +810,25 @@ const app = {
     const content = document.getElementById('admin-content');
     if(content) content.innerHTML = views.adminTabs[tabId]();
     if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
-    if(tabId === 'settings') { setTimeout(() => {
-    ui._initSignaturePad('admin-sig-canvas');
-    const saved = app.state.settings.adminSigUrl;
+     renderAdminTab(tabId) {
+    if (tabId === 'admins' && !this.isMaster()) return;
+    this.currentAdminTab = tabId;
+    document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+    const activeEl = document.getElementById(`menu-${tabId}`);
+    if(activeEl) activeEl.classList.add('active');
+    const content = document.getElementById('admin-content');
+    if(content) content.innerHTML = views.adminTabs[tabId]();
     if(tabId === 'dashboard') { ui.renderChart(); ui.renderTimeline(); }
-    if(tabId === 'settings') { setTimeout(() => {
-      ui._initSignaturePad('admin-sig-canvas');
-      const saved = app.state.settings.adminSigUrl;
-      if(saved) { const c = document.getElementById('admin-sig-canvas'); if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; } }
-    }, 150); }
+    if(tabId === 'settings') {
+      setTimeout(() => {
+        ui._initSignaturePad('admin-sig-canvas');
+        const saved = app.state.settings.adminSigUrl;
+        if(saved) {
+          const c = document.getElementById('admin-sig-canvas');
+          if(c){ const ctx=c.getContext('2d'); const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,c.width,c.height); img.src=saved; }
+        }
+      }, 150);
+    }
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   }
 };
@@ -1422,10 +1432,6 @@ const views = {
               <img src="${app.state.settings.adminSigUrl}" style="max-height:60px; border:1px solid var(--border); border-radius:8px; background:white; padding:4px;">
             </div>` : ''}
            </div>
-                       <div class="card mt-4 mb-0">
-          <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);">
-            <i class="fa-solid fa-signature text-primary"></i> ลายเซ็นผู้ให้เช่า (สำหรับสัญญา)
-          </h4>
           <div class="text-muted text-sm mb-3">วาดลายเซ็นแล้วกดบันทึก จะนำไปใช้ในสัญญาทุกฉบับโดยอัตโนมัติ</div>
           <canvas id="admin-sig-canvas" width="500" height="130"
             style="border:1.5px solid var(--border); border-radius:12px; background:var(--bg-body); cursor:crosshair; touch-action:none; width:100%; max-width:500px; display:block;">
@@ -1737,8 +1743,30 @@ const ui = {
           <div id="ins-desc" class="text-muted text-sm mt-2" style="display:none;"></div>
         </div>` : ''}
         <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> สรุปค่าใช้จ่าย</h4>
-        <div class="card-flat p-4 mb-4" style="border-radius:14px;">
-            ... (เหมือนเดิมทุกอย่าง)
+                <div class="card-flat p-4 mb-4" style="border-radius:14px;">
+          <div class="info-row">
+            <span class="info-row-label" id="bk-disp-renttext">ค่าเช่า</span>
+            <span class="info-row-value font-bold" id="bk-disp-rentprice">฿${utils.formatMoney(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)))}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label text-warning">เงินมัดจำ</span>
+            <span class="info-row-value text-warning font-bold" id="book-deposit-display">฿${utils.formatMoney(app.state.settings.depositType==='percent' ? Math.ceil(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)) * (app.state.settings.depositValue||0) / 100) : (app.state.settings.depositValue||0))}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-row-label text-success">ส่วนลด</span>
+            <span class="info-row-value text-success" id="book-discount">฿0</span>
+          </div>
+          <div class="info-row" style="border:none; border-top:2px solid var(--primary); padding-top:8px; margin-top:4px;">
+            <span class="info-row-label font-bold" style="font-size:1rem;">ยอดรวมสุทธิ</span>
+            <span class="info-row-value font-bold text-primary" style="font-size:1.3rem;" id="book-net" data-net="${utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}">฿${utils.formatMoney(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)))}</span>
+          </div>
+          <div class="input-group mt-3 mb-0">
+            <label>โค้ดส่วนลด <span class="text-muted">(ถ้ามี)</span></label>
+            <div class="flex gap-2">
+              <input type="text" id="promo-code" class="input-control" placeholder="กรอกโค้ด เช่น NEWUSER">
+              <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="logic.applyPromo(${c.price})"><i class="fa-solid fa-tag"></i> ใช้โค้ด</button>
+            </div>
+          </div>
         </div>
         <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-qrcode text-primary"></i> ชำระเงิน</h4>
           <div class="card-flat p-3 mb-4 text-center" style="border-radius:14px;">
@@ -2700,8 +2728,7 @@ const logic = {
     `);
   },
 
-  deleteInsurancePlan(idx) {
-      saveAdminSignature() {
+    saveAdminSignature() {
     const canvas = document.getElementById('admin-sig-canvas');
     if(!canvas) return utils.showToast('ไม่พบ canvas', 'error');
     app.state.settings.adminSigUrl = canvas.toDataURL('image/png');
