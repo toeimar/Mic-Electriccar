@@ -559,7 +559,9 @@ const DEFAULT_STATE = {
     signupPts: 100,
     tgBotToken: '8945655803:AAHI9QB4v9TRS1Z4OYUHrTFcBJdEkwbugig',
     tgChatId: '-1003948271693',
-    insuranceAlertDays: 30
+    insuranceAlertDays: 30,
+    depositType: 'fixed',
+    depositValue: 2000
   },
   branches: [
     { id: 'BKK', name: 'สนามบินสุวรรณภูมิ (BKK)', address: 'ถ.บางนา-ตราด กม.15 สมุทรปราการ', mapUrl: 'https://maps.google.com/?q=สนามบินสุวรรณภูมิ', mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3877.036!2d100.7474!3d13.6900!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d603f8e95b8c9%3A0xb90e8a2aff98b17a!2sSuvarnabhumi+Airport!5e0!3m2!1sth!2sth!4v1234567890' },
@@ -632,6 +634,9 @@ const app = {
     this.state.branches = this.state.branches.map(b => ({ address: '', mapUrl: '', mapEmbed: '', ...b }));
     this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', ...c }));
     if (!this.state.insurancePlans) this.state.insurancePlans = DEFAULT_STATE.insurancePlans;
+    if (!this.state.settings.depositType) this.state.settings.depositType = 'fixed';
+    if (this.state.settings.depositValue === undefined) this.state.settings.depositValue = 2000;
+
 
     document.documentElement.setAttribute('data-theme', this.state.theme);
     this.updateThemeIcon();
@@ -1266,6 +1271,7 @@ const views = {
                 <div class="flex gap-2">
                   <button class="btn btn-outline btn-sm flex-1" onclick="ui.showAdminBookingModal('${b.id}')"><i class="fa-solid fa-pen-to-square"></i> ตรวจสอบ</button>
                   <button class="btn btn-info btn-sm flex-1" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-print"></i> บิล</button>
+                  <button class="btn btn-outline btn-sm flex-1" onclick="ui.showContractModal('${b.id}')"><i class="fa-solid fa-file-contract"></i> สัญญา</button>
                 </div>
               </div>`;
             }).join('')}
@@ -1355,6 +1361,8 @@ const views = {
             <div class="input-group"><label>ข้อความพาดหัวหลัก</label><input type="text" id="set-hero-title" class="input-control" value="${app.state.settings.heroTitle}"></div>
             <div class="input-group"><label>ข้อความรอง</label><input type="text" id="set-hero-sub" class="input-control" value="${app.state.settings.heroSub}"></div>
             <div class="input-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="text" id="set-phone" class="input-control" value="${app.state.settings.phone}"></div>
+            <div class="input-group"><label><i class="fa-solid fa-hand-holding-dollar text-warning"></i> ประเภทมัดจำ</label><select id="set-deposit-type" class="input-control"><option value="fixed" ${app.state.settings.depositType==='fixed'?'selected':''}>จำนวนเงินคงที่ (บาท)</option><option value="percent" ${app.state.settings.depositType==='percent'?'selected':''}>เปอร์เซ็นต์จากค่าเช่า (%)</option></select></div>
+            <div class="input-group"><label>${app.state.settings.depositType==='percent'?'เปอร์เซ็นต์มัดจำ (%)':'จำนวนมัดจำ (บาท)'}</label><input type="number" id="set-deposit-value" class="input-control" value="${app.state.settings.depositValue||2000}" min="0"></div>
           </div>
           <div>
             <div class="card mb-4">
@@ -1662,6 +1670,7 @@ const ui = {
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> สรุปค่าใช้จ่าย</h4>
           <div class="card-flat p-4 mb-4" style="border-radius:14px;">
             <div class="info-row"><span class="info-row-label" id="bk-disp-renttext">ค่าเช่า (${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน)</span><span class="info-row-value" id="bk-disp-rentprice">฿${utils.formatMoney(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)))}</span></div>
+            <div class="info-row"><span class="info-row-label text-warning"><i class="fa-solid fa-hand-holding-dollar"></i> มัดจำ</span><span class="info-row-value text-warning font-bold" id="book-deposit-display">${(() => { const s = app.state.settings; const days = utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo); const base = utils.calcTieredPrice(c, days); const dep = s.depositType==='percent' ? Math.ceil(base*(s.depositValue||0)/100) : (s.depositValue||0); return '฿'+utils.formatMoney(dep); })()}</span></div>
             <div class="info-row"><span class="info-row-label text-success">ส่วนลด</span><span class="info-row-value text-success font-bold" id="book-discount">฿0</span></div>
             <div class="flex justify-between items-center mt-3 pt-2" style="border-top:2px solid var(--border);"><span class="font-bold">ยอดชำระสุทธิ</span><span class="font-bold text-primary" style="font-size:1.8rem; line-height:1; font-family:'Prompt',sans-serif;" id="book-net" data-net="${c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)}">฿${utils.formatMoney(c.price * utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}</span></div>
             <div class="flex gap-2 mt-3"><div class="input-with-icon flex-1"><i class="fa-solid fa-tag input-icon"></i><input type="text" id="promo-code" class="input-control" placeholder="โค้ดส่วนลด" style="padding:9px 12px 9px 36px; font-size:0.95rem;"></div><button class="btn btn-outline btn-sm" onclick="logic.applyPromo(${c.price})" style="white-space:nowrap; flex-shrink:0;">ใช้โค้ด</button></div>
@@ -1732,6 +1741,7 @@ const ui = {
           </div>
           <div class="flex gap-2 flex-wrap">
             <button class="btn btn-outline btn-sm" onclick="ui.showReceiptModal('${b.id}')"><i class="fa-solid fa-file-invoice"></i> ดูบิล</button>
+            <button class="btn btn-outline btn-sm" onclick="ui.showContractModal('${b.id}')"><i class="fa-solid fa-file-contract"></i> สัญญา</button>
             ${b.status === 'Completed' && !b.isReviewed ? `<button class="btn btn-warning btn-sm" onclick="ui.showReviewModal('${b.id}')"><i class="fa-solid fa-star"></i> รีวิวรับ 50 แต้ม</button>` : ''}
             ${b.isReviewed ? `<span class="badge badge-success"><i class="fa-solid fa-check"></i> รีวิวแล้ว</span>` : ''}
           </div>
@@ -1869,6 +1879,82 @@ const ui = {
       <button class="btn btn-primary w-full btn-lg" onclick="logic.saveCRM('${uId}')"><i class="fa-solid fa-save"></i> บันทึกการเปลี่ยนแปลง</button>
     `, '', u.phone);
   },
+
+  showContractModal(bId) {
+  const b = app.state.bookings.find(x => x.id === bId);
+  if(!b) return utils.showToast('ไม่พบข้อมูลการจอง', 'error');
+  const u = app.state.users.find(x => x.id === b.userId);
+  const c = app.state.cars.find(x => x.id === b.carId);
+  const bPick = b.pickCustom ? (b.pickCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.pickBranch)?.name||b.pickBranch);
+  const bDrop = b.dropCustom ? (b.dropCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.dropBranch)?.name||b.dropBranch);
+  const dep = b.deposit || 0;
+  this.showModal('สัญญาเช่ารถยนต์', `
+    <div id="contract-print-area" style="font-family:'Sarabun',sans-serif; font-size:0.95rem; line-height:1.8;">
+      <div class="text-center mb-4">
+        ${app.state.settings.logoUrl ? `<img src="${app.state.settings.logoUrl}" style="max-height:56px; margin:0 auto 8px; display:block;">` : ''}
+        <h2 style="font-size:1.4rem; font-family:'Prompt',sans-serif; margin-bottom:4px;">${app.state.settings.storeName}</h2>
+        <div style="font-size:0.9rem; color:var(--text-muted);">โทร: ${app.state.settings.phone}</div>
+        <h3 style="margin-top:16px; font-size:1.2rem; font-family:'Prompt',sans-serif; border-bottom:2px solid var(--primary); padding-bottom:8px; color:var(--primary);">สัญญาเช่ารถยนต์</h3>
+      </div>
+      <div class="receipt-box">
+        <div class="info-row"><span class="info-row-label">เลขที่สัญญา</span><span class="info-row-value font-bold text-primary">${b.id}</span></div>
+        <div class="info-row" style="border:none;"><span class="info-row-label">วันทำสัญญา</span><span class="info-row-value">${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</span></div>
+      </div>
+      <div class="receipt-box">
+        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-user"></i> ข้อมูลผู้เช่า</div>
+        <div class="info-row"><span class="info-row-label">ชื่อ-นามสกุล</span><span class="info-row-value font-bold">${u.name}</span></div>
+        <div class="info-row" style="border:none;"><span class="info-row-label">เบอร์โทรศัพท์</span><span class="info-row-value">${u.phone}</span></div>
+      </div>
+      <div class="receipt-box">
+        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-car"></i> ข้อมูลรถที่เช่า</div>
+        <div class="info-row"><span class="info-row-label">รุ่นรถ</span><span class="info-row-value font-bold">${c.name}</span></div>
+        <div class="info-row"><span class="info-row-label">ประเภท</span><span class="info-row-value">${c.type}</span></div>
+        <div class="info-row"><span class="info-row-label">สีภายนอก</span><span class="info-row-value">${c.colorExt||'-'}</span></div>
+        <div class="info-row" style="border:none;"><span class="info-row-label">ยี่ห้อ / รุ่น</span><span class="info-row-value">${c.brand||''} ${c.model||''}</span></div>
+      </div>
+      <div class="receipt-box">
+        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-calendar"></i> รายละเอียดการเช่า</div>
+        <div class="info-row"><span class="info-row-label">วันรับรถ</span><span class="info-row-value">${utils.formatDate(b.dateFrom)}</span></div>
+        <div class="info-row"><span class="info-row-label">วันคืนรถ</span><span class="info-row-value">${utils.formatDate(b.dateTo)}</span></div>
+        <div class="info-row"><span class="info-row-label">จำนวนวัน</span><span class="info-row-value font-bold">${b.days} วัน</span></div>
+        <div class="info-row"><span class="info-row-label">สถานที่รับรถ</span><span class="info-row-value">${bPick}</span></div>
+        <div class="info-row" style="border:none;"><span class="info-row-label">สถานที่คืนรถ</span><span class="info-row-value">${bDrop}</span></div>
+      </div>
+      <div class="receipt-box" style="background:var(--primary-light);">
+        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-file-invoice-dollar"></i> ค่าใช้จ่าย</div>
+        <div class="info-row"><span class="info-row-label">ค่าเช่ารถ</span><span class="info-row-value font-bold">฿${utils.formatMoney(b.total)}</span></div>
+        ${dep > 0 ? `<div class="info-row"><span class="info-row-label text-warning">เงินมัดจำ</span><span class="info-row-value text-warning font-bold">฿${utils.formatMoney(dep)}</span></div>` : ''}
+        ${b.insurancePlanName ? `<div class="info-row"><span class="info-row-label">ประกันเพิ่มเติม</span><span class="info-row-value">${b.insurancePlanName}</span></div>` : ''}
+        <div class="info-row" style="border:none; border-top:2px solid var(--primary); margin-top:8px; padding-top:8px;"><span class="info-row-label font-bold" style="font-size:1rem;">ยอดรวมทั้งหมด</span><span class="info-row-value font-bold text-primary" style="font-size:1.3rem;">฿${utils.formatMoney(b.total + dep)}</span></div>
+      </div>
+      <div class="receipt-box">
+        <div class="font-bold mb-3 text-danger"><i class="fa-solid fa-triangle-exclamation"></i> เงื่อนไขและข้อตกลง</div>
+        <ol style="padding-left:18px; font-size:0.88rem; line-height:2; color:var(--text-muted);">
+          <li>ผู้เช่าต้องส่งคืนรถในสภาพเรียบร้อยตามวันและเวลาที่กำหนด</li>
+          <li>หากคืนรถล่าช้าจะคิดค่าเช่าเพิ่มตามอัตราที่กำหนด</li>
+          <li>ผู้เช่าต้องรับผิดชอบความเสียหายที่เกิดจากการใช้งาน</li>
+          <li>ห้ามนำรถไปใช้ในกิจกรรมผิดกฎหมายทุกประเภท</li>
+          <li>เงินมัดจำจะคืนให้หลังตรวจสอบสภาพรถเรียบร้อยแล้ว</li>
+          <li>บริษัทสงวนสิทธิ์ในการเรียกค่าเสียหายเพิ่มเติมหากมีความเสียหาย</li>
+        </ol>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px; text-align:center;">
+        <div style="border-top:1.5px solid var(--text-main); padding-top:8px;">
+          <div class="text-muted" style="font-size:0.85rem;">ลายมือชื่อผู้เช่า</div>
+          <div style="margin-top:4px; font-size:0.85rem;">( ${u.name} )</div>
+        </div>
+        <div style="border-top:1.5px solid var(--text-main); padding-top:8px;">
+          <div class="text-muted" style="font-size:0.85rem;">ลายมือชื่อผู้ให้เช่า</div>
+          <div style="margin-top:4px; font-size:0.85rem;">( ${app.state.settings.storeName} )</div>
+        </div>
+      </div>
+    </div>
+    <div class="flex gap-2 no-print mt-4" style="flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm flex-1" onclick="window.print()"><i class="fa-solid fa-print"></i> พิมพ์สัญญา</button>
+      <button class="btn btn-primary btn-sm flex-1" onclick="ui.closeModal()"><i class="fa-solid fa-check"></i> ปิด</button>
+    </div>
+  `);
+},
 
   showInsuranceEditModal(carId) {
     const c = app.state.cars.find(x => x.id === carId);
@@ -2160,6 +2246,10 @@ const logic = {
       document.getElementById('book-net').innerText = `฿${utils.formatMoney(grandTotal)}`;
       document.getElementById('book-net').dataset.net = grandTotal;
       document.getElementById('book-discount').textContent = `฿0`;
+      const s = app.state.settings;
+      const dep = s.depositType === 'percent' ? Math.ceil(baseTotal * (s.depositValue||0) / 100) : (s.depositValue || 0);
+      const depEl = document.getElementById('book-deposit-display');
+      if(depEl) depEl.textContent = '฿' + utils.formatMoney(dep);
       const promoEl = document.getElementById('promo-code');
       if(promoEl) { promoEl.disabled = false; promoEl.value = ''; }
     }
@@ -2197,10 +2287,11 @@ const logic = {
       licenseUrl: app.tempUploads['license'] || '',
       insurancePlanId: app._selectedInsurancePlan || null,
       insurancePlanName: app._selectedInsurancePlan ? (app.state.insurancePlans?.find(p => p.id === app._selectedInsurancePlan)?.name || '') : '',
+      deposit: (() => { const s = app.state.settings; return s.depositType === 'percent' ? Math.ceil(finalTotal * (s.depositValue||0) / 100) : (s.depositValue || 0); })(),
       isReviewed: false, fine: 0,
       createdAt: new Date().toISOString().split('T')[0]
     };
-    
+  
     app.state.bookings.push(newBooking);
     app.saveState();
     const car = app.state.cars.find(c => c.id === carId);
@@ -2393,6 +2484,8 @@ const logic = {
     app.state.settings.bank = document.getElementById('set-bank').value;
     app.state.settings.accNo = document.getElementById('set-acc-no').value;
     app.state.settings.accName = document.getElementById('set-acc-name').value;
+    app.state.settings.depositType = document.getElementById('set-deposit-type').value;
+    app.state.settings.depositValue = parseFloat(document.getElementById('set-deposit-value').value) || 0;
     if(app.tempUploads['setLogo']) app.state.settings.logoUrl = app.tempUploads['setLogo'];
     if(app.tempUploads['setQR']) app.state.settings.qrUrl = app.tempUploads['setQR'];
     app.saveState(); app.tempUploads = {};
