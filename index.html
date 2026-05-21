@@ -474,21 +474,96 @@
 
   /* ===== BRANCH INPUT MIXED ===== */
   .branch-input-wrap { position: relative; }
-   @media print {
-    body * { visibility: hidden; }
-    #contract-print-area, #contract-print-area * { visibility: visible; }
-    #contract-print-area {
-      position: fixed; top: 0; left: 0;
-      width: 210mm; min-height: 297mm;
-      padding: 20mm 18mm; background: white; color: black;
-      font-family: 'Sarabun', sans-serif; font-size: 13pt; line-height: 1.9;
+  @media print {
+    @page {
+      size: 210mm 297mm;
+      margin: 25.4mm 25.4mm 25.4mm 25.4mm;
     }
+    * { box-sizing: border-box !important; }
+    body * { visibility: hidden; }
+    #contract-print-area, #contract-print-area * { visibility: visible !important; }
+    #contract-print-area {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 10mm 12mm !important;
+    margin: 0 auto !important;
+    background: white !important;
+    color: black !important;
+    font-family: 'Sarabun', sans-serif !important;
+    font-size: 9pt !important;
+    line-height: 1.6 !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+    #contract-print-area * {
+      max-width: 100% !important;
+      word-break: break-word !important;
+      overflow-wrap: break-word !important;
+    }
+    #contract-print-area [style*="font-size:1.15rem"],
+    #contract-print-area [style*="font-size: 1.15rem"],
+    #contract-print-area [style*="font-size:1.1rem"],
+    #contract-print-area [style*="font-size: 1.1rem"] { font-size: 9pt !important; }
+    #contract-print-area [style*="font-size:1.05rem"],
+    #contract-print-area [style*="font-size: 1.05rem"],
+    #contract-print-area [style*="font-size:0.95rem"],
+    #contract-print-area [style*="font-size: 0.95rem"] { font-size: 8pt !important; }
+    #contract-print-area [style*="font-size:0.88rem"],
+    #contract-print-area [style*="font-size: 0.88rem"],
+    #contract-print-area [style*="font-size:0.83rem"],
+    #contract-print-area [style*="font-size: 0.83rem"] { font-size: 7.5pt !important; }
+    #contract-print-area [style*="font-size:0.82rem"],
+    #contract-print-area [style*="font-size: 0.82rem"],
+    #contract-print-area [style*="font-size:0.78rem"],
+    #contract-print-area [style*="font-size: 0.78rem"] { font-size: 7pt !important; }
+    #contract-print-area table {
+      width: 100% !important;
+      font-size: 7.5pt !important;
+      border-collapse: collapse !important;
+    }
+    #contract-print-area td {
+      padding: 3px 4px !important;
+      word-break: break-word !important;
+    }
+    #contract-print-area [style*="display:grid"],
+    #contract-print-area [style*="display: grid"] {
+      display: grid !important;
+      max-width: 100% !important;
+    }
+    #contract-print-area [style*="grid-template-columns:1fr 1fr"],
+    #contract-print-area [style*="grid-template-columns: 1fr 1fr"] {
+      grid-template-columns: 1fr 1fr !important;
+      gap: 6px !important;
+    }
+    #contract-print-area [style*="margin-bottom:18px"],
+    #contract-print-area [style*="margin-bottom: 18px"],
+    #contract-print-area [style*="margin-bottom:14px"],
+    #contract-print-area [style*="margin-bottom: 14px"],
+    #contract-print-area [style*="margin-bottom:12px"],
+    #contract-print-area [style*="margin-bottom: 12px"] { margin-bottom: 5px !important; }
+    #contract-print-area [style*="padding:14px"],
+    #contract-print-area [style*="padding: 14px"],
+    #contract-print-area [style*="padding:10px"],
+    #contract-print-area [style*="padding: 10px"] { padding: 4px 6px !important; }
     .no-print { display: none !important; }
-    .receipt-box { border: 1px solid #ccc !important; background: white !important; }
-    .info-row-label { color: #555 !important; }
-    .info-row-value { color: #000 !important; }
+    .receipt-box { display: none !important; }
     #sig-print-area { display: block !important; }
   }
+    /* ===== BOOKING CALENDAR ===== */
+  .booking-cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .booking-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-day-header { text-align:center; font-size:0.78rem; font-weight:700; color:var(--text-muted); padding:6px 0; text-transform:uppercase; }
+  .cal-day { min-height:76px; border-radius:10px; border:1px solid var(--border); padding:4px 6px; background:var(--bg-card); position:relative; transition:background 0.15s; }
+  .cal-day:hover { background:var(--primary-light); }
+  .cal-day.today { border-color:var(--primary); border-width:2px; }
+  .cal-day.other-month { opacity:0.35; }
+  .cal-day-num { font-size:0.82rem; font-weight:700; color:var(--text-muted); }
+  .cal-day.today .cal-day-num { color:var(--primary); }
+  .cal-booking-chip { font-size:0.68rem; font-weight:700; border-radius:4px; padding:1px 5px; margin-top:2px; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; cursor:pointer; }
+  .cal-car-filter { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 </style>
   
 </head>
@@ -562,8 +637,24 @@ const DEFAULT_STATE = {
     tgBotToken: '8945655803:AAHI9QB4v9TRS1Z4OYUHrTFcBJdEkwbugig',
     tgChatId: '-1003948271693',
     insuranceAlertDays: 30,
+        depositType: 'fixed',
+    depositValue: 2000,
+    contractTitle: 'สัญญาเช่ารถยนต์',
+    contractHeader: 'สัญญาฉบับนี้ทำขึ้นระหว่างผู้ให้เช่าและผู้เช่า โดยทั้งสองฝ่ายตกลงกันตามเงื่อนไขดังต่อไปนี้',
+    contractFooter: 'สัญญาฉบับนี้ทำขึ้น 2 ฉบับ มีข้อความตรงกัน คู่สัญญาแต่ละฝ่ายยึดถือไว้ฝ่ายละ 1 ฉบับ',
+    contractTerms: [
+      'ผู้เช่าต้องส่งคืนรถในสภาพเรียบร้อยตามวันและเวลาที่กำหนด',
+      'หากคืนรถล่าช้าจะคิดค่าเช่าเพิ่มตามอัตราที่กำหนด',
+      'ผู้เช่าต้องรับผิดชอบความเสียหายที่เกิดจากการใช้งาน',
+      'ห้ามนำรถไปใช้ในกิจกรรมผิดกฎหมายทุกประเภท',
+      'เงินมัดจำจะคืนให้หลังตรวจสอบสภาพรถเรียบร้อยแล้ว',
+      'บริษัทสงวนสิทธิ์ในการเรียกค่าเสียหายเพิ่มเติมหากมีความเสียหาย'
+    ],
     depositType: 'fixed',
-    depositValue: 2000
+    depositValue: 2000,
+    deliveryPricePerKm: 10,
+    deliveryBaseKm: 0,
+    storeMapUrl: '',
   },
   branches: [
     { id: 'BKK', name: 'สนามบินสุวรรณภูมิ (BKK)', address: 'ถ.บางนา-ตราด กม.15 สมุทรปราการ', mapUrl: 'https://maps.google.com/?q=สนามบินสุวรรณภูมิ', mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3877.036!2d100.7474!3d13.6900!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d603f8e95b8c9%3A0xb90e8a2aff98b17a!2sSuvarnabhumi+Airport!5e0!3m2!1sth!2sth!4v1234567890' },
@@ -584,16 +675,20 @@ const DEFAULT_STATE = {
       brand: "Tesla", model: "Model 3", colorExt: "ขาวมุก", colorInt: "ดำ",
       engine: "Dual Motor Electric", power: "358 แรงม้า", torque: "510 Nm",
       acceleration: "4.4 วินาที", topSpeed: "225 กม./ชม.",
-      insuranceExpiry: "2025-12-31", insuranceNote: "ประกันชั้น 1 บริษัทเมืองไทยประกันภัย"
+      insuranceExpiry: "2025-12-31", insuranceNote: "ประกันชั้น 1 บริษัทเมืองไทยประกันภัย",
+      prbExpiry: "", prbNote: "",
+      taxExpiry: "", taxNote: "",
+      depositType: 'fixed', depositValue: 2000
     },
     { 
-      id: 2, name: "Tesla Model Y", type: "SUV", price: 3200, range: 533, seats: 5, 
+      id: 2, name: "Tesla Model Y", 
       status: "Available", rating: 4.9, reviews: 85, images: [MOCK_IMAGES[1], MOCK_IMAGES[0]], 
       features: "พื้นที่กว้าง, หลังคาแก้ว",
       brand: "Tesla", model: "Model Y", colorExt: "เทาเมทัลลิก", colorInt: "ขาว",
       engine: "Long Range Dual Motor", power: "456 แรงม้า", torque: "493 Nm",
       acceleration: "5.0 วินาที", topSpeed: "217 กม./ชม.",
-      insuranceExpiry: "2026-06-15", insuranceNote: "ประกันชั้น 1 บริษัทวิริยะประกันภัย"
+      insuranceExpiry: "2026-06-15", insuranceNote: "ประกันชั้น 1 บริษัทวิริยะประกันภัย",
+      depositType: 'fixed', depositValue: 2000
     }
   ],
   insurancePlans: [
@@ -634,10 +729,17 @@ const app = {
     if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
     if (!this.state.settings.insuranceAlertDays) this.state.settings.insuranceAlertDays = 30;
     this.state.branches = this.state.branches.map(b => ({ address: '', mapUrl: '', mapEmbed: '', ...b }));
-    this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', ...c }));
+    this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', prbExpiry: '', prbNote: '', taxExpiry: '', taxNote: '', depositType: 'fixed', depositValue: 2000, ...c }));
     if (!this.state.insurancePlans) this.state.insurancePlans = DEFAULT_STATE.insurancePlans;
     if (!this.state.settings.depositType) this.state.settings.depositType = 'fixed';
     if (this.state.settings.depositValue === undefined) this.state.settings.depositValue = 2000;
+    if (!this.state.settings.contractTitle) this.state.settings.contractTitle = 'สัญญาเช่ารถยนต์';
+    if (this.state.settings.deliveryPricePerKm === undefined) this.state.settings.deliveryPricePerKm = 10;
+    if (this.state.settings.deliveryBaseKm === undefined) this.state.settings.deliveryBaseKm = 0;
+    if (!this.state.settings.storeMapUrl) this.state.settings.storeMapUrl = '';
+    if (!this.state.settings.contractHeader) this.state.settings.contractHeader = 'สัญญาฉบับนี้ทำขึ้นระหว่างผู้ให้เช่าและผู้เช่า โดยทั้งสองฝ่ายตกลงกันตามเงื่อนไขดังต่อไปนี้';
+    if (!this.state.settings.contractFooter) this.state.settings.contractFooter = 'สัญญาฉบับนี้ทำขึ้น 2 ฉบับ มีข้อความตรงกัน คู่สัญญาแต่ละฝ่ายยึดถือไว้ฝ่ายละ 1 ฉบับ';
+    if (!this.state.settings.contractTerms) this.state.settings.contractTerms = ['ผู้เช่าต้องส่งคืนรถในสภาพเรียบร้อยตามวันและเวลาที่กำหนด','หากคืนรถล่าช้าจะคิดค่าเช่าเพิ่มตามอัตราที่กำหนด','ผู้เช่าต้องรับผิดชอบความเสียหายที่เกิดจากการใช้งาน','ห้ามนำรถไปใช้ในกิจกรรมผิดกฎหมายทุกประเภท','เงินมัดจำจะคืนให้หลังตรวจสอบสภาพรถเรียบร้อยแล้ว','บริษัทสงวนสิทธิ์ในการเรียกค่าเสียหายเพิ่มเติมหากมีความเสียหาย'];
 
 
     document.documentElement.setAttribute('data-theme', this.state.theme);
@@ -659,7 +761,12 @@ const app = {
       onSnapshot(docRef, (snapshot) => {
         if (snapshot.exists()) {
           this._mergeRemoteState(snapshot.data());
-          if (document.getElementById('app-root').innerHTML !== '') this.render();
+          if (document.getElementById('app-root').innerHTML !== '') {
+            this.render();
+            if(this.isAdmin() && this.currentAdminTab) {
+              this.renderAdminTab(this.currentAdminTab);
+            }
+          }
         }
       }, (error) => { console.error("Firestore listen error:", error); });
     } catch(e) { console.error("Firebase init error:", e); }
@@ -697,6 +804,7 @@ const app = {
   },
 
   checkInsuranceAlerts() {
+    if(!this.isAdmin()) return;
     const alertDays = this.state.settings.insuranceAlertDays || 30;
     const today = new Date(); today.setHours(0,0,0,0);
     this.state.cars.forEach(car => {
@@ -723,11 +831,17 @@ const app = {
       const user = this.state.users.find(u => u.id === b.userId);
       const carName = car ? car.name : b.carId;
       const userName = user ? user.name : b.userId;
-      if(b.status === 'Confirmed' && diffPick === 2) {
-        setTimeout(() => { utils.showToast(`🚗 รับรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateFrom)})`, 'info'); }, 2000);
+            if(b.status === 'Confirmed' && diffPick === 2) {
+        if(app.isAdmin()) {
+          setTimeout(() => { utils.showToast(`🚗 รับรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateFrom)})`, 'info'); }, 2000);
+        }
       }
       if(b.status === 'Active' && diffReturn === 2) {
-        setTimeout(() => { utils.showToast(`🔔 คืนรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateTo)})`, 'warning'); }, 2500);
+        if(app.isAdmin()) {
+          setTimeout(() => { utils.showToast(`🔔 คืนรถอีก 2 วัน! ${userName} · ${carName} (${utils.formatDate(b.dateTo)})`, 'warning'); }, 2500);
+        } else if(app.currentUser && app.currentUser.id === b.userId) {
+          setTimeout(() => { utils.showToast(`🔔 แจ้งเตือน: อีก 2 วันถึงกำหนดคืนรถ (${utils.formatDate(b.dateTo)})`, 'warning'); }, 2500);
+        }
       }
     });
   },
@@ -762,7 +876,8 @@ const app = {
     const fn = views.adminTabs[tab];
     content.innerHTML = fn ? fn() : `<p class="text-muted">ไม่พบหน้านี้</p>`;
     if(tab === 'dashboard') {
-      setTimeout(() => { ui.renderChart(); ui.renderTimeline(); }, 100);
+      const today = new Date();
+      setTimeout(() => { ui.renderChart(); ui.renderTimeline(today.getFullYear(), today.getMonth(), null); }, 100);
     }
     document.getElementById('bottom-nav-root').innerHTML = views.bottomNav();
   },
@@ -963,10 +1078,11 @@ const utils = {
     const message = `🛡️ <b>แจ้งเตือนประกันรถ</b>\n\n🚗 <b>รถ:</b> ${car.name}\n📅 <b>วันหมดประกัน:</b> ${utils.formatDate(car.insuranceExpiry)}\n⏰ <b>เหลือ:</b> ${diff >= 0 ? diff + ' วัน' : 'หมดอายุแล้ว!'}\n📋 <b>หมายเหตุ:</b> ${car.insuranceNote||'-'}`;
     await utils.sendTelegram(message);
   },
-  getInsuranceStatus: (car, alertDays) => {
-    if(!car.insuranceExpiry) return { status: 'none', diff: null, color: 'var(--text-muted)', label: 'ไม่ระบุ' };
+    getInsuranceStatus: (car, alertDays, type = 'insurance') => {
+    const expiryField = type === 'prb' ? car.prbExpiry : type === 'tax' ? car.taxExpiry : car.insuranceExpiry;
+    if(!expiryField) return { status: 'none', diff: null, color: 'var(--text-muted)', label: 'ไม่ระบุ' };
     const today = new Date(); today.setHours(0,0,0,0);
-    const expiry = new Date(car.insuranceExpiry); expiry.setHours(0,0,0,0);
+    const expiry = new Date(expiryField); expiry.setHours(0,0,0,0);
     const diff = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
     if(diff < 0) return { status: 'expired', diff, color: 'var(--danger)', label: `หมดอายุแล้ว ${Math.abs(diff)} วัน` };
     if(diff <= alertDays) return { status: 'soon', diff, color: 'var(--warning)', label: `เหลือ ${diff} วัน` };
@@ -1005,7 +1121,7 @@ const views = {
           <div class="bottom-nav-item" onclick="document.querySelector('.flight-search-container')?.scrollIntoView({behavior:'smooth'})">
             <i class="fa-solid fa-search"></i>ค้นหา
           </div>
-          <div class="bottom-nav-item" onclick="${app.currentUser ? 'ui.showMyBookings()' : 'ui.showLoginModal()'}">
+        <div class="bottom-nav-item" onclick="app.currentUser && !app.isAdmin() ? ui.showMyBookings() : ui.showLoginModal()">
             <i class="fa-solid fa-history"></i>ประวัติ
           </div>
           ${app.isAdmin() 
@@ -1095,7 +1211,7 @@ const views = {
     <div class="container" style="padding-bottom: 40px;">
       <div class="flex justify-between items-center mb-4">
         <h2 class="section-title">รถพร้อมให้บริการ</h2>
-        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm desktop-only" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง</button>` : ''}
+        ${app.currentUser && !app.isAdmin() ? `<button class="btn btn-outline btn-sm" onclick="ui.showMyBookings()"><i class="fa-solid fa-history"></i> ประวัติการจอง</button>` : ''}
       </div>
       <div class="chip-group mb-4">
         ${app.state.carTypes.map(t => `<div class="chip ${app.searchParams.type===t?'active':''}" onclick="app.searchParams.type='${t}'; app.renderCarGrid(); document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); this.classList.add('active')">${t}</div>`).join('')}
@@ -1222,9 +1338,10 @@ const views = {
             const ins = utils.getInsuranceStatus(car, alertDays);
             return `<div class="card" style="border-color:${ins.status==='expired'?'var(--danger)':ins.status==='soon'?'var(--warning)':'var(--border)'};">
               <div class="flex justify-between items-start mb-3"><div><h4 style="font-size:1rem;">${car.name}</h4><span class="badge badge-info" style="font-size:0.75rem;">${car.type}</span></div><span style="font-size:1.4rem;">${ins.status==='expired'?'🚨':ins.status==='soon'?'⚠️':'✅'}</span></div>
-              <div class="info-row"><span class="info-row-label">วันหมดประกัน</span><span class="info-row-value" style="color:${ins.color}; font-weight:700;">${utils.formatDate(car.insuranceExpiry)}</span></div>
-              <div class="info-row"><span class="info-row-label">สถานะ</span><span class="info-row-value" style="color:${ins.color}; font-weight:700;">${ins.label}</span></div>
-              <div class="info-row" style="border:none;"><span class="info-row-label">บันทึก</span><span class="info-row-value text-muted">${car.insuranceNote||'-'}</span></div>
+              <div class="info-row"><span class="info-row-label">🛡️ ประกัน</span><span class="info-row-value" style="color:${ins.color}; font-weight:700;">${utils.formatDate(car.insuranceExpiry)} · ${ins.label}</span></div>
+              <div class="info-row"><span class="info-row-label">📋 บันทึก</span><span class="info-row-value text-muted">${car.insuranceNote||'-'}</span></div>
+              ${(() => { const prb = utils.getInsuranceStatus(car, alertDays, 'prb'); return `<div class="info-row"><span class="info-row-label">🚗 พ.ร.บ.</span><span class="info-row-value" style="color:${prb.color}; font-weight:700;">${car.prbExpiry ? utils.formatDate(car.prbExpiry) + ' · ' + prb.label : 'ไม่ระบุ'}</span></div>`; })()}
+              ${(() => { const tax = utils.getInsuranceStatus(car, alertDays, 'tax'); return `<div class="info-row" style="border:none;"><span class="info-row-label">🏷️ ภาษี/ป้าย</span><span class="info-row-value" style="color:${tax.color}; font-weight:700;">${car.taxExpiry ? utils.formatDate(car.taxExpiry) + ' · ' + tax.label : 'ไม่ระบุ'}</span></div>`; })()}
               ${ins.diff !== null && ins.diff >= 0 ? `<div class="insurance-days-bar mt-2"><div class="insurance-days-fill" style="width:${Math.min(100,(ins.diff/365)*100)}%; background:${ins.color};"></div></div>` : ''}
               <div class="flex gap-2 mt-3">
                 <button class="btn btn-outline btn-sm flex-1" onclick="ui.showInsuranceEditModal(${car.id})"><i class="fa-solid fa-edit"></i> แก้ไข</button>
@@ -1304,6 +1421,7 @@ const views = {
             <div class="p-4">
               <div class="flex justify-between items-start mb-1"><h3 style="font-size:1.05rem; font-weight:700;">${c.name}</h3><span style="font-size:0.82rem; color:var(--text-muted);">${bkCount} ครั้ง</span></div>
               <div class="text-primary font-bold mb-1" style="font-size:1.1rem;">฿${utils.formatMoney(c.price)}<span class="text-muted" style="font-size:0.85rem; font-weight:500;"> /วัน</span></div>
+              ${c.priceTiers && c.priceTiers.length > 1 ? `<div style="margin-bottom:6px;">${c.priceTiers.map(t=>`<span style="font-size:0.72rem; background:var(--primary-light); color:var(--primary); border-radius:6px; padding:2px 7px; margin-right:3px; font-weight:700;">${t.minDay}${t.maxDay?'-'+t.maxDay:'+'}วัน = ฿${utils.formatMoney(t.price)}</span>`).join('')}</div>` : ''}
               <div class="car-rating mb-3"><i class="fa-solid fa-star" style="color:var(--warning);"></i> ${c.rating} (${c.reviews} รีวิว)</div>
               <div class="flex gap-2">
                 <button class="btn btn-outline btn-sm flex-1" onclick="ui.showCarFormModal(${c.id})"><i class="fa-solid fa-edit"></i> แก้ไข</button>
@@ -1341,6 +1459,7 @@ const views = {
                 </div>
               </div>
               <button class="btn btn-outline btn-sm" onclick="ui.showCRMEditModal('${u.id}')"><i class="fa-solid fa-gear"></i> จัดการ</button>
+              <button class="btn btn-danger btn-sm" onclick="logic.deleteCustomer('${u.id}')"><i class="fa-solid fa-trash"></i> ลบ</button>
             </div>`;
           }).join('')}
     `,
@@ -1366,6 +1485,11 @@ const views = {
             <div class="input-group"><label>ข้อความพาดหัวหลัก</label><input type="text" id="set-hero-title" class="input-control" value="${app.state.settings.heroTitle}"></div>
             <div class="input-group"><label>ข้อความรอง</label><input type="text" id="set-hero-sub" class="input-control" value="${app.state.settings.heroSub}"></div>
             <div class="input-group"><label>เบอร์โทรศัพท์ติดต่อ</label><input type="text" id="set-phone" class="input-control" value="${app.state.settings.phone}"></div>
+            <div class="input-group"><label><i class="fa-solid fa-location-dot text-danger"></i> ที่ตั้งร้าน (Google Maps URL)</label><input type="url" id="set-store-mapurl" class="input-control" value="${app.state.settings.storeMapUrl||''}" placeholder="https://maps.google.com/?q=..."><small class="text-muted" style="font-size:0.82rem;">ใช้คำนวณระยะทางรับ-ส่งรถ</small></div>
+            <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="input-group"><label><i class="fa-solid fa-road text-info"></i> ค่าส่ง (บาท/กม.)</label><input type="number" id="set-delivery-km" class="input-control" value="${app.state.settings.deliveryPricePerKm||10}" min="0" placeholder="10"></div>
+            <div class="input-group"><label>ระยะฟรี (กม.)</label><input type="number" id="set-delivery-base" class="input-control" value="${app.state.settings.deliveryBaseKm||0}" min="0" placeholder="0"><small class="text-muted" style="font-size:0.82rem;">ระยะที่ไม่คิดเงิน</small></div>
+            </div>
             <div class="input-group"><label><i class="fa-solid fa-hand-holding-dollar text-warning"></i> ประเภทมัดจำ</label><select id="set-deposit-type" class="input-control"><option value="fixed" ${app.state.settings.depositType==='fixed'?'selected':''}>จำนวนเงินคงที่ (บาท)</option><option value="percent" ${app.state.settings.depositType==='percent'?'selected':''}>เปอร์เซ็นต์จากค่าเช่า (%)</option></select></div>
             <div class="input-group"><label>${app.state.settings.depositType==='percent'?'เปอร์เซ็นต์มัดจำ (%)':'จำนวนมัดจำ (บาท)'}</label><input type="number" id="set-deposit-value" class="input-control" value="${app.state.settings.depositValue||2000}" min="0"></div>
           </div>
@@ -1423,14 +1547,21 @@ const views = {
         <div class="card mt-4">
           <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-brands fa-telegram text-info"></i> การแจ้งเตือน Telegram</h4>
           <div class="input-group"><label>Chat ID (Group/Channel)</label><input type="text" id="tg-chatid" class="input-control" value="${app.state.settings.tgChatId||''}" placeholder="-1001234567890"></div>
-          <div class="flex gap-2">
+            <div class="flex gap-2">
             <button class="btn btn-primary btn-sm" onclick="logic.saveTelegramSettings()"><i class="fa-solid fa-save"></i> บันทึก Chat ID</button>
             <button class="tg-test-btn" onclick="logic.testTelegram()"><i class="fa-brands fa-telegram"></i> ทดสอบส่ง</button>
           </div>
         </div>
-                        </div>
-                </div>
-                </div>
+        <div class="card mt-4">
+          <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-solid fa-file-contract text-primary"></i> แม่แบบสัญญาเช่า</h4>
+          <div class="input-group"><label>ชื่อสัญญา (หัวเรื่อง)</label><input type="text" id="ct-title" class="input-control" value="${app.state.settings.contractTitle||'สัญญาเช่ารถยนต์'}"></div>
+          <div class="input-group"><label>ข้อความนำ (ใต้ชื่อสัญญา)</label><textarea id="ct-header" class="input-control" rows="2">${app.state.settings.contractHeader||''}</textarea></div>
+          <div class="input-group"><label>ข้อความท้ายสัญญา (Footer)</label><textarea id="ct-footer" class="input-control" rows="2">${app.state.settings.contractFooter||''}</textarea></div>
+          <div class="input-group mb-2"><label>เงื่อนไขและข้อตกลง <span class="text-muted text-sm">(1 ข้อต่อ 1 บรรทัด)</span></label>
+            <textarea id="ct-terms" class="input-control" rows="8" style="font-size:0.9rem;">${(app.state.settings.contractTerms||[]).join('\n')}</textarea>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="logic.saveContractTemplate()"><i class="fa-solid fa-save"></i> บันทึกแม่แบบสัญญา</button>
+        </div>
         <style>@media(max-width:768px){ #setting-grid { grid-template-columns: 1fr !important; } }</style>`;
     },
 
@@ -1690,9 +1821,19 @@ const ui = {
           <div class="card-flat p-3 mb-4" style="border-radius:14px;">
             <div class="font-bold text-primary mb-3" style="font-size:1.05rem;">${c.name}</div>
             ${branchSelectHTML('bk-edit-pick', app.searchParams.pick, 'สถานที่รับรถ', 'fa-location-dot', 'var(--primary)')}
-            <div class="input-group mb-2 mt-3"><label>วันที่รับรถ</label><input type="date" id="bk-edit-dfrom" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})"></div>
+            <div class="input-group mb-2 mt-3"><label>วันที่รับรถ</label>
+              <div class="flex gap-2">
+                <input type="date" id="bk-edit-dfrom" class="input-control" style="padding:8px 12px; flex:1;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
+                <input type="time" id="bk-edit-tpick" class="input-control" style="padding:8px 12px; width:120px;" value="09:00">
+              </div>
+            </div>
             ${branchSelectHTML('bk-edit-drop', app.searchParams.drop, 'สถานที่คืนรถ', 'fa-map-pin', 'var(--warning)')}
-            <div class="input-group mb-0 mt-3"><label>วันที่คืนรถ</label><input type="date" id="bk-edit-dto" class="input-control" style="padding:8px 12px;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})"></div>
+            <div class="input-group mb-0 mt-3"><label>วันที่คืนรถ</label>
+              <div class="flex gap-2">
+                <input type="date" id="bk-edit-dto" class="input-control" style="padding:8px 12px; flex:1;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
+                <input type="time" id="bk-edit-tdrop" class="input-control" style="padding:8px 12px; width:120px;" value="09:00">
+              </div>
+            </div>
             <div class="mt-3 p-2 text-center" style="background:var(--primary-light); border-radius:10px; font-weight:700; color:var(--primary); font-size:0.95rem;" id="bk-disp-days"><i class="fa-solid fa-calendar-days"></i> รวม ${utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)} วัน</div>
           </div>
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-id-card text-primary"></i> เอกสารผู้เช่า</h4>
@@ -1722,7 +1863,7 @@ const ui = {
           </div>
           <div class="info-row">
             <span class="info-row-label text-warning">เงินมัดจำ</span>
-            <span class="info-row-value text-warning font-bold" id="book-deposit-display">฿${utils.formatMoney(app.state.settings.depositType==='percent' ? Math.ceil(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)) * (app.state.settings.depositValue||0) / 100) : (app.state.settings.depositValue||0))}</span>
+            <span class="info-row-value text-warning font-bold" id="book-deposit-display">฿${utils.formatMoney((c.depositType||app.state.settings.depositType)==='percent' ? Math.ceil(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)) * ((c.depositValue!==undefined?c.depositValue:app.state.settings.depositValue)||0) / 100) : (c.depositValue!==undefined?c.depositValue:app.state.settings.depositValue)||0)}</span>
           </div>
           <div class="info-row">
             <span class="info-row-label text-success">ส่วนลด</span>
@@ -1731,6 +1872,10 @@ const ui = {
           <div class="info-row" style="border:none; border-top:2px solid var(--primary); padding-top:8px; margin-top:4px;">
             <span class="info-row-label font-bold" style="font-size:1rem;">ยอดรวมสุทธิ</span>
             <span class="info-row-value font-bold text-primary" style="font-size:1.3rem;" id="book-net" data-net="${utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo))}">฿${utils.formatMoney(utils.calcTieredPrice(c, utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo)))}</span>
+          </div>
+                    <div class="info-row" id="delivery-row" style="display:none;">
+            <span class="info-row-label text-info"><i class="fa-solid fa-truck"></i> ค่ารับ-ส่งรถ</span>
+            <span class="info-row-value text-info font-bold" id="book-delivery-cost">฿0</span>
           </div>
           <div class="input-group mt-3 mb-0">
             <label>โค้ดส่วนลด <span class="text-muted">(ถ้ามี)</span></label>
@@ -1748,6 +1893,18 @@ const ui = {
             <div class="text-muted text-sm">${app.state.settings.accName}</div>
           </div>
           <div class="input-group"><label>แนบสลิปโอนเงิน <span class="text-danger">*</span></label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'slip')"><img id="preview-slip" style="max-height:100px; display:none; margin-top:8px; border-radius:8px; border:1px solid var(--border); object-fit:cover;"></div>
+      ${app.state.settings.storeMapUrl ? `
+          <div class="card-flat p-3 mb-3" style="border-radius:14px; border-color:var(--info);">
+            <div class="font-bold mb-2" style="color:var(--info); font-size:0.9rem;"><i class="fa-solid fa-truck"></i> บริการรับ-ส่งรถถึงที่ (คิดตามระยะทาง)</div>
+            <div class="input-group mb-2">
+              <label style="font-size:0.88rem;">Google Maps URL ตำแหน่งของคุณ <span class="text-muted">(ถ้าต้องการให้ส่งถึงที่)</span></label>
+              <input type="url" id="bk-delivery-url" class="input-control" placeholder="https://maps.google.com/?q=..." style="font-size:0.88rem;" oninput="logic.estimateDeliveryCost(${c.id}, ${c.price})">
+            </div>
+            <div id="delivery-estimate-box" style="display:none; background:var(--primary-light); border-radius:10px; padding:10px 14px; font-size:0.9rem;">
+              <span class="text-muted">ระยะทางโดยประมาณ:</span> <span id="delivery-km-display" class="font-bold text-info">- กม.</span>
+              <span style="margin-left:12px; color:var(--text-muted);">ค่าส่ง:</span> <span id="delivery-cost-display" class="font-bold text-primary">฿0</span>
+            </div>
+          </div>` : ''}
           <button class="btn btn-primary w-full btn-lg mt-2" onclick="logic.confirmBooking(${c.id}, ${c.price})"><i class="fa-solid fa-check-circle"></i> ยืนยันการจอง</button>
           <p class="text-center text-muted mt-2" style="font-size:0.82rem;"><i class="fa-solid fa-shield-halved text-success"></i> การจองจะมีผลหลังแอดมินตรวจสอบสลิป</p>
         </div>
@@ -1832,18 +1989,19 @@ const ui = {
           <h4 class="mb-3" style="font-size:0.95rem; border-bottom:1px solid var(--border); padding-bottom:10px;">รายละเอียดการเช่า</h4>
           <div class="info-row">
             <span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถที่</span>
-            <span class="info-row-value">${bPick}${b.pickCustomUrl ? `<br><a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateFrom)}</span></span>
+            <span class="info-row-value">${bPick}${b.pickCustomUrl ? `<br><a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateFrom)}${b.timePick ? ' เวลา ' + b.timePick + ' น.' : ''}</span></span>
           </div>
           <div class="info-row">
             <span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถที่</span>
-            <span class="info-row-value">${bDrop}${b.dropCustomUrl ? `<br><a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateTo)}</span></span>
+            <span class="info-row-value">${bDrop}${b.dropCustomUrl ? `<br><a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> ดูแผนที่</a>` : ''}<br><span class="text-muted text-sm">${utils.formatDate(b.dateTo)}${b.timeDrop ? ' เวลา ' + b.timeDrop + ' น.' : ''}</span></span>
           </div>
           <div class="info-row" style="border:none;"><span class="info-row-label">ระยะเวลา</span><span class="info-row-value font-bold text-info">${b.days} วัน</span></div>
         </div>
         <div class="receipt-box text-right" style="background:var(--primary-light);">
           <div class="text-muted text-sm">ยอดชำระสุทธิ</div>
-          <div class="font-bold text-primary" style="font-size:2.2rem; line-height:1.1; font-family:'Prompt',sans-serif;">฿${utils.formatMoney(b.total)}</div>
-          ${b.fine ? `<div class="text-danger mt-2">ยอดค่าปรับ: + ฿${utils.formatMoney(b.fine)}</div><div class="font-bold text-danger" style="font-size:1.5rem;">รวม: ฿${utils.formatMoney(b.total + b.fine)}</div>` : ''}
+          ${b.deliveryCost > 0 ? `<div class="text-muted text-sm" style="margin-bottom:4px;"><i class="fa-solid fa-truck" style="color:var(--info);"></i> รวมค่ารับ-ส่งรถ ฿${utils.formatMoney(b.deliveryCost)} (${b.deliveryKm} กม.)</div>` : ''}
+          <div class="font-bold text-primary" style="font-size:2.2rem; line-height:1.1; font-family:'Prompt',sans-serif;">฿${utils.formatMoney(b.total + (b.deliveryCost||0))}</div>
+          ${b.fine ? `<div class="text-danger mt-2">ยอดค่าปรับ: + ฿${utils.formatMoney(b.fine)}</div><div class="font-bold text-danger" style="font-size:1.5rem;">รวม: ฿${utils.formatMoney(b.total + (b.deliveryCost||0) + b.fine)}</div>` : ''}
         </div>
       </div>
       <div class="flex gap-2 no-print mt-4" style="flex-wrap:wrap;">
@@ -1919,110 +2077,145 @@ const ui = {
     `, 'modal-lg', `${u.name} · ${c.name}`);
   },
 
-  showCRMEditModal(uId) {
-    const u = app.state.users.find(x => x.id === uId);
-    const bCount = app.state.bookings.filter(b => b.userId === uId).length;
-    this.showModal(`แก้ไขข้อมูลลูกค้า`, `
-      <div class="text-center mb-4"><div style="width:60px; height:60px; border-radius:50%; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-size:1.5rem; color:var(--primary); margin:0 auto 10px; font-weight:700;">${u.name.charAt(0)}</div><div class="font-bold">${u.name}</div><div class="text-muted text-sm">${bCount} ครั้งที่เช่า</div></div>
-      <div class="input-group"><label>เบอร์โทรศัพท์</label><input type="text" id="crm-phone" class="input-control" value="${u.phone}"></div>
-      <div class="input-group"><label>ระดับสมาชิก (Tier)</label><select id="crm-tier" class="input-control"><option ${u.tier==='Silver'?'selected':''}>Silver</option><option ${u.tier==='Gold'?'selected':''}>Gold</option><option ${u.tier==='Platinum'?'selected':''}>Platinum</option></select></div>
-      <div class="input-group mb-6"><label>คะแนนสะสม (แต้ม)</label><input type="number" id="crm-pts" class="input-control" value="${u.points}"></div>
-      <button class="btn btn-primary w-full btn-lg" onclick="logic.saveCRM('${uId}')"><i class="fa-solid fa-save"></i> บันทึกการเปลี่ยนแปลง</button>
-    `, '', u.phone);
-  },
+    showContractModal(bId) {
+      const b = app.state.bookings.find(x => x.id === bId);
+      if(!b) return utils.showToast('ไม่พบข้อมูลการจอง', 'error');
+      const u = app.state.users.find(x => x.id === b.userId) || { name: '-', phone: '-' };
+      const c = app.state.cars.find(x => x.id === b.carId) || { name: '-', type: '-', brand: '-', model: '-', colorExt: '-' };
+      const bPick = b.pickCustom ? (b.pickCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.pickBranch)?.name||b.pickBranch);
+      const bDrop = b.dropCustom ? (b.dropCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.dropBranch)?.name||b.dropBranch);
+      const dep = b.deposit || 0;
+      const s = app.state.settings;
+      const terms = (s.contractTerms||[]).map((t,i) => `<tr><td style="padding:7px 10px; vertical-align:top; color:var(--text-muted); font-weight:700; white-space:nowrap;">${i+1}.</td><td style="padding:7px 10px;">${t}</td></tr>`).join('');
+      const deliveryCost = b.deliveryCost || 0;
+      const grandTotal = b.total + dep + deliveryCost;
 
-  showContractModal(bId) {
-    const b = app.state.bookings.find(x => x.id === bId);
-    if(!b) return utils.showToast('ไม่พบข้อมูลการจอง', 'error');
-    const u = app.state.users.find(x => x.id === b.userId);
-    const c = app.state.cars.find(x => x.id === b.carId);
-    const bPick = b.pickCustom ? (b.pickCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.pickBranch)?.name||b.pickBranch);
-    const bDrop = b.dropCustom ? (b.dropCustomLabel||'ระบุเอง') : (app.state.branches.find(br=>br.id===b.dropBranch)?.name||b.dropBranch);
-    const dep = b.deposit || 0;
-    this.showModal('สัญญาเช่ารถยนต์', `
-     <div id="contract-print-area" style="font-family:'Sarabun',sans-serif; font-size:0.95rem; line-height:1.8;">
-       <div class="text-center mb-4">
-        ${app.state.settings.logoUrl ? `<img src="${app.state.settings.logoUrl}" style="max-height:56px; margin:0 auto 8px; display:block;">` : ''}
-        <h2 style="font-size:1.4rem; font-family:'Prompt',sans-serif; margin-bottom:4px;">${app.state.settings.storeName}</h2>
-        <div style="font-size:0.9rem; color:var(--text-muted);">โทร: ${app.state.settings.phone}</div>
-        <h3 style="margin-top:16px; font-size:1.2rem; font-family:'Prompt',sans-serif; border-bottom:2px solid var(--primary); padding-bottom:8px; color:var(--primary);">สัญญาเช่ารถยนต์</h3>
-      </div>
-      <div class="receipt-box">
-        <div class="info-row"><span class="info-row-label">เลขที่สัญญา</span><span class="info-row-value font-bold text-primary">${b.id}</span></div>
-        <div class="info-row" style="border:none;"><span class="info-row-label">วันทำสัญญา</span><span class="info-row-value">${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</span></div>
-      </div>
-      <div class="receipt-box">
-        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-user"></i> ข้อมูลผู้เช่า</div>
-        <div class="info-row"><span class="info-row-label">ชื่อ-นามสกุล</span><span class="info-row-value font-bold">${u.name}</span></div>
-        <div class="info-row" style="border:none;"><span class="info-row-label">เบอร์โทรศัพท์</span><span class="info-row-value">${u.phone}</span></div>
-      </div>
-      <div class="receipt-box">
-        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-car"></i> ข้อมูลรถที่เช่า</div>
-        <div class="info-row"><span class="info-row-label">รุ่นรถ</span><span class="info-row-value font-bold">${c.name}</span></div>
-        <div class="info-row"><span class="info-row-label">ประเภท</span><span class="info-row-value">${c.type}</span></div>
-        <div class="info-row"><span class="info-row-label">สีภายนอก</span><span class="info-row-value">${c.colorExt||'-'}</span></div>
-        <div class="info-row" style="border:none;"><span class="info-row-label">ยี่ห้อ / รุ่น</span><span class="info-row-value">${c.brand||''} ${c.model||''}</span></div>
-      </div>
-      <div class="receipt-box">
-        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-calendar"></i> รายละเอียดการเช่า</div>
-        <div class="info-row"><span class="info-row-label">วันรับรถ</span><span class="info-row-value">${utils.formatDate(b.dateFrom)}</span></div>
-        <div class="info-row"><span class="info-row-label">วันคืนรถ</span><span class="info-row-value">${utils.formatDate(b.dateTo)}</span></div>
-        <div class="info-row"><span class="info-row-label">จำนวนวัน</span><span class="info-row-value font-bold">${b.days} วัน</span></div>
-        <div class="info-row"><span class="info-row-label">สถานที่รับรถ</span><span class="info-row-value">${bPick}</span></div>
-        <div class="info-row" style="border:none;"><span class="info-row-label">สถานที่คืนรถ</span><span class="info-row-value">${bDrop}</span></div>
-      </div>
-      <div class="receipt-box" style="background:var(--primary-light);">
-        <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-file-invoice-dollar"></i> ค่าใช้จ่าย</div>
-        <div class="info-row"><span class="info-row-label">ค่าเช่ารถ</span><span class="info-row-value font-bold">฿${utils.formatMoney(b.total)}</span></div>
-        ${dep > 0 ? `<div class="info-row"><span class="info-row-label text-warning">เงินมัดจำ</span><span class="info-row-value text-warning font-bold">฿${utils.formatMoney(dep)}</span></div>` : ''}
-        ${b.insurancePlanName ? `<div class="info-row"><span class="info-row-label">ประกันเพิ่มเติม</span><span class="info-row-value">${b.insurancePlanName}</span></div>` : ''}
-        <div class="info-row" style="border:none; border-top:2px solid var(--primary); margin-top:8px; padding-top:8px;"><span class="info-row-label font-bold" style="font-size:1rem;">ยอดรวมทั้งหมด</span><span class="info-row-value font-bold text-primary" style="font-size:1.3rem;">฿${utils.formatMoney(b.total + dep)}</span></div>
-      </div>
-      <div class="receipt-box">
-        <div class="font-bold mb-3 text-danger"><i class="fa-solid fa-triangle-exclamation"></i> เงื่อนไขและข้อตกลง</div>
-        <ol style="padding-left:18px; font-size:0.88rem; line-height:2; color:var(--text-muted);">
-          <li>ผู้เช่าต้องส่งคืนรถในสภาพเรียบร้อยตามวันและเวลาที่กำหนด</li>
-          <li>หากคืนรถล่าช้าจะคิดค่าเช่าเพิ่มตามอัตราที่กำหนด</li>
-          <li>ผู้เช่าต้องรับผิดชอบความเสียหายที่เกิดจากการใช้งาน</li>
-          <li>ห้ามนำรถไปใช้ในกิจกรรมผิดกฎหมายทุกประเภท</li>
-          <li>เงินมัดจำจะคืนให้หลังตรวจสอบสภาพรถเรียบร้อยแล้ว</li>
-          <li>บริษัทสงวนสิทธิ์ในการเรียกค่าเสียหายเพิ่มเติมหากมีความเสียหาย</li>
-        </ol>
+      this.showModal(s.contractTitle||'สัญญาเช่ารถยนต์', `
+      <div id="contract-print-area" style="font-family:'Sarabun',sans-serif; font-size:0.95rem; line-height:1.9; color:#111; max-width:680px; margin:0 auto;">
+
+      <!-- หัว -->
+      <div style="text-align:center; margin-bottom:18px; padding-bottom:14px; border-bottom:2px solid #111;">
+        ${s.logoUrl ? `<img src="${s.logoUrl}" style="max-height:50px; margin:0 auto 6px; display:block;">` : ''}
+        <div style="font-size:1.05rem; font-weight:700; font-family:'Prompt',sans-serif;">${s.storeName}</div>
+        <div style="font-size:0.82rem; color:#555;">โทร: ${s.phone}</div>
+        <div style="font-size:1.15rem; font-weight:700; font-family:'Prompt',sans-serif; margin-top:10px; letter-spacing:1px;">
+          ${s.contractTitle||'สัญญาเช่ารถยนต์'}
+        </div>
+        ${s.contractHeader ? `<div style="margin-top:6px; font-size:0.82rem; color:#555;">${s.contractHeader}</div>` : ''}
       </div>
 
-      <!-- ===== ลายเซ็นดิจิทัล ===== -->
-      <div class="receipt-box no-print">
+      <!-- เลขสัญญา + วันที่ -->
+      <div style="display:flex; justify-content:space-between; margin-bottom:14px; font-size:0.88rem;">
+        <div><span style="color:#555;">เลขที่สัญญา: </span><span style="font-weight:700;">${b.id}</span></div>
+        <div><span style="color:#555;">วันที่: </span><span style="font-weight:700;">${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</span></div>
+      </div>
+
+      <!-- เส้นคั่น -->
+      <div style="border-top:1px solid #ccc; margin-bottom:12px;"></div>
+
+      <!-- ข้อมูลคู่สัญญา -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; font-size:0.88rem;">
+        <div>
+          <div style="font-weight:700; margin-bottom:4px; border-bottom:1px solid #ddd; padding-bottom:3px;">ผู้ให้เช่า</div>
+          <div>${s.storeName}</div>
+          <div style="color:#555;">โทร: ${s.phone}</div>
+          <div style="color:#555;">${s.bank||''} ${s.accNo||''}</div>
+        </div>
+        <div>
+          <div style="font-weight:700; margin-bottom:4px; border-bottom:1px solid #ddd; padding-bottom:3px;">ผู้เช่า</div>
+          <div>${u.name}</div>
+          <div style="color:#555;">โทร: ${u.phone}</div>
+        </div>
+      </div>
+
+      <!-- รายละเอียดรถ -->
+      <div style="margin-bottom:12px; font-size:0.88rem;">
+        <div style="font-weight:700; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:3px;">รายละเอียดรถที่เช่า</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <div><span style="color:#555;">รุ่น: </span><span style="font-weight:700;">${c.name}</span></div>
+          <div><span style="color:#555;">ประเภท: </span>${c.type}</div>
+          <div><span style="color:#555;">ยี่ห้อ: </span>${c.brand||'-'} ${c.model||''}</div>
+          <div><span style="color:#555;">สีภายนอก: </span>${c.colorExt||'-'}</div>
+        </div>
+      </div>
+
+      <!-- รายละเอียดการเช่า -->
+      <div style="margin-bottom:12px; font-size:0.88rem;">
+        <div style="font-weight:700; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:3px;">รายละเอียดการเช่า</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px;">
+          <div><span style="color:#555;">วันรับรถ: </span><span style="font-weight:700;">${utils.formatDate(b.dateFrom)}${b.timePick?' เวลา '+b.timePick+' น.':''}</span></div>
+          <div><span style="color:#555;">วันคืนรถ: </span><span style="font-weight:700;">${utils.formatDate(b.dateTo)}${b.timeDrop?' เวลา '+b.timeDrop+' น.':''}</span></div>
+          <div><span style="color:#555;">จำนวนวัน: </span><span style="font-weight:700;">${b.days} วัน</span></div>
+          <div><span style="color:#555;">สถานที่รับ: </span>${bPick}</div>
+          <div style="grid-column:1/-1;"><span style="color:#555;">สถานที่คืน: </span>${bDrop}</div>
+        </div>
+      </div>
+
+      <!-- ตารางค่าใช้จ่าย -->
+      <div style="margin-bottom:14px; font-size:0.88rem;">
+        <div style="font-weight:700; margin-bottom:6px; border-bottom:1px solid #ddd; padding-bottom:3px;">สรุปค่าใช้จ่าย</div>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #eee;">
+            <td style="padding:5px 4px; color:#555;">ค่าเช่ารถ (${b.days} วัน)</td>
+            <td style="padding:5px 4px; text-align:right; font-weight:700;">฿${utils.formatMoney(b.total)}</td>
+          </tr>
+          ${dep > 0 ? `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 4px; color:#555;">เงินมัดจำ</td><td style="padding:5px 4px; text-align:right; font-weight:700;">฿${utils.formatMoney(dep)}</td></tr>` : ''}
+          ${deliveryCost > 0 ? `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 4px; color:#555;">ค่ารับ-ส่งรถ</td><td style="padding:5px 4px; text-align:right; font-weight:700;">฿${utils.formatMoney(deliveryCost)}</td></tr>` : ''}
+          ${b.insurancePlanName ? `<tr style="border-bottom:1px solid #eee;"><td style="padding:5px 4px; color:#555;">ประกันเพิ่มเติม (${b.insurancePlanName})</td><td style="padding:5px 4px; text-align:right;">รวมแล้ว</td></tr>` : ''}
+          <tr style="border-top:2px solid #111;">
+            <td style="padding:7px 4px; font-weight:700;">ยอดรวมทั้งหมด</td>
+            <td style="padding:7px 4px; text-align:right; font-weight:700; font-size:1.1rem;">฿${utils.formatMoney(grandTotal)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- เส้นคั่น -->
+      <div style="border-top:1px solid #ccc; margin-bottom:12px;"></div>
+
+      <!-- เงื่อนไข -->
+      <div style="margin-bottom:14px; font-size:0.83rem; line-height:1.75;">
+        <div style="font-weight:700; margin-bottom:6px;">ข้อตกลงและเงื่อนไข</div>
+        <table style="width:100%; border-collapse:collapse;">
+          ${terms}
+        </table>
+      </div>
+
+      <!-- footer -->
+      ${s.contractFooter ? `<div style="text-align:center; font-size:0.78rem; color:#777; margin-bottom:14px; border-top:1px solid #ddd; padding-top:8px;">${s.contractFooter}</div>` : ''}
+
+      <!-- ลายเซ็น (no-print) -->
+      <div class="receipt-box no-print" style="margin-top:12px;">
         <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-signature"></i> ลายเซ็นดิจิทัล</div>
         <div class="grid" style="grid-template-columns:1fr 1fr; gap:16px;">
           <div>
             <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้เช่า (${u.name})</div>
             <canvas id="sig-renter" width="300" height="120" style="border:1.5px solid var(--border); border-radius:12px; background:var(--bg-body); cursor:crosshair; touch-action:none; width:100%;"></canvas>
-            <div class="flex gap-2 mt-2">
-              <button class="btn btn-outline btn-xs flex-1" onclick="ui._clearCanvas('sig-renter')"><i class="fa-solid fa-eraser"></i> ล้าง</button>
-            </div>
+            <div class="flex gap-2 mt-2"><button class="btn btn-outline btn-xs flex-1" onclick="ui._clearCanvas('sig-renter')"><i class="fa-solid fa-eraser"></i> ล้าง</button></div>
           </div>
           <div>
-            <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้ให้เช่า (${app.state.settings.storeName})</div>
+            <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้ให้เช่า (${s.storeName})</div>
             <canvas id="sig-owner" width="300" height="120" style="border:1.5px solid var(--border); border-radius:12px; background:var(--bg-body); cursor:crosshair; touch-action:none; width:100%;"></canvas>
-            <div class="flex gap-2 mt-2">
-              <button class="btn btn-outline btn-xs flex-1" onclick="ui._clearCanvas('sig-owner')"><i class="fa-solid fa-eraser"></i> ล้าง</button>
-            </div>
+            <div class="flex gap-2 mt-2"><button class="btn btn-outline btn-xs flex-1" onclick="ui._clearCanvas('sig-owner')"><i class="fa-solid fa-eraser"></i> ล้าง</button></div>
           </div>
         </div>
       </div>
 
-      <!-- ===== ลายเซ็นที่พิมพ์ได้ ===== -->
-      <div id="sig-print-area" style="display:none;">
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px; text-align:center;">
-          <div>
-            <img id="sig-renter-img" style="max-height:80px; display:block; margin:0 auto 4px;">
-            <div style="border-top:1.5px solid var(--text-main); padding-top:6px; font-size:0.85rem; color:var(--text-muted);">ลายมือชื่อผู้เช่า</div>
-            <div style="font-size:0.85rem;">( ${u.name} )</div>
-          </div>
-          <div>
-            <img id="sig-owner-img" style="max-height:80px; display:block; margin:0 auto 4px;">
-            <div style="border-top:1.5px solid var(--text-main); padding-top:6px; font-size:0.85rem; color:var(--text-muted);">ลายมือชื่อผู้ให้เช่า</div>
-            <div style="font-size:0.85rem;">( ${app.state.settings.storeName} )</div>
+      <!-- ลายเซ็น print -->
+      <div id="sig-print-area" style="display:none; margin-top:20px;">
+        <div style="border-top:1px solid #ccc; padding-top:14px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:32px; text-align:center;">
+            <div>
+              <img id="sig-renter-img" style="max-height:70px; display:block; margin:0 auto 6px; max-width:100%;">
+              <div style="border-top:1px solid #333; padding-top:5px; font-size:0.82rem;">ลายมือชื่อผู้เช่า</div>
+              <div style="font-size:0.82rem; font-weight:700;">( ${u.name} )</div>
+              <div style="font-size:0.78rem; color:#555; margin-top:3px;">วันที่ ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</div>
+            </div>
+            <div>
+              <img id="sig-owner-img" style="max-height:70px; display:block; margin:0 auto 6px; max-width:100%;">
+              <div style="border-top:1px solid #333; padding-top:5px; font-size:0.82rem;">ลายมือชื่อผู้ให้เช่า</div>
+              <div style="font-size:0.82rem; font-weight:700;">( ${s.storeName} )</div>
+              <div style="font-size:0.78rem; color:#555; margin-top:3px;">วันที่ ${new Date().toLocaleDateString('th-TH',{year:'numeric',month:'long',day:'numeric'})}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2034,15 +2227,15 @@ const ui = {
       <button class="btn btn-primary btn-sm flex-1" onclick="ui.closeModal()"><i class="fa-solid fa-check"></i> ปิด</button>
     </div>
   `);
-  setTimeout(() => {
-    ui._initSignaturePad('sig-renter');
-    ui._initSignaturePad('sig-owner');
-    const bk = app.state.bookings.find(x => x.id === bId);
-    if(bk?.sigRenter) { const img = document.getElementById('sig-renter-img'); if(img) img.src = bk.sigRenter; const c = document.getElementById('sig-renter'); if(c){ const ctx=c.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,c.width,c.height); i.src=bk.sigRenter; } }
-        const ownerSig = bk?.sigOwner || app.state.settings.adminSigUrl;
-    if(ownerSig) { const img = document.getElementById('sig-owner-img'); if(img) img.src = ownerSig; const c = document.getElementById('sig-owner'); if(c){ const ctx=c.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,c.width,c.height); i.src=ownerSig; } }
-  }, 150);
-},
+    setTimeout(() => {
+      ui._initSignaturePad('sig-renter');
+      ui._initSignaturePad('sig-owner');
+      const bk = app.state.bookings.find(x => x.id === bId);
+      if(bk?.sigRenter) { const img = document.getElementById('sig-renter-img'); if(img) img.src = bk.sigRenter; const cv = document.getElementById('sig-renter'); if(cv){ const ctx=cv.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,cv.width,cv.height); i.src=bk.sigRenter; } }
+      const ownerSig = bk?.sigOwner || app.state.settings.adminSigUrl;
+      if(ownerSig) { const img = document.getElementById('sig-owner-img'); if(img) img.src = ownerSig; const cv = document.getElementById('sig-owner'); if(cv){ const ctx=cv.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,cv.width,cv.height); i.src=ownerSig; } }
+    }, 150);
+  },
 
 _initSignaturePad(canvasId) {
   const canvas = document.getElementById(canvasId);
@@ -2094,14 +2287,39 @@ _printContract() {
   if(renterCanvas && renterImg) renterImg.src = renterCanvas.toDataURL('image/png');
   if(ownerCanvas && ownerImg) ownerImg.src = ownerCanvas.toDataURL('image/png');
   if(printArea) printArea.style.display = 'block';
-  setTimeout(() => { window.print(); }, 200);
+  const contractArea = document.getElementById('contract-print-area');
+  if(contractArea) {
+    const clone = contractArea.cloneNode(true);
+    clone.id = 'contract-print-area';
+    clone.style.cssText = 'position:relative;width:100%;max-width:100%;background:white;padding:10mm 12mm;font-family:Sarabun,sans-serif;font-size:9pt;line-height:1.6;color:black;box-sizing:border-box;overflow:visible;word-break:break-word;';
+    document.querySelectorAll('#contract-print-area').forEach(el => {
+      if(el !== contractArea) el.remove();
+    });
+    document.body.appendChild(clone);
+    setTimeout(() => { window.print(); clone.remove(); }, 300);
+  } else {
+    setTimeout(() => { window.print(); }, 200);
+  }
 },
 
   showInsuranceEditModal(carId) {
     const c = app.state.cars.find(x => x.id === carId);
     this.showModal(`แก้ไขประกัน: ${c.name}`, `
-      <div class="input-group"><label>วันที่ประกันหมดอายุ</label><input type="date" id="ins-expiry" class="input-control" value="${c.insuranceExpiry||''}"></div>
-      <div class="input-group mb-6"><label>บันทึก / บริษัทประกัน</label><textarea id="ins-note" class="input-control" rows="3" placeholder="เช่น ประกันชั้น 1 บริษัทเมืองไทยประกันภัย">${c.insuranceNote||''}</textarea></div>
+            <div style="padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border);">
+        <p class="font-bold mb-2" style="color:var(--primary);">🛡️ ประกันภัย</p>
+        <div class="input-group"><label>วันหมดอายุประกัน</label><input type="date" id="ins-expiry" class="input-control" value="${c.insuranceExpiry||''}"></div>
+        <div class="input-group mb-0"><label>บริษัทประกัน / บันทึก</label><textarea id="ins-note" class="input-control" rows="2" placeholder="เช่น ประกันชั้น 1 บริษัทเมืองไทยประกันภัย">${c.insuranceNote||''}</textarea></div>
+      </div>
+      <div style="padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid var(--border);">
+        <p class="font-bold mb-2" style="color:var(--warning);">🚗 พ.ร.บ. (ประกันภาคบังคับ)</p>
+        <div class="input-group"><label>วันหมดอายุ พ.ร.บ.</label><input type="date" id="prb-expiry" class="input-control" value="${c.prbExpiry||''}"></div>
+        <div class="input-group mb-0"><label>บันทึก พ.ร.บ.</label><input type="text" id="prb-note" class="input-control" value="${c.prbNote||''}" placeholder="เช่น พ.ร.บ. บริษัทกลางคุ้มครองผู้ประสบภัย"></div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <p class="font-bold mb-2" style="color:var(--info);">🏷️ ภาษีรถยนต์ / ป้ายทะเบียน</p>
+        <div class="input-group"><label>วันหมดอายุภาษี/ป้าย</label><input type="date" id="tax-expiry" class="input-control" value="${c.taxExpiry||''}"></div>
+        <div class="input-group mb-0"><label>บันทึก</label><input type="text" id="tax-note" class="input-control" value="${c.taxNote||''}" placeholder="เช่น ต่อภาษีประจำปี 2026"></div>
+      </div>
       <div class="flex gap-2">
         <button class="btn btn-primary flex-1 btn-lg" onclick="logic.saveInsurance(${carId})"><i class="fa-solid fa-save"></i> บันทึก</button>
         <button class="tg-test-btn" style="border-radius:12px; padding:14px 20px;" onclick="utils.sendTelegramInsuranceAlert(app.state.cars.find(c=>c.id===${carId})).then(()=>utils.showToast('ส่ง Telegram แล้ว','success'))"><i class="fa-brands fa-telegram"></i> แจ้ง TG</button>
@@ -2167,6 +2385,20 @@ _printContract() {
           <div class="input-group mb-0" style="grid-column:1/-1;"><label>บันทึก / บริษัทประกัน</label><input type="text" id="car-ins-note" class="input-control" value="${c.insuranceNote||''}" placeholder="เช่น ประกันชั้น 1 บริษัทเมืองไทย"></div>
         </div>
       </div>
+            <div style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+        <p class="font-bold" style="color:var(--warning); margin-bottom:12px;"><i class="fa-solid fa-hand-holding-dollar"></i> ตั้งค่ามัดจำรายคัน</p>
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="input-group mb-0"><label>ประเภทมัดจำ</label>
+            <select id="car-deposit-type" class="input-control">
+              <option value="fixed" ${(c.depositType||'fixed')==='fixed'?'selected':''}>จำนวนคงที่ (บาท)</option>
+              <option value="percent" ${(c.depositType||'')==='percent'?'selected':''}>เปอร์เซ็นต์จากค่าเช่า (%)</option>
+            </select>
+          </div>
+          <div class="input-group mb-0"><label>จำนวนมัดจำ</label>
+            <input type="number" id="car-deposit-value" class="input-control" value="${c.depositValue !== undefined ? c.depositValue : 2000}" min="0" placeholder="2000">
+          </div>
+        </div>
+      </div>
       <div class="input-group"><label>ฟีเจอร์เด่น <span class="text-muted">(คั่นด้วยลูกน้ำ)</span></label><input type="text" id="car-features" class="input-control" value="${c.features}" placeholder="Autopilot, จอ 15 นิ้ว, หลังคาแก้ว"></div>
       <div class="input-group">
         <label>รูปภาพรถ <span class="text-muted">(เลือกได้หลายรูป)</span></label>
@@ -2209,39 +2441,89 @@ _printContract() {
     });
   },
 
-  renderTimeline() {
+    renderTimeline(year, month, filterCarId) {
     const container = document.getElementById('timeline-container');
     if(!container) return;
     const today = new Date(); today.setHours(0,0,0,0);
-    let html = `<div class="timeline-grid"><div class="tl-cell tl-header">รถยนต์ / วันที่</div>`;
-    let daysArray = [];
-    for(let i=0; i<14; i++) {
-      let d = new Date(today); d.setDate(d.getDate() + i);
-      daysArray.push(d);
-      const isToday = i === 0;
-      html += `<div class="tl-cell tl-header" style="${isToday?'color:var(--primary);font-weight:700;':''}">${d.getDate()}/${d.getMonth()+1}${isToday?'<br><span style="font-size:0.6rem;">(วันนี้)</span>':''}</div>`;
+    const curYear = year !== undefined ? year : today.getFullYear();
+    const curMonth = month !== undefined ? month : today.getMonth();
+    const firstDay = new Date(curYear, curMonth, 1);
+    const lastDay = new Date(curYear, curMonth + 1, 0);
+    const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const startPad = (firstDay.getDay());
+    const totalCells = startPad + lastDay.getDate();
+    const rows = Math.ceil(totalCells / 7);
+    const statusColors = { Pending:'#f59e0b', Confirmed:'#3b82f6', Active:'#10b981', Completed:'#8b5cf6', Cancelled:'#ef4444' };
+    const activeCars = app.state.cars;
+    
+    // Car filter chips
+    let filterHtml = `<div class="cal-car-filter">
+      <div class="chip ${!filterCarId?'active':''}" onclick="ui._calNav(${curYear},${curMonth},null)">ทุกคัน</div>
+      ${activeCars.map(c => `<div class="chip ${filterCarId===c.id?'active':''}" onclick="ui._calNav(${curYear},${curMonth},${c.id})">${c.name}</div>`).join('')}
+    </div>`;
+
+    // Header nav
+    let navHtml = `
+      <div class="booking-cal-header">
+        <button class="btn btn-outline btn-sm" onclick="ui._calNav(${curMonth===0?curYear-1:curYear},${curMonth===0?11:curMonth-1},${filterCarId||'null'})"><i class="fa-solid fa-chevron-left"></i> ก่อนหน้า</button>
+        <h3 style="font-family:'Prompt',sans-serif; color:var(--primary);">${thMonths[curMonth]} ${curYear + 543}</h3>
+        <button class="btn btn-outline btn-sm" onclick="ui._calNav(${curMonth===11?curYear+1:curYear},${curMonth===11?0:curMonth+1},${filterCarId||'null'})">ถัดไป <i class="fa-solid fa-chevron-right"></i></button>
+      </div>`;
+
+    // Day headers
+    const dayNames = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+    let gridHtml = `<div class="booking-cal-grid">`;
+    dayNames.forEach(d => { gridHtml += `<div class="cal-day-header">${d}</div>`; });
+
+    // Empty pads
+    for(let i=0; i<startPad; i++) {
+      const padDate = new Date(curYear, curMonth, -startPad + i + 1);
+      gridHtml += `<div class="cal-day other-month"><div class="cal-day-num">${padDate.getDate()}</div></div>`;
     }
-    app.state.cars.forEach(car => {
-      html += `<div class="tl-cell tl-car-name">${car.name}</div>`;
-      const carBks = app.state.bookings.filter(b => b.carId === car.id && b.status !== 'Cancelled' && b.status !== 'Completed');
-      daysArray.forEach(d => {
-        const dTime = d.getTime();
-        let cellHtml = '';
-        carBks.forEach(b => {
-          const bStart = new Date(b.dateFrom).getTime();
-          const bEnd = new Date(b.dateTo).getTime();
-          if(dTime >= bStart && dTime <= bEnd) {
-            const isStart = dTime === bStart;
-            let bg = b.status === 'Confirmed' ? 'var(--info)' : b.status === 'Active' ? 'var(--success)' : b.status === 'Pending' ? 'var(--warning)' : 'var(--purple)';
-            cellHtml = `<div class="tl-bar" style="background:${bg}; left:1px; right:1px; width:calc(100% - 2px); border-radius:${isStart?'4px 0 0 4px':'0'}" title="${b.id}">${isStart ? b.id : ''}</div>`;
-          }
-        });
-        html += `<div class="tl-cell">${cellHtml}</div>`;
+
+    // Days
+    for(let d=1; d<=lastDay.getDate(); d++) {
+      const thisDate = new Date(curYear, curMonth, d); thisDate.setHours(0,0,0,0);
+      const isToday = thisDate.getTime() === today.getTime();
+      let chips = '';
+      let bkCount = 0;
+      app.state.bookings.forEach(b => {
+        if(b.status === 'Cancelled') return;
+        if(filterCarId && b.carId !== filterCarId) return;
+        const bStart = new Date(b.dateFrom); bStart.setHours(0,0,0,0);
+        const bEnd = new Date(b.dateTo); bEnd.setHours(0,0,0,0);
+        if(thisDate >= bStart && thisDate <= bEnd) {
+          bkCount++;
+          const car = app.state.cars.find(c => c.id === b.carId);
+          const color = statusColors[b.status] || '#888';
+          const label = thisDate.getTime()===bStart.getTime() ? (car?.name||b.carId) : '─';
+          if(bkCount <= 3) chips += `<div class="cal-booking-chip" style="background:${color};" title="${b.id} · ${car?.name||''}" onclick="ui.showAdminBookingModal('${b.id}')">${label}</div>`;
+          else if(bkCount === 4) chips += `<div class="cal-booking-chip" style="background:var(--text-muted);">+${bkCount-3} อื่นๆ</div>`;
+        }
       });
-    });
-    html += `</div>`;
-    container.innerHTML = html;
-  }
+      gridHtml += `<div class="cal-day${isToday?' today':''}"><div class="cal-day-num">${d}</div>${chips}</div>`;
+    }
+
+    // Trailing pads
+    const endPad = (7 - ((startPad + lastDay.getDate()) % 7)) % 7;
+    for(let i=1; i<=endPad; i++) {
+      gridHtml += `<div class="cal-day other-month"><div class="cal-day-num">${i}</div></div>`;
+    }
+    gridHtml += `</div>`;
+
+    // Legend
+    const legendHtml = `<div class="flex gap-3 flex-wrap mt-3" style="font-size:0.8rem; font-weight:600;">
+      ${Object.entries(statusColors).map(([s,c]) => `<span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${c};margin-right:4px;"></span>${s==='Pending'?'รอตรวจสอบ':s==='Confirmed'?'อนุมัติแล้ว':s==='Active'?'กำลังใช้งาน':s==='Completed'?'คืนรถแล้ว':'ยกเลิก'}</span>`).join('')}
+    </div>`;
+
+    container.innerHTML = filterHtml + navHtml + gridHtml + legendHtml;
+  },
+
+  _calNav(year, month, carId) {
+    const container = document.getElementById('timeline-container');
+    if(!container) return;
+    ui.renderTimeline(year, month, carId || null);
+  },
 };
 
 // =========== BUSINESS LOGIC ===========
@@ -2387,8 +2669,10 @@ const logic = {
       document.getElementById('book-net').innerText = `฿${utils.formatMoney(grandTotal)}`;
       document.getElementById('book-net').dataset.net = grandTotal;
       document.getElementById('book-discount').textContent = `฿0`;
-      const s = app.state.settings;
-      const dep = s.depositType === 'percent' ? Math.ceil(baseTotal * (s.depositValue||0) / 100) : (s.depositValue || 0);
+      const carObj2 = app.state.cars.find(c => c.price === carPrice);
+      const dt = (carObj2 && carObj2.depositType) ? carObj2.depositType : app.state.settings.depositType;
+      const dv = (carObj2 && carObj2.depositValue !== undefined) ? carObj2.depositValue : (app.state.settings.depositValue || 0);
+      const dep = dt === 'percent' ? Math.ceil(baseTotal * dv / 100) : dv;
       const depEl = document.getElementById('book-deposit-display');
       if(depEl) depEl.textContent = '฿' + utils.formatMoney(dep);
       const promoEl = document.getElementById('promo-code');
@@ -2421,14 +2705,24 @@ const logic = {
       pickCustom: true, pickCustomLabel, pickCustomUrl,
       dropCustom: true, dropCustomLabel, dropCustomUrl,
       dateFrom: app.searchParams.dateFrom, dateTo: app.searchParams.dateTo,
+      timePick: document.getElementById('bk-edit-tpick')?.value || '09:00',
+      timeDrop: document.getElementById('bk-edit-tdrop')?.value || '09:00',
       days: utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo),
-      total: finalTotal, status: "Pending",
+      total: finalTotal + (app._deliveryCost || 0), status: "Pending",
       slipUrl: app.tempUploads['slip'] || '',
       idCardUrl: app.tempUploads['idcard'] || '',
       licenseUrl: app.tempUploads['license'] || '',
       insurancePlanId: app._selectedInsurancePlan || null,
       insurancePlanName: app._selectedInsurancePlan ? (app.state.insurancePlans?.find(p => p.id === app._selectedInsurancePlan)?.name || '') : '',
-      deposit: (() => { const s = app.state.settings; return s.depositType === 'percent' ? Math.ceil(finalTotal * (s.depositValue||0) / 100) : (s.depositValue || 0); })(),
+      deposit: (() => { 
+          const carDep = app.state.cars.find(c => c.id === carId);
+          const dt = (carDep && carDep.depositType) ? carDep.depositType : app.state.settings.depositType;
+          const dv = (carDep && carDep.depositValue !== undefined) ? carDep.depositValue : (app.state.settings.depositValue || 0);
+          return dt === 'percent' ? Math.ceil(finalTotal * dv / 100) : dv; 
+        })(),
+    deliveryCost: app._deliveryCost || 0,
+      deliveryKm: app._deliveryKm || 0,
+      deliveryUrl: document.getElementById('bk-delivery-url')?.value.trim() || '',
       isReviewed: false, fine: 0,
       createdAt: new Date().toISOString().split('T')[0]
     };
@@ -2438,9 +2732,11 @@ const logic = {
     const car = app.state.cars.find(c => c.id === carId);
     utils.sendTelegramNotification(newBooking, car, app.currentUser);
     app.tempUploads = {};
-    utils.showToast('สร้างรายการจองเรียบร้อย! แอดมินกำลังตรวจสอบ 🎉', 'success');
+    app._deliveryCost = 0;
+    app._deliveryKm = 0;
+    utils.showToast('สร้างรายการจองเรียบร้อย! กรุณาลงนามในสัญญา 🎉', 'success');
     app.renderCarGrid();
-    ui.showReceiptModal(bId);
+    ui.showContractModal(bId);
   },
 
   recalcAdminBookingPrice(carPricePerDay) {
@@ -2523,6 +2819,8 @@ const logic = {
       topSpeed: document.getElementById('car-topspeed').value,
       insuranceExpiry: document.getElementById('car-ins-expiry').value,
       insuranceNote: document.getElementById('car-ins-note').value,
+      depositType: document.getElementById('car-deposit-type').value,
+      depositValue: parseFloat(document.getElementById('car-deposit-value').value) || 0,
       status: "Available", rating: 5.0, reviews: 0
     };
     if(app.tempUploads['carimgs'] && app.tempUploads['carimgs'].length > 0) {
@@ -2547,10 +2845,14 @@ const logic = {
     }
   },
 
-  saveInsurance(carId) {
+    saveInsurance(carId) {
     const c = app.state.cars.find(x => x.id === carId);
     c.insuranceExpiry = document.getElementById('ins-expiry').value;
     c.insuranceNote = document.getElementById('ins-note').value;
+    c.prbExpiry = document.getElementById('prb-expiry')?.value || '';
+    c.prbNote = document.getElementById('prb-note')?.value || '';
+    c.taxExpiry = document.getElementById('tax-expiry')?.value || '';
+    c.taxNote = document.getElementById('tax-note')?.value || '';
     app.saveState(); ui.closeModal();
     utils.showToast('บันทึกข้อมูลประกันสำเร็จ', 'success');
     app.renderAdminTab('insurance');
@@ -2627,6 +2929,9 @@ const logic = {
     app.state.settings.accName = document.getElementById('set-acc-name').value;
     app.state.settings.depositType = document.getElementById('set-deposit-type').value;
     app.state.settings.depositValue = parseFloat(document.getElementById('set-deposit-value').value) || 0;
+    app.state.settings.storeMapUrl = document.getElementById('set-store-mapurl').value.trim();
+    app.state.settings.deliveryPricePerKm = parseFloat(document.getElementById('set-delivery-km').value) || 10;
+    app.state.settings.deliveryBaseKm = parseFloat(document.getElementById('set-delivery-base').value) || 0;
     if(app.tempUploads['setLogo']) app.state.settings.logoUrl = app.tempUploads['setLogo'];
     if(app.tempUploads['setQR']) app.state.settings.qrUrl = app.tempUploads['setQR'];
     app.saveState(); app.tempUploads = {};
@@ -2717,6 +3022,79 @@ const logic = {
     }
   },
 
+  saveContractTemplate() {
+    app.state.settings.contractTitle = document.getElementById('ct-title').value.trim() || 'สัญญาเช่ารถยนต์';
+    app.state.settings.contractHeader = document.getElementById('ct-header').value.trim();
+    app.state.settings.contractFooter = document.getElementById('ct-footer').value.trim();
+    const termsRaw = document.getElementById('ct-terms').value;
+    app.state.settings.contractTerms = termsRaw.split('\n').map(t=>t.trim()).filter(t=>t.length > 0);
+    app.saveState();
+    utils.showToast('บันทึกแม่แบบสัญญาสำเร็จ ✅', 'success');
+  },
+
+  estimateDeliveryCost(carId, carPrice) {
+    const storeUrl = app.state.settings.storeMapUrl;
+    const customerUrl = document.getElementById('bk-delivery-url')?.value.trim();
+    if(!storeUrl || !customerUrl) return;
+
+    // ดึง lat/lng จาก Google Maps URL
+    const extractLatLng = (url) => {
+      let m = url.match(/[?&]q=([^&]+)/);
+      if(m) {
+        const parts = decodeURIComponent(m[1]).split(',');
+        if(parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
+      }
+      m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if(m) return { lat: parseFloat(m[1]), lng: parseFloat(m[2]) };
+      return null;
+    };
+
+    const storePt = extractLatLng(storeUrl);
+    const custPt = extractLatLng(customerUrl);
+    if(!storePt || !custPt) {
+      utils.showToast('ไม่สามารถอ่านพิกัดจาก URL กรุณาใช้ลิงก์ที่มีพิกัด', 'warning');
+      return;
+    }
+
+    // Haversine formula
+    const R = 6371;
+    const dLat = (custPt.lat - storePt.lat) * Math.PI / 180;
+    const dLng = (custPt.lng - storePt.lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(storePt.lat*Math.PI/180) * Math.cos(custPt.lat*Math.PI/180) * Math.sin(dLng/2)**2;
+    const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const roundKm = Math.round(km * 10) / 10;
+
+    const baseKm = app.state.settings.deliveryBaseKm || 0;
+    const pricePerKm = app.state.settings.deliveryPricePerKm || 10;
+    const billableKm = Math.max(0, roundKm - baseKm);
+    const cost = Math.ceil(billableKm * pricePerKm);
+
+    document.getElementById('delivery-km-display').textContent = `${roundKm} กม.`;
+    document.getElementById('delivery-cost-display').textContent = `฿${utils.formatMoney(cost)}`;
+    document.getElementById('delivery-estimate-box').style.display = 'block';
+
+    // อัปเดตยอดรวม
+    const deliveryRow = document.getElementById('delivery-row');
+    const deliveryCostEl = document.getElementById('book-delivery-cost');
+    if(deliveryRow) deliveryRow.style.display = cost > 0 ? '' : 'none';
+    if(deliveryCostEl) deliveryCostEl.textContent = `฿${utils.formatMoney(cost)}`;
+
+    const netEl = document.getElementById('book-net');
+    if(netEl) {
+      const base = parseFloat(netEl.dataset.net) || 0;
+      const days = utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo);
+      const carObj = app.state.cars.find(c => c.id === carId);
+      const baseTotal = utils.calcTieredPrice(carObj, days);
+      netEl.dataset.deliveryCost = cost;
+      const discountEl = document.getElementById('book-discount');
+      const discountAmt = discountEl ? (parseFloat(discountEl.textContent.replace(/[^0-9.-]/g,'')) || 0) : 0;
+      netEl.textContent = `฿${utils.formatMoney(baseTotal - discountAmt + cost)}`;
+      netEl.dataset.net = baseTotal - discountAmt + cost;
+    }
+    app._deliveryCost = cost;
+    app._deliveryKm = roundKm;
+  },
+
   addBranch() {
     const id = document.getElementById('new-branch-id').value.trim().toUpperCase();
     const name = document.getElementById('new-branch-name').value.trim();
@@ -2727,6 +3105,17 @@ const logic = {
     if(app.state.branches.find(b => b.id === id)) return utils.showToast('รหัสสาขานี้มีอยู่แล้ว', 'error');
     app.state.branches.push({ id, name, address, mapUrl, mapEmbed });
     app.saveState(); utils.showToast('เพิ่มสาขาสำเร็จ', 'success'); app.renderAdminTab('settings');
+  },
+
+   deleteCustomer(userId) {
+    const u = app.state.users.find(x => x.id === userId);
+    if(!u) return;
+    if(confirm(`ต้องการลบลูกค้า "${u.name}" ออกจากระบบ?`)) {
+      app.state.users = app.state.users.filter(x => x.id !== userId);
+      app.saveState();
+      utils.showToast('ลบลูกค้าสำเร็จ', 'success');
+      app.renderAdminTab('crm');
+    }
   },
 
   deleteBranch(id) {
