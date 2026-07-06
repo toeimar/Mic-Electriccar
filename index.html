@@ -2287,16 +2287,19 @@ _printContract() {
   if(renterCanvas && renterImg) renterImg.src = renterCanvas.toDataURL('image/png');
   if(ownerCanvas && ownerImg) ownerImg.src = ownerCanvas.toDataURL('image/png');
   if(printArea) printArea.style.display = 'block';
+  document.querySelectorAll('body > #contract-print-area').forEach(el => el.remove());
   const contractArea = document.getElementById('contract-print-area');
   if(contractArea) {
+    contractArea.id = 'contract-print-area-src';
     const clone = contractArea.cloneNode(true);
     clone.id = 'contract-print-area';
     clone.style.cssText = 'position:relative;width:100%;max-width:100%;background:white;padding:10mm 12mm;font-family:Sarabun,sans-serif;font-size:9pt;line-height:1.6;color:black;box-sizing:border-box;overflow:visible;word-break:break-word;';
-    document.querySelectorAll('#contract-print-area').forEach(el => {
-      if(el !== contractArea) el.remove();
-    });
     document.body.appendChild(clone);
-    setTimeout(() => { window.print(); clone.remove(); }, 300);
+    setTimeout(() => {
+      window.print();
+      clone.remove();
+      contractArea.id = 'contract-print-area';
+    }, 300);
   } else {
     setTimeout(() => { window.print(); }, 200);
   }
