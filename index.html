@@ -1105,10 +1105,13 @@ function branchSelectHTML(fieldId, currentVal, label, icon, iconColor) {
       <input type="text" id="${fieldId}-text" class="input-control" 
              placeholder="เช่น สนามบินสุวรรณภูมิ, โรงแรม X ถ.สุขุมวิท"
              value="${currentVal || ''}">
-      <div style="margin-top:6px;">
+      <div class="flex gap-2" style="margin-top:6px;">
         <input type="url" id="${fieldId}-url" class="input-control" 
                placeholder="Google Maps URL (ไม่บังคับ) https://maps.google.com/..."
-               style="font-size:0.88rem; padding:9px 12px;">
+               style="font-size:0.88rem; padding:9px 12px; flex:1;">
+        <button type="button" class="btn btn-outline btn-sm" style="white-space:nowrap; padding:9px 12px;" onclick="ui.showPinMapModal('${fieldId}')">
+          <i class="fa-solid fa-map-location-dot"></i> ปักหมุด
+        </button>
       </div>
     </div>`;
 }
