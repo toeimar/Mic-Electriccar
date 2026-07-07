@@ -1644,9 +1644,10 @@ const ui = {
     setTimeout(() => document.getElementById('main-modal').classList.add('active'), 10);
   },
   
-  closeModal() {
+    closeModal() {
     const m = document.getElementById('main-modal');
     if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; app._selectedInsurancePlan = null; }
+    if(this._pinMap) { this._pinMap.remove(); this._pinMap = null; }
   },
 
   toggleCustomLocation(fieldId) {
@@ -1655,6 +1656,72 @@ const ui = {
     if(!sel || !box) return;
     if(sel.value === '__custom__') { box.classList.add('show'); }
     else { box.classList.remove('show'); }
+  },
+    showPinMapModal(fieldId) {
+    this._pinMapTargetField = fieldId;
+    this.showModal('ปักหมุดตำแหน่ง', `
+      <div class="pin-map-wrap">
+        <div id="pin-map-el"></div>
+        <div class="pin-map-center-icon"><i class="fa-solid fa-location-dot"></i></div>
+      </div>
+      <div class="pin-map-addr-bar" id="pin-map-addr">
+        <i class="fa-solid fa-crosshairs text-primary"></i> <span id="pin-map-addr-text">กำลังระบุตำแหน่ง...</span>
+      </div>
+      <button class="btn btn-primary w-full btn-lg mt-3" onclick="ui.confirmPinMap()">
+        <i class="fa-solid fa-check"></i> ยืนยันตำแหน่งนี้
+      </button>
+    `, 'modal-lg', 'เลื่อนแผนที่เพื่อขยับหมุดไปยังตำแหน่งที่ต้องการ (แบบเดียวกับแอปเรียกรถ)');
+    setTimeout(() => this._initPinMap(), 200);
+  },
+
+  _initPinMap() {
+    const mapEl = document.getElementById('pin-map-el');
+    if(!mapEl || typeof L === 'undefined') return;
+    const startCenter = [13.7563, 100.5018];
+    this._pinMap = L.map('pin-map-el', { zoomControl: true }).setView(startCenter, 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '© OpenStreetMap'
+    }).addTo(this._pinMap);
+    this._reverseGeocode(startCenter[0], startCenter[1]);
+    this._pinMap.on('moveend', () => {
+      const c = this._pinMap.getCenter();
+      this._reverseGeocode(c.lat, c.lng);
+    });
+    if(navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        this._pinMap.setView([pos.coords.latitude, pos.coords.longitude], 16);
+      }, () => {}, { timeout: 5000 });
+    }
+    setTimeout(() => this._pinMap.invalidateSize(), 300);
+  },
+
+  async _reverseGeocode(lat, lng) {
+    const addrEl = document.getElementById('pin-map-addr-text');
+    if(addrEl) addrEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังค้นหาที่อยู่...`;
+    this._pinLat = lat; this._pinLng = lng;
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=17`);
+      const data = await res.json();
+      this._pinAddr = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    } catch(e) {
+      this._pinAddr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    }
+    if(addrEl) addrEl.textContent = this._pinAddr;
+  },
+
+  confirmPinMap() {
+    if(!this._pinMap) return;
+    const fieldId = this._pinMapTargetField;
+    const lat = this._pinLat, lng = this._pinLng;
+    const addr = this._pinAddr || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    const textInput = document.getElementById(`${fieldId}-text`);
+    const urlInput = document.getElementById(`${fieldId}-url`);
+    if(textInput) textInput.value = addr;
+    if(urlInput) urlInput.value = `https://maps.google.com/?q=${lat},${lng}`;
+    this._pinMap.remove();
+    this._pinMap = null;
+    this.closeModal();
+    utils.showToast('ปักหมุดตำแหน่งสำเร็จ 📍', 'success');
   },
 
   // ===== แยก Login / Register =====
