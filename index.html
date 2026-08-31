@@ -661,12 +661,6 @@ const DEFAULT_STATE = {
     deliveryBaseKm: 0,
     storeMapUrl: '',
   },
-  branches: [
-    { id: 'BKK', name: 'สนามบินสุวรรณภูมิ (BKK)', address: 'ถ.บางนา-ตราด กม.15 สมุทรปราการ', mapUrl: 'https://maps.google.com/?q=สนามบินสุวรรณภูมิ', mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3877.036!2d100.7474!3d13.6900!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x311d603f8e95b8c9%3A0xb90e8a2aff98b17a!2sSuvarnabhumi+Airport!5e0!3m2!1sth!2sth!4v1234567890' },
-    { id: 'DMK', name: 'สนามบินดอนเมือง (DMK)', address: '222 ถ.วิภาวดีรังสิต หลักสี่ กรุงเทพ', mapUrl: 'https://maps.google.com/?q=สนามบินดอนเมือง', mapEmbed: '' },
-    { id: 'CNX', name: 'เชียงใหม่ (CNX)', address: '60 ถ.มหิดล ต.หายยา อ.เมือง เชียงใหม่', mapUrl: 'https://maps.google.com/?q=เชียงใหม่', mapEmbed: '' },
-    { id: 'HKT', name: 'ภูเก็ต (HKT)', address: '222 ถ.เฉลิมพระเกียรติ ต.ไม้ขาว ถลาง ภูเก็ต', mapUrl: 'https://maps.google.com/?q=ภูเก็ต', mapEmbed: '' }
-  ],
   carTypes: ['ทั้งหมด', 'Sedan', 'SUV', 'Sport', 'Van'],
   users: [
     { id: 'U001', name: 'คุณสมชาย ใจดี', phone: '0811111111', password: '123', email: 'somchai@test.com', role: 'user', tier: 'Gold', points: 450 },
@@ -1094,25 +1088,6 @@ const utils = {
     return { status: 'ok', diff, color: 'var(--success)', label: `เหลือ ${diff} วัน` };
   }
 };
-
-// =========== BRANCH SELECT + CUSTOM LOCATION ===========
-function branchSelectHTML(fieldId, currentVal, label, icon, iconColor) {
-  return `
-    <div class="input-group mb-0">
-      <label><i class="fa-solid ${icon}" style="color:${iconColor};"></i> ${label}</label>
-      <input type="text" id="${fieldId}-text" class="input-control" 
-             placeholder="เช่น สนามบินสุวรรณภูมิ, โรงแรม X ถ.สุขุมวิท"
-             value="${currentVal || ''}">
-      <div class="flex gap-2" style="margin-top:6px;">
-        <input type="url" id="${fieldId}-url" class="input-control" 
-               placeholder="Google Maps URL (ไม่บังคับ) https://maps.google.com/..."
-               style="font-size:0.88rem; padding:9px 12px; flex:1;">
-        <button type="button" class="btn btn-outline btn-sm" style="white-space:nowrap; padding:9px 12px;" onclick="ui.showPinMapModal('${fieldId}')">
-          <i class="fa-solid fa-map-location-dot"></i> ปักหมุด
-        </button>
-      </div>
-    </div>`;
-}
 
 // =========== VIEWS ===========
 
