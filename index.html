@@ -1839,14 +1839,22 @@ const ui = {
           <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-car text-primary"></i> ข้อมูลการเช่า</h4>
           <div class="card-flat p-3 mb-4" style="border-radius:14px;">
             <div class="font-bold text-primary mb-3" style="font-size:1.05rem;">${c.name}</div>
-            ${branchSelectHTML('bk-edit-pick', app.searchParams.pick, 'สถานที่รับรถ', 'fa-location-dot', 'var(--primary)')}
+            <div class="input-group mb-0">
+        <label><i class="fa-solid fa-location-dot" style="color:var(--primary);"></i> สถานที่รับรถ</label>
+         <input type="text" id="bk-edit-pick-text" class="input-control" placeholder="ระบุสถานที่รับรถ">
+         <input type="hidden" id="bk-edit-pick-url" value="">
+        </div>
             <div class="input-group mb-2 mt-3"><label>วันที่รับรถ</label>
               <div class="flex gap-2">
                 <input type="date" id="bk-edit-dfrom" class="input-control" style="padding:8px 12px; flex:1;" value="${app.searchParams.dateFrom}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
                 <input type="time" id="bk-edit-tpick" class="input-control" style="padding:8px 12px; width:120px;" value="09:00">
               </div>
             </div>
-            ${branchSelectHTML('bk-edit-drop', app.searchParams.drop, 'สถานที่คืนรถ', 'fa-map-pin', 'var(--warning)')}
+          <div class="input-group mb-0">
+           <label><i class="fa-solid fa-map-pin" style="color:var(--warning);"></i> สถานที่คืนรถ</label>
+           <input type="text" id="bk-edit-drop-text" class="input-control" placeholder="ระบุสถานที่คืนรถ">
+           <input type="hidden" id="bk-edit-drop-url" value="">
+          </div>
             <div class="input-group mb-0 mt-3"><label>วันที่คืนรถ</label>
               <div class="flex gap-2">
                 <input type="date" id="bk-edit-dto" class="input-control" style="padding:8px 12px; flex:1;" value="${app.searchParams.dateTo}" onchange="logic.recalcCustomerBookingPrice(${c.price})">
