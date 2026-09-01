@@ -2215,9 +2215,10 @@ const ui = {
         <div class="font-bold mb-3 text-primary"><i class="fa-solid fa-signature"></i> ลายเซ็นดิจิทัล</div>
         <div class="grid" style="grid-template-columns:1fr 1fr; gap:16px;">
           <div>
-            <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้เช่า (${u.name})</div>
-            <canvas id="sig-renter" width="300" height="120" style="border:1.5px solid var(--border); border-radius:12px; background:var(--bg-body); cursor:crosshair; touch-action:none; width:100%;"></canvas>
-            <div class="flex gap-2 mt-2"><button class="btn btn-outline btn-xs flex-1" onclick="ui._clearCanvas('sig-renter')"><i class="fa-solid fa-eraser"></i> ล้าง</button></div>
+          <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้ให้เช่า (${s.storeName})</div>
+          ${s.adminSigUrl 
+          ? `<img src="${s.adminSigUrl}" style="max-height:120px; border:1.5px solid var(--border); border-radius:12px; background:white; padding:8px; width:100%; object-fit:contain; display:block;">`
+          : `<div style="border:1.5px dashed var(--border); border-radius:12px; padding:24px; text-align:center; color:var(--text-muted); font-size:0.82rem;">ยังไม่ได้ตั้งค่าลายเซ็นผู้ให้เช่า</div>`}
           </div>
           <div>
             <div class="text-muted text-sm mb-2" style="font-weight:600;">ลายเซ็นผู้ให้เช่า (${s.storeName})</div>
@@ -2254,14 +2255,13 @@ const ui = {
       <button class="btn btn-primary btn-sm flex-1" onclick="ui.closeModal()"><i class="fa-solid fa-check"></i> ปิด</button>
     </div>
   `);
+      
     setTimeout(() => {
-      ui._initSignaturePad('sig-renter');
-      ui._initSignaturePad('sig-owner');
-      const bk = app.state.bookings.find(x => x.id === bId);
-      if(bk?.sigRenter) { const img = document.getElementById('sig-renter-img'); if(img) img.src = bk.sigRenter; const cv = document.getElementById('sig-renter'); if(cv){ const ctx=cv.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,cv.width,cv.height); i.src=bk.sigRenter; } }
-      const ownerSig = bk?.sigOwner || app.state.settings.adminSigUrl;
-      if(ownerSig) { const img = document.getElementById('sig-owner-img'); if(img) img.src = ownerSig; const cv = document.getElementById('sig-owner'); if(cv){ const ctx=cv.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,cv.width,cv.height); i.src=ownerSig; } }
-    }, 150);
+  ui._initSignaturePad('sig-renter');
+  const bk = app.state.bookings.find(x => x.id === bId);
+  if(bk?.sigRenter) { const img = document.getElementById('sig-renter-img'); if(img) img.src = bk.sigRenter; const cv = document.getElementById('sig-renter'); if(cv){ const ctx=cv.getContext('2d'); const i=new Image(); i.onload=()=>ctx.drawImage(i,0,0,cv.width,cv.height); i.src=bk.sigRenter; } }
+  if(s.adminSigUrl) { const img = document.getElementById('sig-owner-img'); if(img) img.src = s.adminSigUrl; }
+}, 150);
   },
 
 _initSignaturePad(canvasId) {
@@ -2296,21 +2296,12 @@ _clearCanvas(canvasId) {
 
 _saveContractSignatures(bId) {
   const renterCanvas = document.getElementById('sig-renter');
-  const ownerCanvas = document.getElementById('sig-owner');
   const b = app.state.bookings.find(x => x.id === bId);
   if(!b) return;
-
-  const isCanvasBlank = (canvas) => {
-    const blank = document.createElement('canvas');
-    blank.width = canvas.width; blank.height = canvas.height;
-    return canvas.toDataURL() === blank.toDataURL();
-  };
-  if(!renterCanvas || isCanvasBlank(renterCanvas)) {
+  if(!renterCanvas || ui._isCanvasBlank(renterCanvas)) {
     return utils.showToast('กรุณาให้ลูกค้าเซ็นชื่อยืนยันก่อนบันทึก', 'warning');
   }
-
-  if(renterCanvas) b.sigRenter = renterCanvas.toDataURL('image/png');
-  if(ownerCanvas) b.sigOwner = ownerCanvas.toDataURL('image/png');
+  b.sigRenter = renterCanvas.toDataURL('image/png');
   b.isSigned = true;
   app.saveState();
   utils.showToast('บันทึกลายเซ็นสำเร็จ ✅ ยืนยันการจองเรียบร้อย', 'success');
