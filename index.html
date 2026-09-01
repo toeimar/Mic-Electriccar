@@ -480,7 +480,6 @@
   .custom-location-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
   /* ===== BRANCH INPUT MIXED ===== */
-  .branch-input-wrap { position: relative; }
   @media print {
     @page { size: A4; margin: 0mm; }
     }
@@ -2055,7 +2054,7 @@ const ui = {
     const u = app.state.users.find(x => x.id === b.userId);
     const c = app.state.cars.find(x => x.id === b.carId);
     const st = utils.getBookingStatusDisplay(b);
-    const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
+    const pickLabel = b.pickCustomLabel || b.pickBranch || 'ระบุเอง'
     const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
     this.showModal(`จัดการคำสั่งจอง: ${bId}`, `
       <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;" id="admin-bk-grid">
