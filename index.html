@@ -2075,6 +2075,19 @@ const ui = {
             <div class="info-row"><span class="info-row-label"><i class="fa-solid fa-location-dot text-primary"></i> รับรถ</span><span class="info-row-value">${pickLabel}${b.pickCustomUrl ? ` <a href="${b.pickCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> Maps</a>` : ''}</span></div>
             <div class="info-row" style="border:none;"><span class="info-row-label"><i class="fa-solid fa-map-pin text-warning"></i> คืนรถ</span><span class="info-row-value">${dropLabel}${b.dropCustomUrl ? ` <a href="${b.dropCustomUrl}" target="_blank" class="text-primary text-sm"><i class="fa-solid fa-map-location-dot"></i> Maps</a>` : ''}</span></div>
           </div>
+          ${b.deposit ? `
+          <h4 class="mb-3 text-success"><i class="fa-solid fa-hand-holding-dollar"></i> คืนเงินมัดจำ (฿${utils.formatMoney(b.deposit)})</h4>
+          <div class="card-flat p-3 mb-4" style="border-radius:14px;">
+            ${b.refundBank || b.refundAccNo ? `
+              <div class="info-row"><span class="info-row-label">ธนาคาร</span><span class="info-row-value">${b.refundBank||'-'}</span></div>
+              <div class="info-row"><span class="info-row-label">เลขบัญชี</span><span class="info-row-value">${b.refundAccNo||'-'}</span></div>
+              <div class="info-row" style="border:none;"><span class="info-row-label">ชื่อบัญชี</span><span class="info-row-value">${b.refundAccName||'-'}</span></div>
+            ` : `<div class="text-muted text-sm">ลูกค้าไม่ได้กรอกข้อมูลบัญชีคืนเงิน</div>`}
+            <label class="flex items-center gap-2 mt-3" style="cursor:pointer;">
+              <input type="checkbox" id="adm-deposit-refunded" ${b.depositRefunded ? 'checked' : ''} style="width:18px; height:18px;">
+              <span class="font-bold" style="font-size:0.92rem;">คืนเงินมัดจำแล้ว</span>
+            </label>
+          </div>` : ''}
           <h4 class="mb-3 text-warning"><i class="fa-solid fa-calendar"></i> แก้ไขวันและราคา</h4>
           <div class="input-group"><label>วันรับรถ</label><input type="date" id="adm-date-from" class="input-control" value="${b.dateFrom}" onchange="logic.recalcAdminBookingPrice(${c.price})"></div>
           <div class="input-group"><label>วันคืนรถ</label><input type="date" id="adm-date-to" class="input-control" value="${b.dateTo}" onchange="logic.recalcAdminBookingPrice(${c.price})"></div>
@@ -2770,6 +2783,10 @@ const logic = {
     deliveryCost: app._deliveryCost || 0,
       deliveryKm: app._deliveryKm || 0,
       deliveryUrl: document.getElementById('bk-delivery-url')?.value.trim() || '',
+      refundBank: document.getElementById('bk-refund-bank')?.value.trim() || '',
+      refundAccNo: document.getElementById('bk-refund-accno')?.value.trim() || '',
+      refundAccName: document.getElementById('bk-refund-accname')?.value.trim() || '',
+      depositRefunded: false,
       isReviewed: false, fine: 0,
       createdAt: new Date().toISOString().split('T')[0]
     };
@@ -2811,6 +2828,7 @@ const logic = {
     const oldStatus = b.status;
     b.status = newStatus; b.dateFrom = newDFrom; b.dateTo = newDTo;
     b.days = utils.calcDays(newDFrom, newDTo); b.total = newTotal; b.fine = newFine;
+    b.depositRefunded = document.getElementById('adm-deposit-refunded')?.checked || false;
     app.saveState(); ui.closeModal();
     if(oldStatus !== newStatus) {
       const car = app.state.cars.find(c => c.id === b.carId);
