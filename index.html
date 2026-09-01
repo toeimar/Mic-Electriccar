@@ -1131,14 +1131,20 @@ const views = {
       </div>`;
     }
   },
-
     flightSearchPanel: () => {
     const tOpts = app.state.carTypes.map(t => `<option value="${t}" ${app.searchParams.type===t?'selected':''}>${t}</option>`).join('');
     return `
       <div class="flight-search-box">
-        ${branchSelectHTML('s-pick', app.searchParams.pick, 'รับรถที่', 'fa-location-dot', 'var(--primary)')}
-        ${branchSelectHTML('s-drop', app.searchParams.drop, 'คืนรถที่', 'fa-map-pin', 'var(--warning)')}
-        
+        <div class="input-group mb-0">
+  <label><i class="fa-solid fa-location-dot" style="color:var(--primary);"></i> รับรถที่</label>
+  <input type="text" id="s-pick-text" class="input-control" placeholder="ระบุสถานที่รับรถ">
+  <input type="hidden" id="s-pick-url" value="">
+</div>
+<div class="input-group mb-0">
+  <label><i class="fa-solid fa-map-pin" style="color:var(--warning);"></i> คืนรถที่</label>
+  <input type="text" id="s-drop-text" class="input-control" placeholder="ระบุสถานที่คืนรถ">
+  <input type="hidden" id="s-drop-url" value="">
+</div>
         <div class="input-group mb-0">
           <label><i class="fa-regular fa-calendar text-primary"></i> วันรับรถ</label>
           <input type="date" id="s-dfrom" class="input-control" value="${app.searchParams.dateFrom}" onchange="app.searchParams.dateFrom=this.value">
@@ -1436,16 +1442,7 @@ const views = {
           }).join('')}
     `,
 
-    settings: () =>
-        <div class="card-flat p-3 mb-3" style="border-radius:14px;">
-          <div class="flex justify-between items-start mb-2">
-            <div><span class="badge badge-primary" style="margin-right:8px;">${b.id}</span><span class="font-bold">${b.name}</span></div>
-            <button class="btn btn-danger btn-xs" onclick="logic.deleteBranch('${b.id}')"><i class="fa-solid fa-trash"></i></button>
-          </div>
-          <div class="text-muted text-sm mb-2">${b.address || 'ไม่ระบุที่อยู่'}</div>
-          ${b.mapUrl ? `<a href="${b.mapUrl}" target="_blank" class="btn btn-outline btn-xs"><i class="fa-solid fa-map-location-dot"></i> เปิด Google Maps</a>` : ''}
-          ${b.mapEmbed ? `<div class="map-embed-container mt-2"><iframe src="${b.mapEmbed}" allowfullscreen loading="lazy"></iframe></div>` : ''}
-        </div>`).join('');
+    settings: () => {
       return `
         <h2 class="mb-4">ตั้งค่าร้านค้า & ดีไซน์</h2>
         <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 20px;" id="setting-grid">
@@ -1471,10 +1468,8 @@ const views = {
               <div class="input-group"><label>เลขที่บัญชี</label><input type="text" id="set-acc-no" class="input-control" value="${app.state.settings.accNo}"></div>
               <div class="input-group"><label>ชื่อบัญชี</label><input type="text" id="set-acc-name" class="input-control" value="${app.state.settings.accName}"></div>
               <div class="input-group"><label>อัปโหลด QR Code รับเงิน</label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setQR')"><img id="preview-setQR" src="${app.state.settings.qrUrl || ''}" style="max-height:100px; display:${app.state.settings.qrUrl?'block':'none'}; margin-top:8px; border-radius:8px; border:1px solid var(--border);"></div>
-            </ldiv>
             </div>
           </div>
-        </div>
         <div class="card mt-4 mb-0">
            <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);">
               <i class="fa-solid fa-signature text-primary"></i> ลายเซ็นผู้ให้เช่า (สำหรับสัญญา)
