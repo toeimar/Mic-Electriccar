@@ -1951,8 +1951,8 @@ const ui = {
       html = profileBar + myBks.map(b => {
         const c = app.state.cars.find(x => x.id === b.carId);
         const st = utils.getBookingStatusDisplay(b);
-        const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
-        const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
+        const pickLabel = b.pickCustomLabel || 'ระบุเอง';
+        const dropLabel = b.dropCustomLabel || 'ระบุเอง';
         return `
         <div class="card mb-3 p-4">
           <div class="flex justify-between items-center mb-3"><div class="font-bold text-primary"><i class="fa-solid fa-ticket"></i> ${b.id}</div><span class="badge badge-${st.class}">${st.text}</span></div>
@@ -1988,8 +1988,8 @@ const ui = {
     if(!b) return utils.showToast('ไม่พบข้อมูลการจอง', 'error');
     const u = app.state.users.find(x => x.id === b.userId);
     const c = app.state.cars.find(x => x.id === b.carId);
-    const bPick = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
-    const bDrop = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
+    const bPick = b.pickCustomLabel || 'ระบุเอง';
+    const bDrop = b.dropCustomLabel || 'ระบุเอง';
     const st = utils.getBookingStatusDisplay(b);
     const shareLink = window.location.origin + window.location.pathname + `?receipt=${b.id}`;
     this.showModal(`ใบยืนยันการจอง`, `
@@ -2054,8 +2054,8 @@ const ui = {
     const u = app.state.users.find(x => x.id === b.userId);
     const c = app.state.cars.find(x => x.id === b.carId);
     const st = utils.getBookingStatusDisplay(b);
-    const pickLabel = b.pickCustomLabel || b.pickBranch || 'ระบุเอง'
-    const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
+    const pickLabel = b.pickCustomLabel || 'ระบุเอง';
+    const dropLabel = b.dropCustomLabel || 'ระบุเอง';
     this.showModal(`จัดการคำสั่งจอง: ${bId}`, `
       <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 24px;" id="admin-bk-grid">
         <div>
