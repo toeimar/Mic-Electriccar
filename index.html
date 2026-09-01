@@ -1171,10 +1171,6 @@ const views = {
           <span class="hero-stat-lbl">รถในระบบ</span>
         </div>
         <div class="hero-stat">
-          <span class="hero-stat-num">${app.state.branches.length}</span>
-          <span class="hero-stat-lbl">สาขา</span>
-        </div>
-        <div class="hero-stat">
           <span class="hero-stat-num">${app.state.bookings.filter(b=>b.status!=='Cancelled').length}+</span>
           <span class="hero-stat-lbl">การเช่าแล้ว</span>
         </div>
@@ -1441,8 +1437,7 @@ const views = {
           }).join('')}
     `,
 
-    settings: () => {
-      const bList = app.state.branches.map(b => `
+    settings: () =>
         <div class="card-flat p-3 mb-3" style="border-radius:14px;">
           <div class="flex justify-between items-start mb-2">
             <div><span class="badge badge-primary" style="margin-right:8px;">${b.id}</span><span class="font-bold">${b.name}</span></div>
@@ -1477,21 +1472,7 @@ const views = {
               <div class="input-group"><label>เลขที่บัญชี</label><input type="text" id="set-acc-no" class="input-control" value="${app.state.settings.accNo}"></div>
               <div class="input-group"><label>ชื่อบัญชี</label><input type="text" id="set-acc-name" class="input-control" value="${app.state.settings.accName}"></div>
               <div class="input-group"><label>อัปโหลด QR Code รับเงิน</label><input type="file" accept="image/*" class="input-control" onchange="logic.handleFileUpload(event, 'setQR')"><img id="preview-setQR" src="${app.state.settings.qrUrl || ''}" style="max-height:100px; display:${app.state.settings.qrUrl?'block':'none'}; margin-top:8px; border-radius:8px; border:1px solid var(--border);"></div>
-            </div>
-            <div class="card">
-              <h4 class="mb-3" style="padding-bottom:12px; border-bottom:1px solid var(--border);"><i class="fa-solid fa-map-location-dot text-primary"></i> สาขา / สถานที่รับ-คืนรถ</h4>
-              <div style="max-height:260px; overflow-y:auto; margin-bottom:12px;">${bList}</div>
-              <div class="flex gap-2 mb-2">
-                <input type="text" id="new-branch-id" class="input-control" placeholder="รหัส (เช่น BKK)" style="width:35%;">
-                <input type="text" id="new-branch-name" class="input-control" placeholder="ชื่อสาขา">
-              </div>
-              <div class="input-group mb-2"><input type="text" id="new-branch-addr" class="input-control" placeholder="ที่อยู่ / รายละเอียด"></div>
-              <div class="input-group mb-2"><input type="text" id="new-branch-mapurl" class="input-control" placeholder="ลิงก์ Google Maps (https://maps.google.com/...)"></div>
-              <div class="input-group mb-2">
-                <label style="font-size:0.85rem; color:var(--text-muted);">Embed URL จาก Google Maps</label>
-                <input type="text" id="new-branch-embed" class="input-control" placeholder="https://www.google.com/maps/embed?pb=...">
-              </div>
-              <button class="btn btn-outline btn-sm w-full mt-2" onclick="logic.addBranch()"><i class="fa-solid fa-plus"></i> เพิ่มสาขา</button>
+            </ldiv>
             </div>
           </div>
         </div>
@@ -3142,18 +3123,6 @@ const logic = {
     app._deliveryKm = roundKm;
   },
 
-  addBranch() {
-    const id = document.getElementById('new-branch-id').value.trim().toUpperCase();
-    const name = document.getElementById('new-branch-name').value.trim();
-    const address = document.getElementById('new-branch-addr').value.trim();
-    const mapUrl = document.getElementById('new-branch-mapurl').value.trim();
-    const mapEmbed = document.getElementById('new-branch-embed').value.trim();
-    if(!id || !name) return utils.showToast('กรุณากรอกรหัสและชื่อสาขา', 'warning');
-    if(app.state.branches.find(b => b.id === id)) return utils.showToast('รหัสสาขานี้มีอยู่แล้ว', 'error');
-    app.state.branches.push({ id, name, address, mapUrl, mapEmbed });
-    app.saveState(); utils.showToast('เพิ่มสาขาสำเร็จ', 'success'); app.renderAdminTab('settings');
-  },
-
    deleteCustomer(userId) {
     const u = app.state.users.find(x => x.id === userId);
     if(!u) return;
@@ -3162,13 +3131,6 @@ const logic = {
       app.saveState();
       utils.showToast('ลบลูกค้าสำเร็จ', 'success');
       app.renderAdminTab('crm');
-    }
-  },
-
-  deleteBranch(id) {
-    if(confirm('ต้องการลบสาขานี้ใช่หรือไม่?')) {
-      app.state.branches = app.state.branches.filter(b => b.id !== id);
-      app.saveState(); utils.showToast('ลบสาขาสำเร็จ', 'success'); app.renderAdminTab('settings');
     }
   },
 
