@@ -480,9 +480,9 @@
   .custom-location-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
   /* ===== BRANCH INPUT MIXED ===== */
-  @media print {
+ @media print {
     @page { size: A4; margin: 0mm; }
-    }
+    * { box-sizing: border-box !important; }
     * { box-sizing: border-box !important; }
     body * { visibility: hidden; }
     #contract-print-area, #contract-print-area * { visibility: visible !important; }
@@ -2296,10 +2296,21 @@ _saveContractSignatures(bId) {
   const ownerCanvas = document.getElementById('sig-owner');
   const b = app.state.bookings.find(x => x.id === bId);
   if(!b) return;
+
+  const isCanvasBlank = (canvas) => {
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width; blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+  };
+  if(!renterCanvas || isCanvasBlank(renterCanvas)) {
+    return utils.showToast('กรุณาให้ลูกค้าเซ็นชื่อยืนยันก่อนบันทึก', 'warning');
+  }
+
   if(renterCanvas) b.sigRenter = renterCanvas.toDataURL('image/png');
   if(ownerCanvas) b.sigOwner = ownerCanvas.toDataURL('image/png');
+  b.isSigned = true;
   app.saveState();
-  utils.showToast('บันทึกลายเซ็นสำเร็จ ✅', 'success');
+  utils.showToast('บันทึกลายเซ็นสำเร็จ ✅ ยืนยันการจองเรียบร้อย', 'success');
 },
 
 _printContract() {
