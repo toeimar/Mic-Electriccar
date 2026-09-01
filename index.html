@@ -3187,6 +3187,35 @@ const logic = {
     app._deliveryKm = roundKm;
   },
 
+    setManualDeliveryKm(carId) {
+    const manualInput = document.getElementById('bk-delivery-km-manual');
+    if(!manualInput) return;
+    const km = parseFloat(manualInput.value) || 0;
+    const baseKm = app.state.settings.deliveryBaseKm || 0;
+    const pricePerKm = app.state.settings.deliveryPricePerKm || 10;
+    const billableKm = Math.max(0, km - baseKm);
+    const cost = Math.ceil(billableKm * pricePerKm);
+
+    document.getElementById('delivery-cost-display').textContent = `฿${utils.formatMoney(cost)}`;
+    const deliveryRow = document.getElementById('delivery-row');
+    const deliveryCostEl = document.getElementById('book-delivery-cost');
+    if(deliveryRow) deliveryRow.style.display = cost > 0 ? '' : 'none';
+    if(deliveryCostEl) deliveryCostEl.textContent = `฿${utils.formatMoney(cost)}`;
+
+    const netEl = document.getElementById('book-net');
+    if(netEl) {
+      const days = utils.calcDays(app.searchParams.dateFrom, app.searchParams.dateTo);
+      const carObj = app.state.cars.find(c => c.id === carId);
+      const baseTotal = utils.calcTieredPrice(carObj, days);
+      const discountEl = document.getElementById('book-discount');
+      const discountAmt = discountEl ? (parseFloat(discountEl.textContent.replace(/[^0-9.-]/g,'')) || 0) : 0;
+      netEl.textContent = `฿${utils.formatMoney(baseTotal - discountAmt + cost)}`;
+      netEl.dataset.net = baseTotal - discountAmt + cost;
+    }
+    app._deliveryCost = cost;
+    app._deliveryKm = km;
+  },
+
    deleteCustomer(userId) {
     const u = app.state.users.find(x => x.id === userId);
     if(!u) return;
