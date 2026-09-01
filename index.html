@@ -3160,6 +3160,8 @@ const logic = {
     const cost = Math.ceil(billableKm * pricePerKm);
 
     document.getElementById('delivery-km-display').textContent = `${roundKm} กม.`;
+    const manualInput = document.getElementById('bk-delivery-km-manual');
+    if(manualInput) manualInput.value = roundKm;
     document.getElementById('delivery-cost-display').textContent = `฿${utils.formatMoney(cost)}`;
     document.getElementById('delivery-estimate-box').style.display = 'block';
 
