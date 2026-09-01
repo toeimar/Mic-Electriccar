@@ -2318,29 +2318,39 @@ _saveContractSignatures(bId) {
 
 _printContract() {
   const renterCanvas = document.getElementById('sig-renter');
-  const ownerCanvas = document.getElementById('sig-owner');
-  const renterImg = document.getElementById('sig-renter-img');
-  const ownerImg = document.getElementById('sig-owner-img');
-  const printArea = document.getElementById('sig-print-area');
-  if(renterCanvas && renterImg) renterImg.src = renterCanvas.toDataURL('image/png');
-  if(ownerCanvas && ownerImg) ownerImg.src = ownerCanvas.toDataURL('image/png');
-  if(printArea) printArea.style.display = 'block';
-  document.querySelectorAll('body > #contract-print-area').forEach(el => el.remove());
+  const renterSigData = (renterCanvas && !this._isCanvasBlank(renterCanvas)) ? renterCanvas.toDataURL('image/png') : '';
   const contractArea = document.getElementById('contract-print-area');
-  if(contractArea) {
-    contractArea.id = 'contract-print-area-src';
-    const clone = contractArea.cloneNode(true);
-    clone.id = 'contract-print-area';
-    clone.style.cssText = 'position:relative;width:100%;max-width:100%;background:white;padding:10mm 12mm;font-family:Sarabun,sans-serif;font-size:9pt;line-height:1.6;color:black;box-sizing:border-box;overflow:visible;word-break:break-word;';
-    document.body.appendChild(clone);
-    setTimeout(() => {
-      window.print();
-      clone.remove();
-      contractArea.id = 'contract-print-area';
-    }, 300);
-  } else {
-    setTimeout(() => { window.print(); }, 200);
-  }
+  if(!contractArea) return;
+
+  const clone = contractArea.cloneNode(true);
+  const renterImgInClone = clone.querySelector('#sig-renter-img');
+  if(renterImgInClone && renterSigData) renterImgInClone.src = renterSigData;
+  const sigPrintArea = clone.querySelector('#sig-print-area');
+  if(sigPrintArea) sigPrintArea.style.display = 'block';
+  clone.querySelectorAll('canvas').forEach(cv => cv.remove());
+  clone.querySelectorAll('.receipt-box').forEach(el => el.remove());
+
+  const printWin = window.open('', '_blank', 'width=800,height=900');
+  if(!printWin) { utils.showToast('เบราว์เซอร์บล็อกป๊อปอัป กรุณาอนุญาตแล้วลองใหม่', 'warning'); return; }
+  printWin.document.write(`
+    <!DOCTYPE html><html><head><meta charset="UTF-8">
+    <title>สัญญาเช่ารถยนต์</title>
+    <style>
+      @page { size: A4; margin: 15mm; }
+      * { box-sizing: border-box; }
+      body { font-family: 'Sarabun', sans-serif; color: #111; margin: 0; padding: 0; }
+      table { width: 100%; border-collapse: collapse; }
+    </style>
+    </head><body>${clone.outerHTML}</body></html>
+  `);
+  printWin.document.close();
+  printWin.onload = () => { printWin.focus(); printWin.print(); };
+},
+
+_isCanvasBlank(canvas) {
+  const blank = document.createElement('canvas');
+  blank.width = canvas.width; blank.height = canvas.height;
+  return canvas.toDataURL() === blank.toDataURL();
 },
 
   showInsuranceEditModal(carId) {
