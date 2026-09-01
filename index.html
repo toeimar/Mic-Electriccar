@@ -1584,11 +1584,11 @@ const ui = {
     setTimeout(() => document.getElementById('main-modal').classList.add('active'), 10);
   },
   
-    closeModal() {
-    const m = document.getElementById('main-modal');
-    if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; app._selectedInsurancePlan = null; }
-    if(this._pinMap) { this._pinMap.remove(); this._pinMap = null; }
-  },
+  closeModal() {
+  const m = document.getElementById('main-modal');
+  if(m) { m.classList.remove('active'); setTimeout(() => m.remove(), 300); app.tempUploads = {}; app._selectedInsurancePlan = null; }
+  if(this._pinMap) { this._pinMap = null; }
+},
 
   toggleCustomLocation(fieldId) {
     const sel = document.getElementById(fieldId);
