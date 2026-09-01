@@ -1910,7 +1910,14 @@ const ui = {
             </div>
           </div>
         </div>
-        <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-qrcode text-primary"></i> ชำระเงิน</h4>
+        <h4 class="mb-3 flex items-center gap-2"><i class="fa-solid fa-money-bill-transfer text-warning"></i> บัญชีสำหรับคืนเงินมัดจำ</h4>
+        <div class="card-flat p-3 mb-4" style="border-radius:14px; border-color:var(--warning);">
+          <div class="text-muted text-sm mb-2">กรอกไว้ล่วงหน้า เพื่อความสะดวกตอนคืนรถและรับเงินมัดจำคืน</div>
+          <div class="input-group mb-2"><label>ธนาคาร</label><input type="text" id="bk-refund-bank" class="input-control" placeholder="เช่น ธนาคารกสิกรไทย"></div>
+          <div class="input-group mb-2"><label>เลขที่บัญชี</label><input type="text" id="bk-refund-accno" class="input-control" placeholder="เลขที่บัญชีสำหรับรับเงินคืน"></div>
+          <div class="input-group mb-0"><label>ชื่อบัญชี</label><input type="text" id="bk-refund-accname" class="input-control" placeholder="ชื่อ-นามสกุล เจ้าของบัญชี"></div>
+        </div>
+
           <div class="card-flat p-3 mb-4 text-center" style="border-radius:14px;">
             ${app.state.settings.qrUrl ? `<img src="${app.state.settings.qrUrl}" style="max-height:140px; margin:0 auto 10px; border-radius:12px; display:block;">` : `<i class="fa-solid fa-qrcode" style="font-size:56px; color:var(--primary); display:block; margin-bottom:10px;"></i>`}
             <div class="font-bold text-muted text-sm">${app.state.settings.bank}</div>
