@@ -727,7 +727,6 @@ const app = {
     if (!this.state.settings.tgBotToken) this.state.settings.tgBotToken = DEFAULT_STATE.settings.tgBotToken;
     if (!this.state.settings.tgChatId) this.state.settings.tgChatId = DEFAULT_STATE.settings.tgChatId;
     if (!this.state.settings.insuranceAlertDays) this.state.settings.insuranceAlertDays = 30;
-    this.state.branches = this.state.branches.map(b => ({ address: '', mapUrl: '', mapEmbed: '', ...b }));
     this.state.cars = this.state.cars.map(c => ({ insuranceExpiry: '', insuranceNote: '', prbExpiry: '', prbNote: '', taxExpiry: '', taxNote: '', depositType: 'fixed', depositValue: 2000, ...c }));
     if (!this.state.insurancePlans) this.state.insurancePlans = DEFAULT_STATE.insurancePlans;
     if (!this.state.settings.depositType) this.state.settings.depositType = 'fixed';
@@ -774,11 +773,6 @@ const app = {
     const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
     this.searchParams.dateFrom = today.toISOString().split('T')[0];
     this.searchParams.dateTo = tomorrow.toISOString().split('T')[0];
-    if (this.state.branches.length > 0) {
-      this.searchParams.pick = this.state.branches[0].id;
-      this.searchParams.drop = this.state.branches[0].id;
-    }
-
     const urlParams = new URLSearchParams(window.location.search);
     const receiptId = urlParams.get('receipt');
 
