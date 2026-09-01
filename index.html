@@ -1034,8 +1034,8 @@ const utils = {
     } catch (error) { console.error("Telegram Error:", error); }
   },
   sendTelegramNotification: async (booking, car, user) => {
-    const pickBranchName = booking.pickCustom ? (booking.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(b => b.id === booking.pickBranch)?.name || booking.pickBranch);
-    const dropBranchName = booking.dropCustom ? (booking.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(b => b.id === booking.dropBranch)?.name || booking.dropBranch);
+    const pickBranchName = booking.pickCustomLabel || 'ระบุเอง';
+    const dropBranchName = booking.dropCustomLabel || 'ระบเอง';
     const pickMapLine = booking.pickCustomUrl ? `\n🗺️ <b>แผนที่รับรถ:</b> ${booking.pickCustomUrl}` : '';
     const dropMapLine = booking.dropCustomUrl ? `\n🗺️ <b>แผนที่คืนรถ:</b> ${booking.dropCustomUrl}` : '';
     const message = `🔔 <b>มีรายการจองรถใหม่เข้าสู่ระบบ!</b>\n\n` +
@@ -1345,8 +1345,8 @@ const views = {
               const c = app.state.cars.find(x => x.id === b.carId);
               const st = utils.getBookingStatusDisplay(b);
               const bookedOn = b.createdAt ? utils.formatDate(b.createdAt) : utils.formatDate(b.dateFrom);
-              const pickLabel = b.pickCustom ? (b.pickCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.pickBranch)?.name || b.pickBranch);
-              const dropLabel = b.dropCustom ? (b.dropCustomLabel || 'ระบุเอง') : (app.state.branches.find(br => br.id === b.dropBranch)?.name || b.dropBranch);
+              const pickLabel = b.pickCustomLabel || 'ระบุเอง';
+              const dropLabel = b.dropCustomLabel || 'ระบุเอง';
               return `
               <div class="card mb-3 p-4">
                 <div class="flex justify-between items-center mb-3">
